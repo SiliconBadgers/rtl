@@ -12,13 +12,27 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--fix", action="store_true")
 args = parser.parse_args()
 config = json.loads((ROOT / "style.json").read_text())
-files = set()
-for pattern in config["systemverilog"]:
-    matches = list(ROOT.glob(pattern))
-    if not matches:
-        raise SystemExit(f"No sources match {pattern}; initialize components or fix style.json")
-    files.update(matches)
-files = sorted(files)
+# Limit checks to this repository; Git submodules and ignored build/vendor files
+# are excluded even if a broad source pattern would otherwise match them.
+tracked = set(
+    subprocess.check_output(
+        ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"], cwd=ROOT, text=True
+    ).split("\0")
+)
+
+
+def discover(patterns):
+    return sorted(
+        {
+            p
+            for pattern in patterns
+            for p in ROOT.glob(pattern)
+            if p.is_file() and str(p.relative_to(ROOT)) in tracked
+        }
+    )
+
+
+files = discover(config["systemverilog"])
 failed = False
 for path in files:
     formatted = subprocess.check_output(
@@ -47,8 +61,11 @@ for path in files:
                 )
             )
             failed = True
-subprocess.run(["verible-verilog-lint", "--ruleset=default", *map(str, files)], check=True)
-python_paths = config.get("python", [])
+if files:
+    subprocess.run(["verible-verilog-lint", "--ruleset=default", *map(str, files)], check=True)
+else:
+    print("No SystemVerilog sources in this checkout; SV checks have no inputs yet")
+python_paths = [str(p.relative_to(ROOT)) for p in discover(config.get("python", []))]
 if python_paths:
     subprocess.run(
         ["ruff", "check", *(["--fix"] if args.fix else []), *python_paths], cwd=ROOT, check=True

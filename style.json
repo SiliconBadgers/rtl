@@ -1,8 +1,10 @@
 {
   "systemverilog": [
-    "rtl/integration/*.sv"
+    "rtl/**/*.sv",
+    "tb/**/*.sv",
+    "sim/**/*.sv"
   ],
   "python": [
-    "scripts/check_style.py"
+    "scripts/*.py"
   ]
 }

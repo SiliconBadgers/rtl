@@ -1,8 +1,8 @@
-name: Integration style
+name: Source style
 on:
   pull_request:
   push:
-    branches: [main, feat/consolidated-integration]
+    branches: [main, chore/rtl-style-tooling]
 permissions:
   contents: read
 jobs:
