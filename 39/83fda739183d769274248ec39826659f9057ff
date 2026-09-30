@@ -1,0 +1,21 @@
+README.md
+  s_5b555a9f3bd0b8::t_26d3002d408874 33
+docs/command-router.md
+  s_5b555a9f3bd0b8::t_844cfd9b6fd37b 8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3983fda739183d769274248ec39826659f9057ff",
+  "prompts": {},
+  "sessions": {
+    "s_5b555a9f3bd0b8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0d977-3795-73c0-aaed-6767eaef473e",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "abhinavnandwani <abhu.srt@gmail.com>"
+    }
+  }
+}
