@@ -1,0 +1,21 @@
+SETUP.md
+  s_5b555a9f3bd0b8::t_0f7deddca11990 16
+rtl/integration/README.md
+  s_5b555a9f3bd0b8::t_c39e025255da73 9,13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f1f13ad097bb22ba9a55bf509e295ee3f72208d4",
+  "prompts": {},
+  "sessions": {
+    "s_5b555a9f3bd0b8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0d977-3795-73c0-aaed-6767eaef473e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "abhinavnandwani <abhu.srt@gmail.com>"
+    }
+  }
+}
