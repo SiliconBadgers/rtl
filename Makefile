@@ -7,3 +7,10 @@ doctor: setup
 test:
 	@echo "NOT IMPLEMENTED: this repository is a scaffold; no component test exists yet."
 	@exit 2
+
+.PHONY: style format
+style:
+	python3 scripts/check_style.py
+
+format:
+	python3 scripts/check_style.py --fix

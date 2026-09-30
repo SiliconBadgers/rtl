@@ -23,3 +23,13 @@ the issue. Use existing evidence and explicit assumptions to work in parallel.
 Preserve recorded experiments and slide baselines. Put new runs and proposals
 in their own locations so reviewers can compare them. A change in architecture
 or team scope needs an explicit proposal, not a silent documentation rewrite.
+
+## Integration coding standards
+
+Follow the [SystemVerilog coding standards](https://app.notion.com/p/3eb38826be1b81129170e99b72affdca).
+Run `make format` to format the sources listed in `style.json`, then `make style`
+to check Verible formatting/style and Ruff checks. The style job runs on pull requests.
+Use Verible `v0.0-3946-g851d3ff4` and Ruff `0.16.6` to match CI. On macOS,
+install with `brew install chipsalliance/verible/verible ruff`; check installed
+versions if the package manager supplies a newer release. These checks cover
+the integration sources, not the entire repository or third-party RTL.
