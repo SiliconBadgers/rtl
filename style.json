@@ -1,0 +1,10 @@
+{
+  "systemverilog": [
+    "rtl/**/*.sv",
+    "tb/**/*.sv",
+    "sim/**/*.sv"
+  ],
+  "python": [
+    "scripts/*.py"
+  ]
+}

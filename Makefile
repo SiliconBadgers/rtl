@@ -11,3 +11,10 @@ doctor: setup
 test:
 	$(PYTHON) "$(MODELS_ROOT)/generate_vectors.py" --contract "$(CONTRACT)" --output build/mac-vectors.txt
 	$(PYTHON) "$(VERIFICATION_ROOT)/run.py" --rtl-root "$(RTL_ROOT)" --vectors build/mac-vectors.txt
+
+.PHONY: style format
+style:
+	$(PYTHON) scripts/check_style.py
+
+format:
+	$(PYTHON) scripts/check_style.py --fix

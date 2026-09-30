@@ -1,25 +1,19 @@
 # Contributing
 
-Start with `README.md` and `docs/START-HERE.md`. The linked issues define the
-current assignments. Divide the work within your team and record ownership in
-the issue. Use existing evidence and explicit assumptions to work in parallel.
+Read [the current assignments](docs/START-HERE.md) and the relevant team charter.
+Create a branch from `main` and propose changes through a pull request. Main
+requires one code-owner approval. Record ownership in the linked issue.
 
-## Branch, validate, propose
+Put compute, control and memory sources in `rtl/compute/`, `rtl/control/` and
+`rtl/memory/`. Shared block packages belong in `rtl/common/`. SoC composition and
+CPU/host wrappers remain in the SoC repository. Keep Compute1 and Compute2's
+complete research proposals independent.
 
-1. Accept any pending organization invite and check repository write access.
-2. Create a descriptive branch from current `main`, then make the issue's change.
-3. Keep editable diagram sources and link the central architecture diagram.
-   Distinguish proposed interfaces, stubs, measured results and estimates.
-4. Record source revisions, commands, inputs, tool versions, assumptions and
-   relevant pass/fail evidence. Use `SETUP.md` for existing example checks;
-   those checks only validate the example. Mark unrun licensed-tool checks as
-   unrun, not passed. Keep secrets, licenses, PDKs, model weights and generated
-   build/simulation databases out of Git.
-5. Commit your changes with a clear description.
-6. Push the branch and open a PR linked to the issue for `@abhinavnandwani` to
-   review. Main requires one code-owner approval; admins can bypass. Do not
-   close research/scaffold issues just because folders or templates exist.
+Run `make style` and checks appropriate to the changed behavior. Record source
+revisions, commands, tool versions and results for experiments. Preserve dated
+evidence; publish new runs alongside it. Label stubs and proposals accurately.
 
-Preserve recorded experiments and slide baselines. Put new runs and proposals
-in their own locations so reviewers can compare them. A change in architecture
-or team scope needs an explicit proposal, not a silent documentation rewrite.
+Do not commit secrets, licenses, PDKs, model weights or generated simulation
+and build databases. Preserve source licensing and authorship. If an AI agent
+assists, identify the tool and exact model ID when available in the PR
+summary; state when the model ID is unavailable rather than guessing.

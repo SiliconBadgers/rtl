@@ -1,31 +1,35 @@
-# Compute research: two independent proposals
+# SiliconBadgers RTL
 
-Compute1 and Compute2 each investigate the full compute-unit design question and produce their own proposal. They are not splitting arithmetic versus stateful work, and neither team depends on or coordinates its proposal with the other.
+Compute datapaths, execution control and memory blocks for the SiliconBadgers
+accelerator live in this repository. The [SoC repository](https://github.com/SiliconBadgers/soc)
+owns CPU and host interfaces, platform adaptation and system composition.
 
-## Start here
+## Current work
 
-1. Read [the current assignment and artifact locations](docs/START-HERE.md).
-2. Work on a branch and open a PR for `@abhinavnandwani` using
-   [CONTRIBUTING.md](CONTRIBUTING.md). Main requires a code-owner approval;
-   admins can bypass.
+| Area | Source | Design material | Assignment |
+|---|---|---|---|
+| Compute | `rtl/compute/` | [Compute guide](docs/compute/START-HERE.md), `research/compute1/`, `research/compute2/` | [Compute research #2](https://github.com/SiliconBadgers/rtl/issues/2) |
+| Control | `rtl/control/` | [Control guide](docs/control/START-HERE.md), `docs/control/controller/` | [Controller design #6](https://github.com/SiliconBadgers/rtl/issues/6) |
+| Memory | `rtl/memory/` | [Memory guide](docs/memory/START-HERE.md), `docs/memory/controller/` | [Memory design #7](https://github.com/SiliconBadgers/rtl/issues/7) |
 
-## Current issues
+Compute1 and Compute2 each produce a complete independent compute proposal.
+The repository consolidation does not divide their operation coverage or select
+an engine count. Team charters and objectives remain under `docs/<area>/`.
 
-- [Research the complete compute-unit design](https://github.com/SiliconBadgers/rtl-compute/issues/2)
+## Existing implementation
 
-## Repository structure
+The signed INT8 MAC with an INT32 accumulator is a runnable example in
+[rtl/compute/pe_mac.sv](rtl/compute/pe_mac.sv). Control and memory design work
+remains provisional. The MAC example does not establish full-accelerator
+correctness, throughput or physical feasibility.
 
-| Location | Purpose |
-|---|---|
-| [research/compute1/](research/compute1/README.md) | Compute1's complete independent investigation and proposal for rtl-compute#2. Cover the full operation set; divide tasks within Compute1. |
-| [research/compute2/](research/compute2/README.md) | Compute2's complete independent investigation and proposal for rtl-compute#2. Cover the full operation set; divide tasks within Compute2. |
+## Build and contribute
 
-## Current material and scope
+Read [SETUP.md](SETUP.md) for tools and tests and [CONTRIBUTING.md](CONTRIBUTING.md)
+for the review workflow. Shared block packages belong in `rtl/common/` when
+introduced. Block tests belong under `tb/<area>/`; independent verification
+remains in the [Verification repository](https://github.com/SiliconBadgers/verification).
 
-The signed MAC is a runnable example. The four functional boxes in Architecture do not commit the project to four engines. No final unit allocation is established here.
-
-[Shared diagram](https://github.com/SiliconBadgers/architecture/blob/main/docs/accelerator-diagram.md) · [Software evidence](https://github.com/SiliconBadgers/software/tree/main/experiments/llama-cpp/2026-09-22)
-
-[CHARTER.md](CHARTER.md) and [OBJECTIVES.md](OBJECTIVES.md) describe the
-longer-term purpose. Current issues and the starting guide specify the work
-assigned now. [SETUP.md](SETUP.md) describes existing example commands and scope.
+[Shared architecture](https://github.com/SiliconBadgers/architecture/blob/main/docs/accelerator-diagram.md)
+provides system context. This repository preserves the histories of the former
+compute, control and memory repositories; existing source notices remain intact.
