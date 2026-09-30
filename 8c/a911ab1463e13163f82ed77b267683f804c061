@@ -1,0 +1,23 @@
+docs/control/command-router.md
+  s_5b555a9f3bd0b8::t_34c65db4944bb9 1-23
+rtl/common/command_pkg.sv
+  s_5b555a9f3bd0b8::t_7eb544e1631d9f 1-52
+rtl/control/command_router.sv
+  s_5b555a9f3bd0b8::t_6ae95ca97e1d3e 1-84
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8ca911ab1463e13163f82ed77b267683f804c061",
+  "prompts": {},
+  "sessions": {
+    "s_5b555a9f3bd0b8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0d977-3795-73c0-aaed-6767eaef473e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "abhinavnandwani <abhu.srt@gmail.com>"
+    }
+  }
+}
