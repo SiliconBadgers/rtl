@@ -1,0 +1,51 @@
+memory-import/.github/CODEOWNERS
+  s_5b555a9f3bd0b8::t_49aa659dce4c4e 1-2
+memory-import/.github/pull_request_template.md
+  s_5b555a9f3bd0b8::t_1f275ba31cd399 1-8
+memory-import/.gitignore
+  s_5b555a9f3bd0b8::t_6fe5ad4f27bc02 1-9
+memory-import/AGENTS.md
+  s_5b555a9f3bd0b8::t_dcf9840777742b 1-28
+memory-import/CHARTER.md
+  s_5b555a9f3bd0b8::t_20f6ddd5ed755b 1-65
+memory-import/CONTRIBUTING.md
+  s_5b555a9f3bd0b8::t_22021509880b7b 1-25
+memory-import/Makefile
+  s_5b555a9f3bd0b8::t_8e10b0fc59001c 1-9
+memory-import/OBJECTIVES.md
+  s_5b555a9f3bd0b8::t_e039c0ae323f40 1-41
+memory-import/README.md
+  s_5b555a9f3bd0b8::t_baeb1da3e60e9f 1-30
+memory-import/SETUP.md
+  s_5b555a9f3bd0b8::t_9ee4be3e04bdf4 1-16
+memory-import/docs/README.md
+  s_5b555a9f3bd0b8::t_83db10c65f96d1 1-9
+memory-import/docs/START-HERE.md
+  s_5b555a9f3bd0b8::t_7b1c9fc500bc6c 1-33
+memory-import/docs/controller/README.md
+  s_5b555a9f3bd0b8::t_fe8579fff919e0 1-5
+memory-import/experiments/README.md
+  s_5b555a9f3bd0b8::t_f2a37e1f67ecff 1-9
+memory-import/research/README.md
+  s_5b555a9f3bd0b8::t_a2051edc32b81c 1-9
+memory-import/rtl/README.md
+  s_5b555a9f3bd0b8::t_b04752fcdb7c40 1-9
+memory-import/tb/README.md
+  s_5b555a9f3bd0b8::t_ba666b677f20b9 1-9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1b444c4c53d07f66c85bebec0ad1a0c876ced3a4",
+  "prompts": {},
+  "sessions": {
+    "s_5b555a9f3bd0b8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0d977-3795-73c0-aaed-6767eaef473e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "abhinavnandwani <abhu.srt@gmail.com>"
+    }
+  }
+}
