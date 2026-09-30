@@ -1,0 +1,23 @@
+README.md
+  s_5b555a9f3bd0b8::t_0798e3626e43c6 32-33
+rtl/integration/README.md
+  s_5b555a9f3bd0b8::t_5d3ed776d30bc0 1-16
+rtl/integration/sb_accelerator_top.sv
+  s_5b555a9f3bd0b8::t_cc0c491f731e0e 1-60
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "23096da3ee8279cb231f6225ced39eda7ff1a38a",
+  "prompts": {},
+  "sessions": {
+    "s_5b555a9f3bd0b8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0d977-3795-73c0-aaed-6767eaef473e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "abhinavnandwani <abhu.srt@gmail.com>"
+    }
+  }
+}
