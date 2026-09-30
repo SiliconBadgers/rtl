@@ -5,7 +5,7 @@ or the controller proposed in PR #5. It owns a command until its completion is
 consumed, blocks acceptance during quiesce and rejects unknown opcodes/ABIs.
 It does not fetch descriptors, issue memory transfers or drain real writes.
 
-Shared RTL types come from SoC’s `rtl/integration/command_pkg.sv`. The `engine_stub` instances are supplied
+Shared RTL types come from SoC’s `rtl/command_pkg.sv`. The `engine_stub` instances are supplied
 by the consolidated SoC workspace as integration fixtures; they are
 not Compute or Memory implementations. Every supported test route returns
 `UNIMPLEMENTED`. The memory route is a simulation test route, not a compute unit.

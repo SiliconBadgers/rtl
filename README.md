@@ -30,4 +30,4 @@ This repo has design scaffolding, not a runnable accelerator controller. The one
 longer-term purpose. Current issues and the starting guide specify the work
 assigned now. [SETUP.md](SETUP.md) describes existing example commands and scope.
 
-Runnable routing experiment: [rtl/integration/](rtl/integration/README.md).
+Runnable routing experiment: [rtl/integration/](docs/command-router.md).
