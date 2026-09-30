@@ -31,4 +31,4 @@ files and does not create commits.
 
 - [rtl/pe_mac.sv](rtl/pe_mac.sv)
 
-For the shared example, see the [workspace checkout guide](https://github.com/SiliconBadgers/accelerator/blob/main/docs/GETTING_STARTED.md).
+For the shared example, see the [workspace checkout guide](https://github.com/SiliconBadgers/soc/blob/main/docs/GETTING_STARTED.md).
