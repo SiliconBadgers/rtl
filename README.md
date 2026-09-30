@@ -29,3 +29,5 @@ This repo has design scaffolding, not a runnable accelerator controller. The one
 [CHARTER.md](CHARTER.md) and [OBJECTIVES.md](OBJECTIVES.md) describe the
 longer-term purpose. Current issues and the starting guide specify the work
 assigned now. [SETUP.md](SETUP.md) describes existing example commands and scope.
+
+Runnable routing experiment: [rtl/integration/](rtl/integration/README.md).
