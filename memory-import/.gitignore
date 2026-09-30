@@ -1,0 +1,9 @@
+/build/
+/.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Local/generated tooling outputs
+__pycache__/
+*.pyc
