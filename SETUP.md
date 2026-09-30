@@ -13,4 +13,4 @@ Keep tool dependencies and ways to revisit experiments documented alongside the
 work that uses them. The team can change these entry points when an implementation
 or experiment calls for a different environment.
 
-For the shared example, see the [workspace checkout guide](https://github.com/SiliconBadgers/accelerator/blob/main/docs/GETTING_STARTED.md).
+For the shared example, see the [workspace checkout guide](https://github.com/SiliconBadgers/soc/blob/main/docs/GETTING_STARTED.md).
