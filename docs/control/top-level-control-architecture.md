@@ -1,7 +1,7 @@
 # Top-Level Control Architecture (Proposal)
 
 **Repo:** `rtl`
-**Origin:** [David Sklow’s original proposal and review](https://github.com/SiliconBadgers/rtl-control/pull/5). The original author commit is preserved in this branch. The error-drain diagram and command-submitter definition remain open review points.
+**Origin:** [David Sklow’s original proposal and review](https://github.com/SiliconBadgers/rtl/blob/main/docs/history/control/pull-5.md). The original author commit is preserved in this branch. The error-drain diagram and command-submitter definition remain open review points.
 **Status:** Draft for review — internal structure and command walkthrough only. MMIO register map / descriptor fields to follow once llama.cpp op-tracing material is reviewed (tracked as a follow-up, see §12).
 **Relation to central diagram:** This document expands only the "Top-level command controller" box from the [central architecture diagram](https://github.com/SiliconBadgers/architecture/blob/main/docs/accelerator-diagram.md). Everything outside that box (the four engine candidates, SRAM, transfer controller, platform memory) is referenced, not redrawn — the central diagram stays the single source of truth for the system-level picture.
 
