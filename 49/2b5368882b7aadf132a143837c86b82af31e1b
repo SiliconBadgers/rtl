@@ -1,0 +1,55 @@
+docs/compute/CHARTER.md
+  s_5b555a9f3bd0b8::t_888e7ca276c5cb 33,44
+docs/control/CHARTER.md
+  s_5b555a9f3bd0b8::t_447b9767a12d9c 33,44
+docs/control/START-HERE.md
+  s_5b555a9f3bd0b8::t_0fa2314e54975f 3,25
+docs/control/controller/README.md
+  s_5b555a9f3bd0b8::t_17e1eb734de039 1
+docs/memory/CHARTER.md
+  s_5b555a9f3bd0b8::t_a52ee6e5149c17 33,44
+docs/memory/START-HERE.md
+  s_5b555a9f3bd0b8::t_e0acdfa8a44bb5 23
+docs/memory/controller/README.md
+  s_5b555a9f3bd0b8::t_ec7e4c117ccf48 1
+experiments/compute/README.md
+  s_5b555a9f3bd0b8::t_2a17987b8d5529 1
+experiments/control/README.md
+  s_5b555a9f3bd0b8::t_34aebdd2704b38 1
+experiments/memory/README.md
+  s_5b555a9f3bd0b8::t_b3ad844c941df0 1
+research/compute/README.md
+  s_5b555a9f3bd0b8::t_a0577e319b38b7 1
+research/control/README.md
+  s_5b555a9f3bd0b8::t_ba0336cb7456af 1
+research/memory/README.md
+  s_5b555a9f3bd0b8::t_14b77cd0ac49d8 1
+rtl/compute/README.md
+  s_5b555a9f3bd0b8::t_f8ee015ea0253f 1
+rtl/control/README.md
+  s_5b555a9f3bd0b8::t_e57e61d8838ec8 1
+rtl/memory/README.md
+  s_5b555a9f3bd0b8::t_9245861d07e3e1 1
+tb/compute/README.md
+  s_5b555a9f3bd0b8::t_cc251a6ad989ed 1
+tb/control/README.md
+  s_5b555a9f3bd0b8::t_72fb9611c78f5d 1
+tb/memory/README.md
+  s_5b555a9f3bd0b8::t_f15a8c0dd38283 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "492b5368882b7aadf132a143837c86b82af31e1b",
+  "prompts": {},
+  "sessions": {
+    "s_5b555a9f3bd0b8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0d977-3795-73c0-aaed-6767eaef473e",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "abhinavnandwani <abhu.srt@gmail.com>"
+    }
+  }
+}
