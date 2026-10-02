@@ -1,7 +1,7 @@
 # Compute2 compute proposal
 
 Status: unfilled template for this team's independent full proposal.
-Issue: https://github.com/SiliconBadgers/rtl-compute/issues/2
+Issue: https://github.com/SiliconBadgers/rtl/issues/2
 
 ## Evidence and workload cases
 

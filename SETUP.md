@@ -1,34 +1,30 @@
-# rtl-compute: optional example setup
+# RTL setup
 
-No tools are required to read the charter or contribute research and design
-material. The commands below apply only to the existing technical example.
+Reading design material requires no EDA tools. The runnable MAC example requires
+Make, Python 3.11+ and Icarus Verilog (`iverilog`, `vvp`). Use the pinned
+[SoC workspace](https://github.com/SiliconBadgers/soc) for combined checks.
 
-## Existing example
-
-A signed INT8 MAC with an INT32 accumulator is present, with model-based and directed checking through the verification component. Its original MIT notice is retained in [LICENSE](LICENSE).
-
-Prerequisites: Make, Python 3.11+ and Icarus Verilog (`iverilog` and `vvp`). The current Python code uses the standard library.
-Keep the component folders as siblings for the provided cross-component paths.
-
-From this component directory:
+With Architecture, Software and Verification checked out as siblings:
 
 ```sh
 make setup
 make doctor
-make test
+make test MODELS_ROOT=../software CONTRACT=../architecture/contracts/mac-v0.json VERIFICATION_ROOT=../verification
 ```
 
-These commands check the current example files. The combined MAC example can be
-run from the sibling `accelerator` folder using the same commands. It exercises
-four model tests, 261 reference vectors and 131,600 RTL checks. It establishes
-no full-accelerator, board or physical-implementation claim.
+The Verification runner must support the `rtl/compute/pe_mac.sv` location.
+The example checks arithmetic and pipeline behavior only.
 
-Run `make clean` from `accelerator` to remove generated build outputs and Python
-caches before sharing a folder snapshot. The runner reads the current sibling
-files and does not create commits.
+## Source style
 
-## Example files
+Install Verible v0.0-3946-g851d3ff4 and Ruff 0.16.6, and put their executables on
+PATH. CI pins those versions and checks only tracked project sources.
 
-- [rtl/pe_mac.sv](rtl/pe_mac.sv)
+```sh
+make style
+make format
+```
 
-For the shared example, see the [workspace checkout guide](https://github.com/SiliconBadgers/accelerator/blob/main/docs/GETTING_STARTED.md).
+Verible formats and lints SystemVerilog. Ruff formats and lints Python tooling.
+Generated build products, external dependencies and licensed collateral do not
+belong in Git.

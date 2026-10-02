@@ -1,0 +1,21 @@
+name: Source style
+on:
+  pull_request:
+  push:
+    branches: [main, chore/rtl-style-tooling]
+permissions:
+  contents: read
+jobs:
+  style:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned style tools
+        run: |
+          curl --fail --location --retry 3 -o /tmp/verible.tar.gz https://github.com/chipsalliance/verible/releases/download/v0.0-3946-g851d3ff4/verible-v0.0-3946-g851d3ff4-linux-static-x86_64.tar.gz
+          echo 'be81036ab5a3d5d5ba4ee677ebf9a09665779c3bd99ffe2e161c5025beaa1f16  /tmp/verible.tar.gz' | sha256sum --check
+          mkdir -p /tmp/verible
+          tar -xzf /tmp/verible.tar.gz -C /tmp/verible --strip-components=1
+          echo /tmp/verible/bin >> "$GITHUB_PATH"
+          pipx install ruff==0.16.6
+      - run: make style

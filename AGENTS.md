@@ -1,31 +1,17 @@
-# Working in Compute research: two independent proposals
+# Working in SiliconBadgers RTL
 
-Compute1 and Compute2 each investigate the full compute-unit design question and produce their own proposal. They are not splitting arithmetic versus stateful work, and neither team depends on or coordinates its proposal with the other.
+Read README.md, CONTRIBUTING.md, docs/START-HERE.md and the linked issue before
+editing. Use a branch and PR for review. Keep the issue's technical scope intact.
 
-## Before editing or committing
+Compute1 and Compute2 independently investigate the full compute-unit design
+in research/compute1 and research/compute2. Do not split their operation coverage
+or combine recommendations by default. Control and memory retain their own
+responsibilities under docs/control and docs/memory.
 
-- Read README.md, CONTRIBUTING.md, docs/START-HERE.md and the linked issue.
-- Do not commit secrets, licensed collateral, model weights or generated
-  build/simulation databases.
-- Use a branch and PR for @abhinavnandwani's review. Keep the issue's technical
-  scope intact; scaffolding and tone changes do not authorize a new design.
+Link shared architectural material instead of duplicating it. Distinguish
+accepted interfaces, proposals, assumptions, real RTL and stubs. Preserve dated
+experiments and record new results separately with reproduction details.
 
-## AI assistance
-
-If you use an AI agent, report the tool and exact model ID when available in
-the PR description or change summary. State when the model is unavailable;
-do not guess. No additional software, hooks or setup is required.
-
-## Evidence and boundaries
-
-- Link the central Architecture diagram instead of copying it. Distinguish
-  accepted interfaces, proposals, assumptions, real RTL and stubs.
-- Preserve dated experiment results and slide baselines. Put new work alongside
-  them with revisions, commands, inputs, tool versions and limitations.
-- Run checks appropriate to changed behavior. Never claim an unrun licensed-tool
-  check passed or that a MAC/stub test validates the full accelerator.
-- Software includes workload mapping and runtime/host integration. Do not invent
-  a compiler team, custom CPU core or custom ISA.
-- Compute1 and Compute2 independently cover the full operation set in
-  research/compute1 and research/compute2. Do not divide scope between teams,
-  require cross-team coordination, or merge their recommendations by default.
+Do not commit secrets, licensed collateral, model weights or generated databases.
+Run proportionate checks and report their scope accurately. Preserve authorship
+and licensing. Report the exact AI model ID in the PR when available; do not guess.
