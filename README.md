@@ -1,3 +1,16 @@
+# Development moved to SiliconBadgers RTL
+
+New memory work belongs in [SiliconBadgers/rtl](https://github.com/SiliconBadgers/rtl).
+Use the [current memory guide](https://github.com/SiliconBadgers/rtl/blob/main/docs/memory/START-HERE.md)
+and [assignment #7](https://github.com/SiliconBadgers/rtl/issues/7).
+SoC composition remains in [SiliconBadgers/soc](https://github.com/SiliconBadgers/soc).
+
+The original commits are preserved in the combined RTL history. This repository
+retains the original pull requests, reviews and branches for reference.
+The overview below describes the former standalone repository.
+
+---
+
 # Memory Control
 
 Design the memory controller and explain data movement, outstanding requests, buffer ownership and safe reuse.
