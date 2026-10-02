@@ -1,0 +1,14 @@
+README.md
+  h_88577b387ec62e 1-13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "61be10b88524ca6139d3e0e3dd791b82d74e3bf1",
+  "prompts": {},
+  "humans": {
+    "h_88577b387ec62e": {
+      "author": "abhinavnandwani <abhu.srt@gmail.com>"
+    }
+  }
+}
