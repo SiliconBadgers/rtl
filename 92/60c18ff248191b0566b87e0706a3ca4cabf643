@@ -1,0 +1,27 @@
+docs/compute/CHARTER.md
+  s_5b555a9f3bd0b8::t_70f793eb356cda 33
+docs/memory/CHARTER.md
+  s_5b555a9f3bd0b8::t_37b28e74d41469 33
+experiments/compute/README.md
+  s_5b555a9f3bd0b8::t_4e388861fab4ad 7-8
+experiments/control/README.md
+  s_5b555a9f3bd0b8::t_46cb32c2b1f342 7-8
+experiments/memory/README.md
+  s_5b555a9f3bd0b8::t_1d3b2d27feda69 7-8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9260c18ff248191b0566b87e0706a3ca4cabf643",
+  "prompts": {},
+  "sessions": {
+    "s_5b555a9f3bd0b8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0d977-3795-73c0-aaed-6767eaef473e",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "abhinavnandwani <abhu.srt@gmail.com>"
+    }
+  }
+}
