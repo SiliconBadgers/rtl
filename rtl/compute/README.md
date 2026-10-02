@@ -1,4 +1,4 @@
-# rtl-compute/rtl
+# Compute rtl
 
 Arithmetic and datapath implementations developed through the team’s chosen work.
 

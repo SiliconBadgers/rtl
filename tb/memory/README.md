@@ -1,4 +1,4 @@
-# rtl-memory/tb
+# Memory tb
 
 Local checks and models of memory behavior associated with implemented designs.
 
