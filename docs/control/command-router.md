@@ -1,13 +1,16 @@
 # Command routing experiment
 
 `command_router` is a single-command routing stub, not a complete device top
-or the controller proposed in PR #5. It owns a command until its completion is
-consumed, blocks acceptance during quiesce and rejects unknown opcodes/ABIs.
+or the controller proposed in [RTL #10](https://github.com/SiliconBadgers/rtl/pull/10).
+It owns a command until its completion is consumed, blocks acceptance during
+quiesce and rejects unknown opcodes/ABIs.
 It does not fetch descriptors, issue memory transfers or drain real writes.
 
-Shared RTL types come from SoC’s `rtl/command_pkg.sv`. The `engine_stub` instances are supplied
-by the consolidated SoC workspace as integration fixtures; they are
-not Compute or Memory implementations. Every supported test route returns
+Shared RTL types live in this repository at
+[`rtl/common/command_pkg.sv`](../../rtl/common/command_pkg.sv). The SoC workspace
+consumes that package through its pinned `components/rtl` submodule and supplies
+the `engine_stub` instances as integration fixtures. These fixtures are not
+Compute or Memory implementations. Every supported test route returns
 `UNIMPLEMENTED`. The memory route is a simulation test route, not a compute unit.
 
 Run `./scripts/workspace.sh test` from the SoC checkout. Its pinned
