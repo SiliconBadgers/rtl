@@ -1,4 +1,4 @@
-# rtl-control/rtl
+# Control rtl
 
 Execution control and scheduling implementations developed through the team’s chosen work.
 

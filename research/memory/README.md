@@ -1,4 +1,4 @@
-# rtl-memory/research
+# Memory research
 
 Literature notes, surveys, analytical studies and comparisons relevant to the charter. Explain the question, sources, interpretation and remaining uncertainty in a form that suits the work.
 

@@ -30,7 +30,7 @@ Preserve explanations, experiments, local checks and implementation knowledge so
 
 ## Boundaries and shared decisions
 
-This team owns arithmetic implementation and its internal pipelines. rtl-control coordinates operations across blocks; rtl-memory owns storage and movement services; soc owns system composition. Architecture and software help establish shared numerical semantics. Verification contributes independent correctness assessment, while physical-design provides implementation feedback. A choice that changes visible timing or numerical behavior is discussed with the relevant consumers.
+This team owns arithmetic implementation and its internal pipelines. the control team coordinates operations across blocks; the memory team owns storage and movement services; soc owns system composition. Architecture and software help establish shared numerical semantics. Verification contributes independent correctness assessment, while physical-design provides implementation feedback. A choice that changes visible timing or numerical behavior is discussed with the relevant consumers.
 
 ## Member autonomy
 
@@ -41,7 +41,7 @@ Members choose operators or design questions that serve the charter and their in
 | Partners | Shared concerns |
 |---|---|
 | architecture and software | Exchange operation requirements, numerical assumptions and reference behavior so compute choices remain meaningful to the workload. |
-| rtl-control and rtl-memory | Agree on operand availability, operation acceptance, result handling and the assumptions that affect scheduling or data movement. |
+| the control team and the memory team | Agree on operand availability, operation acceptance, result handling and the assumptions that affect scheduling or data movement. |
 | verification and physical-design | Share behavior and constraints; use independent checks and implementation measurements to assess the strengths and limits of a design. |
 
 ## Possible directions

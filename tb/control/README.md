@@ -1,4 +1,4 @@
-# rtl-control/tb
+# Control tb
 
 Local control models and checks that help explain implemented behavior.
 

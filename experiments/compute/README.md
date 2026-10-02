@@ -1,4 +1,4 @@
-# rtl-compute/experiments
+# Compute experiments
 
 Exploratory studies, prototypes and experiment narratives. Make the question and interpretation understandable; preserve the context needed to revisit a result. These artifacts need not be production implementations.
 

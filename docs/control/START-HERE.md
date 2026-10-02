@@ -1,6 +1,6 @@
 # Top-Level Control: current work
 
-Design command receipt, validation, dispatch, coordination and completion. This team works in rtl-control for controller internals and architecture for the shared register/descriptor contract.
+Design command receipt, validation, dispatch, coordination and completion. This team works in RTL for controller internals and architecture for the shared register/descriptor contract.
 
 ## Assignment
 
@@ -22,7 +22,7 @@ Design command receipt, validation, dispatch, coordination and completion. This 
 
 | Location | What belongs here |
 |---|---|
-| [docs/controller/](controller/README.md) | Controller diagram, interfaces, state/control flow and command walkthroughs for rtl#6. Keep editable source, plus SVG/PNG preview for draw.io. Link the architecture register proposal instead of copying the maps. |
+| [docs/control/controller/](controller/README.md) | Controller diagram, interfaces, state/control flow and command walkthroughs for rtl#6. Keep editable source, plus SVG/PNG preview for draw.io. Link the architecture register proposal instead of copying the maps. |
 
 ## What runs today
 
