@@ -1,0 +1,47 @@
+README.md
+  s_5b555a9f3bd0b8::t_6f0425c4c41f75 38-40
+docs/history/README.md
+  s_5b555a9f3bd0b8::t_4441e43cbcbf46 1-40
+docs/history/control/pull-1.md
+  s_5b555a9f3bd0b8::t_238f7f3c35e1f4 1-31
+docs/history/control/pull-3.md
+  s_5b555a9f3bd0b8::t_a45bf954268bb0 1-33
+docs/history/control/pull-4.md
+  s_5b555a9f3bd0b8::t_de70af6358da8a 1-29
+docs/history/control/pull-5.md
+  s_5b555a9f3bd0b8::t_d4f101e647e539 1-57
+docs/history/control/pull-6.md
+  s_5b555a9f3bd0b8::t_24ca1340902f88 1-41
+docs/history/control/pull-7.md
+  s_5b555a9f3bd0b8::t_41dc939cbc6069 1-31
+docs/history/control/pull-8.md
+  s_5b555a9f3bd0b8::t_716bb5a767dbd8 1-27
+docs/history/memory/pull-1.md
+  s_5b555a9f3bd0b8::t_f649e941fe34ee 1-31
+docs/history/memory/pull-3.md
+  s_5b555a9f3bd0b8::t_c2572c7a223fc1 1-33
+docs/history/memory/pull-4.md
+  s_5b555a9f3bd0b8::t_752de84ad7438d 1-29
+docs/history/memory/pull-5.md
+  s_5b555a9f3bd0b8::t_189c76f4ddc711 1-43
+docs/history/memory/pull-6.md
+  s_5b555a9f3bd0b8::t_a3c23942835cc8 1-27
+docs/history/preserved-refs.json
+  s_5b555a9f3bd0b8::t_025dca1ef696dc 1-151
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9217fed427ccb3cf60b528c74aebb4c71d6fdc34",
+  "prompts": {},
+  "sessions": {
+    "s_5b555a9f3bd0b8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0d977-3795-73c0-aaed-6767eaef473e",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "abhinavnandwani <abhu.srt@gmail.com>"
+    }
+  }
+}
