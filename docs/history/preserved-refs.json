@@ -1,0 +1,151 @@
+{
+  "control": [
+    {
+      "source_ref": "refs/heads/chore/rtl-style-tooling",
+      "preserved_ref": "refs/heads/archive/control/chore/rtl-style-tooling",
+      "sha": "d6fdf659d0884675a77a5283ca4342073182e85a"
+    },
+    {
+      "source_ref": "refs/heads/codex/model-attribution",
+      "preserved_ref": "refs/heads/archive/control/codex/model-attribution",
+      "sha": "453a20a08b5a5fab97de269e0c03ff28e0b487e2"
+    },
+    {
+      "source_ref": "refs/heads/codex/team-starting-material",
+      "preserved_ref": "refs/heads/archive/control/codex/team-starting-material",
+      "sha": "be0ad5fbbdfda9ff5568ef1ce205a54d070d106e"
+    },
+    {
+      "source_ref": "refs/heads/docs/consolidated-rtl-redirect",
+      "preserved_ref": "refs/heads/archive/control/docs/consolidated-rtl-redirect",
+      "sha": "a324d7b205ce64410fb388dbe89797edfc0f7c55"
+    },
+    {
+      "source_ref": "refs/heads/dsklow/testbranch",
+      "preserved_ref": "refs/heads/archive/control/dsklow/testbranch",
+      "sha": "9ab0e044247f814d07a5d5e6b9efd9e6c2c57b70"
+    },
+    {
+      "source_ref": "refs/heads/dsklow/wip",
+      "preserved_ref": "refs/heads/archive/control/dsklow/wip",
+      "sha": "931f81f7284a48b197730bdca3c326e4e9a17ca1"
+    },
+    {
+      "source_ref": "refs/heads/feat/consolidated-integration",
+      "preserved_ref": "refs/heads/archive/control/feat/consolidated-integration",
+      "sha": "0d941a1ae8e20928483579b2f406162ed2bc36c1"
+    },
+    {
+      "source_ref": "refs/heads/main",
+      "preserved_ref": "refs/heads/archive/control/main",
+      "sha": "23f0902187786c4e3c838aae7090cba0f149b838"
+    },
+    {
+      "source_ref": "refs/heads/remove-ai-contribution-requirements",
+      "preserved_ref": "refs/heads/archive/control/remove-ai-contribution-requirements",
+      "sha": "ed7642f588089b6e0fb895fc85f89fe287fb6fea"
+    },
+    {
+      "source_ref": "refs/notes/ai",
+      "preserved_ref": "refs/notes/archive/control/ai",
+      "sha": "9062f01446aae69a227460bc85379fc3e39a335f"
+    },
+    {
+      "source_ref": "refs/pull/1/head",
+      "preserved_ref": "refs/heads/archive/control/pulls/1/head",
+      "sha": "be0ad5fbbdfda9ff5568ef1ce205a54d070d106e"
+    },
+    {
+      "source_ref": "refs/pull/3/head",
+      "preserved_ref": "refs/heads/archive/control/pulls/3/head",
+      "sha": "453a20a08b5a5fab97de269e0c03ff28e0b487e2"
+    },
+    {
+      "source_ref": "refs/pull/4/head",
+      "preserved_ref": "refs/heads/archive/control/pulls/4/head",
+      "sha": "ed7642f588089b6e0fb895fc85f89fe287fb6fea"
+    },
+    {
+      "source_ref": "refs/pull/5/head",
+      "preserved_ref": "refs/heads/archive/control/pulls/5/head",
+      "sha": "931f81f7284a48b197730bdca3c326e4e9a17ca1"
+    },
+    {
+      "source_ref": "refs/pull/6/head",
+      "preserved_ref": "refs/heads/archive/control/pulls/6/head",
+      "sha": "0d941a1ae8e20928483579b2f406162ed2bc36c1"
+    },
+    {
+      "source_ref": "refs/pull/7/head",
+      "preserved_ref": "refs/heads/archive/control/pulls/7/head",
+      "sha": "d6fdf659d0884675a77a5283ca4342073182e85a"
+    },
+    {
+      "source_ref": "refs/pull/8/head",
+      "preserved_ref": "refs/heads/archive/control/pulls/8/head",
+      "sha": "a324d7b205ce64410fb388dbe89797edfc0f7c55"
+    }
+  ],
+  "memory": [
+    {
+      "source_ref": "refs/heads/codex/model-attribution",
+      "preserved_ref": "refs/heads/archive/memory/codex/model-attribution",
+      "sha": "39d32f0e31d08615a4b79e48b9de65e29ebd308f"
+    },
+    {
+      "source_ref": "refs/heads/codex/team-starting-material",
+      "preserved_ref": "refs/heads/archive/memory/codex/team-starting-material",
+      "sha": "d459b87317858f714cb70756ba6c31f6188e7e05"
+    },
+    {
+      "source_ref": "refs/heads/docs/consolidated-rtl-redirect",
+      "preserved_ref": "refs/heads/archive/memory/docs/consolidated-rtl-redirect",
+      "sha": "61be10b88524ca6139d3e0e3dd791b82d74e3bf1"
+    },
+    {
+      "source_ref": "refs/heads/feat/consolidated-integration",
+      "preserved_ref": "refs/heads/archive/memory/feat/consolidated-integration",
+      "sha": "8dc4d819ea7815f2570a0d89289a9826c9f1165c"
+    },
+    {
+      "source_ref": "refs/heads/main",
+      "preserved_ref": "refs/heads/archive/memory/main",
+      "sha": "b202a9ad0fa38dd120de3a3772a2f3506db01beb"
+    },
+    {
+      "source_ref": "refs/heads/remove-ai-contribution-requirements",
+      "preserved_ref": "refs/heads/archive/memory/remove-ai-contribution-requirements",
+      "sha": "5d2386450cf37f45daf90ce0f76a09bb866cc7c6"
+    },
+    {
+      "source_ref": "refs/notes/ai",
+      "preserved_ref": "refs/notes/archive/memory/ai",
+      "sha": "06a9027892c175231c52d454ac1543856339c60c"
+    },
+    {
+      "source_ref": "refs/pull/1/head",
+      "preserved_ref": "refs/heads/archive/memory/pulls/1/head",
+      "sha": "d459b87317858f714cb70756ba6c31f6188e7e05"
+    },
+    {
+      "source_ref": "refs/pull/3/head",
+      "preserved_ref": "refs/heads/archive/memory/pulls/3/head",
+      "sha": "39d32f0e31d08615a4b79e48b9de65e29ebd308f"
+    },
+    {
+      "source_ref": "refs/pull/4/head",
+      "preserved_ref": "refs/heads/archive/memory/pulls/4/head",
+      "sha": "5d2386450cf37f45daf90ce0f76a09bb866cc7c6"
+    },
+    {
+      "source_ref": "refs/pull/5/head",
+      "preserved_ref": "refs/heads/archive/memory/pulls/5/head",
+      "sha": "8dc4d819ea7815f2570a0d89289a9826c9f1165c"
+    },
+    {
+      "source_ref": "refs/pull/6/head",
+      "preserved_ref": "refs/heads/archive/memory/pulls/6/head",
+      "sha": "61be10b88524ca6139d3e0e3dd791b82d74e3bf1"
+    }
+  ]
+}

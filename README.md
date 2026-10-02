@@ -35,3 +35,6 @@ remains in the [Verification repository](https://github.com/SiliconBadgers/verif
 [Shared architecture](https://github.com/SiliconBadgers/architecture/blob/main/docs/accelerator-diagram.md)
 provides system context. This repository preserves the histories of the former
 compute, control and memory repositories; existing source notices remain intact.
+
+[Preserved development history](docs/history/README.md) contains the original
+control and memory reviews, branch mappings and authorship records.
