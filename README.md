@@ -1,3 +1,16 @@
+# Development moved to SiliconBadgers RTL
+
+New control work belongs in [SiliconBadgers/rtl](https://github.com/SiliconBadgers/rtl).
+Use the [current control guide](https://github.com/SiliconBadgers/rtl/blob/main/docs/control/START-HERE.md)
+and [assignment #6](https://github.com/SiliconBadgers/rtl/issues/6).
+SoC composition remains in [SiliconBadgers/soc](https://github.com/SiliconBadgers/soc).
+
+The original commits are preserved in the combined RTL history. This repository
+retains the original pull requests, reviews and branches for reference.
+The overview below describes the former standalone repository.
+
+---
+
 # Top-Level Control
 
 Design command receipt, validation, dispatch, coordination and completion. This team works in rtl-control for controller internals and architecture for the shared register/descriptor contract.
