@@ -30,7 +30,7 @@ Investigate bandwidth demand, contention, reuse and physical storage constraints
 
 ## Boundaries and shared decisions
 
-The memory team owns the storage subsystem and its access services. the control team decides when accelerator operations request those services; the compute teams own local arithmetic behavior; soc connects subsystem and host interfaces. Architecture coordinates the shared address and data model. Physical-design informs storage implementation options, and SoC owns platform-specific adaptation of external memory resources. Exact routing and protocol boundaries are agreed where these responsibilities meet.
+The memory team owns the storage subsystem and its access services. The control team decides when accelerator operations request those services; the compute teams own local arithmetic behavior; soc connects subsystem and host interfaces. Architecture coordinates the shared address and data model. Physical-design informs storage implementation options, and SoC owns platform-specific adaptation of external memory resources. Exact routing and protocol boundaries are agreed where these responsibilities meet.
 
 ## Member autonomy
 

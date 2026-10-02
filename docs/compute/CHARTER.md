@@ -30,7 +30,7 @@ Preserve explanations, experiments, local checks and implementation knowledge so
 
 ## Boundaries and shared decisions
 
-This team owns arithmetic implementation and its internal pipelines. the control team coordinates operations across blocks; the memory team owns storage and movement services; soc owns system composition. Architecture and software help establish shared numerical semantics. Verification contributes independent correctness assessment, while physical-design provides implementation feedback. A choice that changes visible timing or numerical behavior is discussed with the relevant consumers.
+This team owns arithmetic implementation and its internal pipelines. The control team coordinates operations across blocks; the memory team owns storage and movement services; soc owns system composition. Architecture and software help establish shared numerical semantics. Verification contributes independent correctness assessment, while physical-design provides implementation feedback. A choice that changes visible timing or numerical behavior is discussed with the relevant consumers.
 
 ## Member autonomy
 
