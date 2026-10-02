@@ -1,4 +1,4 @@
-# rtl-memory/rtl
+# Memory rtl
 
 Storage and data movement implementations developed through the team’s chosen work.
 

@@ -20,7 +20,7 @@ Design the memory controller and explain data movement, outstanding requests, bu
 
 | Location | What belongs here |
 |---|---|
-| [docs/controller/](controller/README.md) | Memory-controller diagram, block/interface descriptions, load-compute-store traces and open assumptions for rtl#7. Include editable source and a preview for draw.io. |
+| [docs/memory/controller/](controller/README.md) | Memory-controller diagram, block/interface descriptions, load-compute-store traces and open assumptions for rtl#7. Include editable source and a preview for draw.io. |
 
 ## What runs today
 

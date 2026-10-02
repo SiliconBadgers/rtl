@@ -1,4 +1,4 @@
-# rtl-compute/tb
+# Compute tb
 
 Local compute testbenches and behavioral checks associated with implemented designs.
 

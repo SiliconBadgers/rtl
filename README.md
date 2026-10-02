@@ -20,14 +20,16 @@ an engine count. Team charters and objectives remain under `docs/<area>/`.
 
 The signed INT8 MAC with an INT32 accumulator is a runnable example in
 [rtl/compute/pe_mac.sv](rtl/compute/pe_mac.sv). Control and memory design work
-remains provisional. The MAC example does not establish full-accelerator
+remains provisional. A [single-command routing pilot](docs/control/command-router.md)
+and its shared command package are also available; the SoC harness exercises
+them with error-returning engine fixtures. The MAC example does not establish full-accelerator
 correctness, throughput or physical feasibility.
 
 ## Build and contribute
 
 Read [SETUP.md](SETUP.md) for tools and tests and [CONTRIBUTING.md](CONTRIBUTING.md)
-for the review workflow. Shared block packages belong in `rtl/common/` when
-introduced. Block tests belong under `tb/<area>/`; independent verification
+for the review workflow. Shared block packages live in `rtl/common/`.
+Block tests belong under `tb/<area>/`; independent verification
 remains in the [Verification repository](https://github.com/SiliconBadgers/verification).
 
 [Shared architecture](https://github.com/SiliconBadgers/architecture/blob/main/docs/accelerator-diagram.md)
