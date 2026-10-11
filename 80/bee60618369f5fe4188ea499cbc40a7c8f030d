@@ -1,0 +1,24 @@
+README.md
+  h_ef9e838b06a174 9-12,13,14
+docs/START-HERE.md
+  h_ef9e838b06a174 9-11
+docs/simd-isa-signatures.md
+  h_ef9e838b06a174 1-7,8,9,10,11,12,13-182
+docs/simd-isa.md
+  h_ef9e838b06a174 1-6,7-8,9,10,11,12-25,26,27-59,60-61,62-81,82-83,84-213,214-215
+docs/compute/START-HERE.md
+  h_ef9e838b06a174 16
+docs/control/START-HERE.md
+  h_ef9e838b06a174 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "80bee60618369f5fe4188ea499cbc40a7c8f030d",
+  "prompts": {},
+  "humans": {
+    "h_ef9e838b06a174": {
+      "author": "Zeb Taylor <zceboys@gmail.com>"
+    }
+  }
+}
