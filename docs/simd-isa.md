@@ -21,27 +21,7 @@ See the [Commands](https://docs.google.com/spreadsheets/d/1XtrQoqvEHGf_vmuHE5VzV
 | `C` | 7:3 | 5 | Addend, shift count, choice predicate, or remainder output; otherwise zero |
 | `PM` | 2:0 | 3 | Execution predicate; `CONTROL` requires zero |
 
-There are no spare word bits. All seven fields account for
-`3 + 7 + 4 + 5 + 5 + 5 + 3 = 32` bits.
-Unused operand fields must be zero. In a used field, reference code `0` names
-`V0` or `P0`, according to the signature's operand role.
-
-Pack the unsigned word as:
-
-```text
-word = (FAMILY << 29) | (SIG << 22) | (D << 18)
-     | (A << 13) | (B << 8) | (C << 3) | PM
-bytes = [word[7:0], word[15:8], word[23:16], word[31:24]]
-```
-
-| Example | `FAMILY`, `SIG`, `D`, `A`, `B`, `C`, `PM` | Word | Stored bytes |
-| --- | --- | --- | --- |
-| `ALU.ADD.I32 V2, V0, S1` masked by `P3` | `1, 2, 2, 0, 9, 0, 3` | `0x20880903` | `03 09 88 20` |
-| `CONTROL.SETVL S0` | `0, 0, 0, 8, 0, 0, 0` | `0x00010000` | `00 00 01 00` |
-
-The second example reads the `U32` length in `S0`; the word contains a register
-reference, not an immediate length. An all-zero word is invalid: `SETVL` requires
-a scalar or constant `A`, but reference code `0` names `V0`.
+Unused operand fields must be zero.
 
 ## Families and fixed signatures
 
@@ -56,8 +36,7 @@ a scalar or constant `A`, but reference code `0` names `V0`.
 | `110` | `DATA` | 7 | Listed `DATA` IDs |
 | `111` | Invalid | 0 | Reject |
 
-Only the listed `FAMILY`/`SIG` pairs and types are legal. The `ALU` type indices
-are `0 F16, 1 F32, 2 I32, 3 U32, 4 I64, 5 U64`; indices `6` and `7` are unused.
+The `ALU` type indices are `0 F16, 1 F32, 2 I32, 3 U32, 4 I64, 5 U64`.
 The function indices are `ADD=0`, `SUB=1`, `EQ=2`, `LT=3`, `SELECT=4`, `AND=5`,
 `XOR=6`, `SHL=7`, `SHR=8`, `CLZ=9`, `ADD_SAT=10`, `SUB_SAT=11`, and
 `RSHIFT_RNE=12`.
@@ -97,18 +76,6 @@ permanently true; only `P1`–`P7` are writable.
 | `19` | Integer all-ones |
 | `20`–`31` | Invalid |
 
-`V/S/K` in the catalogue means vector, scalar, or constant. `S/K` means scalar
-or constant. Constants must match the operand's declared type and cannot be
-destinations. Numeric `D` selects only codes `0`–`15`. A predicate role
-interprets codes `0`–`7` as `P0`–`P7`; the signature determines the register
-namespace. Predicate destinations must be `P1`–`P7`. `DIVMOD` uses `C` as a
-destination: it must name a writable numeric register.
-
-The signature fixes how each input is interpreted. Numeric results fill the
-low bits of the result type and zero the rest of the 64-bit cell, including
-negative signed results. Raw `COPY` and `PERMUTE` fill their selected 16/32/64 bits
-and clear remaining high bits. Disabled lanes retain their entire previous cell.
-
 ## Execution and state
 
 `VL` is the active vector length, from zero through the physical lane count.
@@ -120,12 +87,10 @@ i < VL and P[PM][i] is true
 
 Disabled lanes perform no calculation, access, numeric error check, counter
 update, or write. `PM=P0` enables every lane below `VL`. `SELECT` uses predicate
-`C` to choose between `A` and `B`, independently of `PM`. An enabled floating
-`SELECT` validates both alternatives.
+`C` to choose between `A` and `B`, independently of `PM`.
 
 An ordinary scalar result requires all numeric sources to be scalar or constant.
-It is calculated once if any lane is enabled and preserves its previous value
-if none are enabled. Scalar `SELECT` reads `C` at the lowest enabled lane.
+Scalar `SELECT` reads `C` at the lowest enabled lane.
 `REDUCE` always writes a scalar result, using positive floating zero or integer
 zero for an empty enabled set. `DIVMOD` requires distinct `D` and `C` outputs,
 both scalar or both vector; `C` is an output rather than a source.
@@ -135,18 +100,14 @@ physical lane count, and updates `VL` even when its previous value was zero.
 `PAND` and `PNOT` update predicate bits below `VL`, retain higher bits, and
 require `PM=0`. Comparisons update only the lanes enabled by `VL` and `PM`.
 
-Read all inputs and predicates before writing any result. Inputs and outputs
-can share registers, subject to the signature's restrictions; `DIVMOD` outputs
+Inputs and outputs can share registers, subject to the signature's restrictions; `DIVMOD` outputs
 must be distinct. `PERMUTE` captures its vector input before writing, so in-place
 rearrangement is valid. Its enabled indices must be below the physical lane
 count. The selected source lane can be outside `VL` or masked off.
 
 The issuer selects stored command words, repeats sequences, and coordinates
 SIMD and matrix work. It owns registers, predicates, `VL`, execution mode, and
-diagnostics until dependent compute and memory work completes. `P0` stays true;
-registers not explicitly initialized start at zero. The issuer supplies commands
-in order and waits for earlier register writes before issuing instructions that
-read those registers. SIMD reports completion or an error. Memory logic moves
+diagnostics until dependent compute and memory work completes. Memory logic moves
 values between memory and registers and fetches lookup-table entries.
 
 ## Numeric behavior and faults
@@ -161,8 +122,7 @@ alone, use negative-zero constant `C=17` with `FMA` and integer-zero constant
 
 Integer `ADD`, `SUB`, and checked products reject an exact result outside the
 destination type's range. `WMAC` checks the exact product-plus-addend result
-after addition. Raw shifts and bitwise logic follow their bit-pattern rules.
-Shift counts are `U32`, never reduced modulo the width. `MULSHIFT` permits
+after addition. Raw shifts and bitwise logic follow their bit-pattern rules. `MULSHIFT` permits
 `0`–`63`; rounded right shift permits counts at or above its input width.
 
 `CAST` reads an `I32` exponent `e` in `−255…255` and converts the exact value
@@ -170,9 +130,7 @@ Shift counts are `U32`, never reduced modulo the width. `MULSHIFT` permits
 clamp to their range and record conversion saturation; floating overflow faults.
 Convert directly to the destination rather than through an intermediate float.
 
-`MULSHIFT` clamps its rounded product to `I32`. A subsequent `ADD_SAT` is a
-separate clamp; a later add cannot recover information lost by the product clamp.
-Record product, addition, subtraction, and conversion saturations separately.
+`MULSHIFT` clamps its rounded product to `I32`.
 A compute sequence uses one execution mode: strict or permissive. Permissive
 mode commits clamped results; strict mode records saturation and faults without
 writing the failing instruction's outputs. Ordinary overflow and domain errors
@@ -180,19 +138,10 @@ fault in both modes.
 
 `REDUCE.SUM` includes every physical lane, in lane-index order, pairing adjacent
 positions and then adjacent partial sums. Lanes at or above `VL` and lanes with
-a false `PM` predicate contribute zero. Pad the physical-lane tree to the next
-power of two with zero. Convert `F16` leaves exactly to `F32` and round each
-floating tree addition to `F32`. Every integer partial sum must fit, even if
-later terms would cancel overflow. `MIN` and `MAX` ignore disabled lanes and
+a false `PM` predicate contribute zero. Convert `F16` leaves exactly to `F32` and round each
+floating tree addition to `F32`. `MIN` and `MAX` ignore disabled lanes and
 keep the lowest enabled lane's value on ties, including its floating zero sign.
 Every empty reduction writes positive zero or integer zero.
-
-Before writing any output, validate the instruction and every enabled result
-and access. An invalid family, signature, operand reference, operand type, or
-nonzero unused field faults before a result write. A failing instruction writes
-none of its outputs, invalidates the compute sequence, and blocks further
-execution. Dependent work cannot report success. Earlier completed instructions
-are not rolled back.
 
 ## Programs and lookup tables
 
