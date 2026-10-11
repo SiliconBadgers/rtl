@@ -1,0 +1,14 @@
+docs/simd-isa.md
+  h_ef9e838b06a174 24,39,90,93,103,110,125,133,141-142
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a8385f555648516f99c033a6bcb43e26beeb0111",
+  "prompts": {},
+  "humans": {
+    "h_ef9e838b06a174": {
+      "author": "Zeb Taylor <zceboys@gmail.com>"
+    }
+  }
+}
