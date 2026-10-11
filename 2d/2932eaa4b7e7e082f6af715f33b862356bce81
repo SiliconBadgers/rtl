@@ -1,0 +1,36 @@
+Makefile
+  h_ef9e838b06a174 21-24
+README.md
+  h_ef9e838b06a174 9-14
+docs/START-HERE.md
+  h_ef9e838b06a174 9-11
+docs/compute/START-HERE.md
+  h_ef9e838b06a174 16
+docs/control/START-HERE.md
+  h_ef9e838b06a174 17
+docs/simd-isa-signatures.md
+  h_ef9e838b06a174 1-189
+docs/simd-isa.md
+  h_ef9e838b06a174 1-244
+docs/simd-isa/README.md
+  h_ef9e838b06a174 1-23
+docs/simd-isa/clarifications.json
+  h_ef9e838b06a174 1-7
+docs/simd-isa/signatures.csv
+  h_ef9e838b06a174 1-136
+docs/simd-isa/source-sheet.json
+  h_ef9e838b06a174 1-2606
+scripts/check_simd_isa_docs.py
+  h_ef9e838b06a174 1-282
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2d2932eaa4b7e7e082f6af715f33b862356bce81",
+  "prompts": {},
+  "humans": {
+    "h_ef9e838b06a174": {
+      "author": "Zeb Taylor <zceboys@gmail.com>"
+    }
+  }
+}
