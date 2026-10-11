@@ -6,5 +6,8 @@ Start with the assignment for your area:
 - [Control](control/START-HERE.md): command coordination, sequencing and completion.
 - [Memory](memory/START-HERE.md): storage, access and data movement.
 
+The [32-bit SIMD ISA](simd-isa.md) defines all 135 signatures and their execution
+rules, with links to the source Google Sheet.
+
 Follow [the contribution workflow](../CONTRIBUTING.md). Keep proposals separate
 from accepted interfaces and link the shared Architecture diagram.
