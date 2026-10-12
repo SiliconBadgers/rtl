@@ -28,7 +28,8 @@ correctness, throughput or physical feasibility.
 ## Build and contribute
 
 Read [SETUP.md](SETUP.md) for tools and tests and [CONTRIBUTING.md](CONTRIBUTING.md)
-for the review workflow. Shared block packages live in `rtl/common/`.
+for the review workflow. Follow the [SystemVerilog coding standard](docs/systemverilog-style.md)
+for project RTL and testbenches. Shared block packages live in `rtl/common/`.
 Block tests belong under `tb/<area>/`; independent verification
 remains in the [Verification repository](https://github.com/SiliconBadgers/verification).
 
