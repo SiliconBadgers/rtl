@@ -13,6 +13,7 @@ Compute1 and Compute2 each investigate the full compute-unit design question and
 
 ## Starting evidence
 
+- [32-bit SIMD ISA](../simd-isa.md): command encoding, operand roles, and numeric behavior.
 - [Central diagram](https://github.com/SiliconBadgers/architecture/blob/main/docs/accelerator-diagram.md)
 - [Recorded Software profiling package](https://github.com/SiliconBadgers/software/tree/main/experiments/llama-cpp/2026-09-22)
 

@@ -6,6 +6,10 @@ owns CPU and host interfaces, platform adaptation and system composition.
 
 ## Current work
 
+The [32-bit SIMD ISA](docs/simd-isa.md) defines the command layout, operand
+roles, and execution rules for all 135 signatures. Its source is the
+[SIMD Commands Google Sheet](https://docs.google.com/spreadsheets/d/1XtrQoqvEHGf_vmuHE5VzVlQ5l0E2RK3TIvoId99a1Kk/edit).
+
 | Area | Source | Design material | Assignment |
 |---|---|---|---|
 | Compute | `rtl/compute/` | [Compute guide](docs/compute/START-HERE.md), `research/compute1/`, `research/compute2/` | [Compute research #2](https://github.com/SiliconBadgers/rtl/issues/2) |
