@@ -18,3 +18,10 @@ style:
 
 format:
 	$(PYTHON) scripts/check_style.py --fix
+
+# Matrix-unit systolic array regression (tb/compute/Matrix_Unit/run_tests.sh).
+# Pass runner options through MATRIX_UNIT_ARGS, e.g. MATRIX_UNIT_ARGS="--sim verilator".
+.PHONY: test-matrix-unit
+MATRIX_UNIT_ARGS ?=
+test-matrix-unit:
+	bash tb/compute/Matrix_Unit/run_tests.sh $(MATRIX_UNIT_ARGS)
