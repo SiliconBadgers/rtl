@@ -87,6 +87,37 @@ Do not depend on undocumented local files, personal absolute paths, or manually
 entered simulator commands. A reviewer should be able to run the checked-in
 entry point without reconstructing the author's workstation.
 
+## Required simulator and scenarios
+
+Synopsys VCS is required for all RTL simulation. The pinned compiler/runtime is
+Y-2026.03_Full64. Use `scripts/vcs.py` to check the version, compile with
+assertions enabled, and run with `-exitstatus`. The helper supports the CAE
+launcher and direct licensed installations; it never selects another simulator.
+Verilator is permitted for lint only. Icarus and Verilator simulation results
+do not replace the required VCS regression. Preserve earlier dated reports as
+historical evidence rather than rewriting their tool versions or results.
+
+Record the exact VCS version and commands for each run. A tool-version change
+must be validated with positive and negative regressions before updating the
+pin. Rerun a representative failing case when changing assertion syntax. See
+[SETUP.md](SETUP.md) for the CAE module and result paths.
+
+Tests for conditions such as reset during active work or a stalled transfer must
+check that the condition actually occurred. Bound the attempt to reach it and fail
+if the condition is absent. Report observed scenario counts, including accepted
+work at reset; incrementing a reset counter alone is not sufficient evidence.
+Exercise the missing-condition path deliberately and check its failure reason.
+
+Report planned configurations separately from simulations actually started.
+Compilation failures are failed configurations, not completed simulations. Include
+negative tests for wrong results and timeout handling. PR descriptions must carry
+the issue links and verification summary; comments may discuss the evidence but
+do not replace the description.
+
+The lint configuration must enforce the published coding standard. Project-local
+waivers must not compensate indefinitely for a repository configuration that
+contradicts that standard. Fix the configuration and remove the affected waivers.
+
 ## Maintain the coding standard
 
 The repository and [Notion edition](https://app.notion.com/p/3eb38826be1b81129170e99b72affdca)

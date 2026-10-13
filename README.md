@@ -32,7 +32,8 @@ correctness, throughput or physical feasibility.
 ## Build and contribute
 
 Read [SETUP.md](SETUP.md) for tools and tests and [CONTRIBUTING.md](CONTRIBUTING.md)
-for the review workflow. Follow the [SystemVerilog coding standard](docs/systemverilog-style.md)
+for the review workflow. Synopsys VCS Y-2026.03_Full64 is required for RTL
+simulation; Verilator is reserved for lint. Follow the [SystemVerilog coding standard](docs/systemverilog-style.md)
 for project RTL and testbenches. Shared block packages live in `rtl/common/`.
 Block tests belong under `tb/<area>/`; independent verification
 remains in the [Verification repository](https://github.com/SiliconBadgers/verification).
