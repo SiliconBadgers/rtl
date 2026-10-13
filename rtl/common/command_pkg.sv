@@ -1,11 +1,11 @@
 // Provisional integration boundary. Not the accepted software ABI.
 package command_pkg;
-  parameter int unsigned NUM_ROUTES = 5;
-  parameter logic [15:0] COMMAND_ABI_VERSION = 16'd1;
-  parameter logic [15:0] OPCODE_MATRIX = 16'd1;
-  parameter logic [15:0] OPCODE_VECTOR_TEST = 16'h8002;
-  parameter logic [15:0] OPCODE_STATE_TEST = 16'h8003;
-  parameter logic [15:0] OPCODE_MEMORY_TEST = 16'h8004;
+  localparam int unsigned NUM_ROUTES = 5;
+  localparam logic [15:0] COMMAND_ABI_VERSION = 16'd1;
+  localparam logic [15:0] OPCODE_MATRIX = 16'd1;
+  localparam logic [15:0] OPCODE_VECTOR_TEST = 16'h8002;
+  localparam logic [15:0] OPCODE_STATE_TEST = 16'h8003;
+  localparam logic [15:0] OPCODE_MEMORY_TEST = 16'h8004;
 
   typedef enum logic [2:0] {
     RouteMatrix,

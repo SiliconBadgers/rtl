@@ -126,16 +126,11 @@ module bpu_sa_array #(
   output logic [Rows*AccW-1:0] c_col_o
 );
 
-  // Waiver: parameter-name-style, these localparams only. Coding standard §1 names
-  // fixed constants in ALL_CAPS; Verible's default ruleset accepts only CamelCase
-  // localparams. Remove once the repository lint config allows ALL_CAPS localparams.
-  // verilog_lint: waive-start parameter-name-style
   localparam int unsigned LATENCY_CYCLES = Rows + Cols + 1;
   localparam int unsigned HOLD_CYCLES = Rows + Cols - 2;
   localparam int unsigned MIN_ACC_WIDTH = 16 + $clog2(Cols);
   localparam int unsigned A_COUNT_WIDTH = $clog2(Rows + 1);
   localparam int unsigned HOLD_COUNT_WIDTH = (HOLD_CYCLES > 0) ? $clog2(HOLD_CYCLES + 1) : 1;
-  // verilog_lint: waive-stop parameter-name-style
 
   // Control: shadow fill count, tile switch, reload hold-off.
   logic [A_COUNT_WIDTH-1:0] a_cnt_q;  // rows of the next tile in the shadow registers

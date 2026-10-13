@@ -5,7 +5,8 @@
 // (tb/compute/Matrix_Unit/run_tests.sh) runs several shapes and seeds.
 //
 // Parameters: Rows, Cols, AccW (the array under test), TrafficCycles (cycles per
-// traffic phase) and Seed (the default seed).
+// traffic phase), Seed (the default seed), and ResetWaitCycles (bounded additional
+// attempts to reach the active-reset scenario).
 // Plusargs:
 //   +seed=<n>       random seed (default: Seed)
 //   +inject_error=1 corrupt one expected value on purpose; the run must FAIL
@@ -42,15 +43,11 @@ module bpu_sa_array_tb;
   parameter int AccW = 32;
   parameter int TrafficCycles = 2000;
   parameter int Seed = 1;
+  parameter int ResetWaitCycles = 1000;
 
-  // Waiver: parameter-name-style, these localparams only. Coding standard §1 names
-  // fixed constants in ALL_CAPS; Verible's default ruleset accepts only CamelCase
-  // localparams. Remove once the repository lint config allows ALL_CAPS localparams.
-  // verilog_lint: waive-start parameter-name-style
   localparam int LATENCY_CYCLES = Rows + Cols + 1;
   localparam int QUEUE_DEPTH = LATENCY_CYCLES + 8;  // expected columns in flight
   localparam int TIMEOUT_CYCLES = 3 * TrafficCycles + 20 * LATENCY_CYCLES + 2000;
-  // verilog_lint: waive-stop parameter-name-style
 
   logic                        clk;
   logic                        rst_n;
@@ -67,10 +64,10 @@ module bpu_sa_array_tb;
   logic        [Rows*AccW-1:0] c_col;
 
   // Reference model.
-  int                          next_tile       [       Rows] [Cols];
-  int                          active_tile     [       Rows] [Cols];
-  longint                      expect_val      [QUEUE_DEPTH] [Rows];
-  int                          expect_cycle    [QUEUE_DEPTH];
+  int                          next_tile           [       Rows] [Cols];
+  int                          active_tile         [       Rows] [Cols];
+  longint                      expect_val          [QUEUE_DEPTH] [Rows];
+  int                          expect_cycle        [QUEUE_DEPTH];
   int                          head;
   int                          tail;
   int                          rows_loaded;
@@ -92,6 +89,8 @@ module bpu_sa_array_tb;
   int                          a_stalls;
   int                          switches;
   int                          resets;
+  int                          active_resets;
+  int                          partial_load_resets;
   int                          mode_checks;
   string                       status;
 
@@ -310,11 +309,19 @@ module bpu_sa_array_tb;
 
     tries = 0;
     while (!((tail - head) > 0 && (Rows == 1 || (rows_loaded > 0 && rows_loaded < Rows)))
-           && tries < 1000) begin
+           && tries < ResetWaitCycles) begin
       step(1'b1);
       tries++;
     end
 
+    if (!((tail - head) > 0 && (Rows == 1 || (rows_loaded > 0 && rows_loaded < Rows)))) begin
+      $fatal(1, "active-reset precondition not reached: in_flight=%0d rows_loaded=%0d tries=%0d",
+             tail - head, rows_loaded, tries);
+    end
+
+    // drive_and_model accounts for the next rising-edge transfer. Let that
+    // transfer occur before asserting reset so the queued work was accepted.
+    @(posedge clk);
     #2;  // between clock edges: an asynchronous assertion
     in_flight = tail - head;
     rst_n     = 1'b0;
@@ -326,6 +333,10 @@ module bpu_sa_array_tb;
       $display("bpu_sa_array_tb: reset did not clear c_valid_o and a_full_o at once");
     end
     resets++;
+    active_resets++;
+    if (Rows > 1 && rows_loaded > 0 && rows_loaded < Rows) begin
+      partial_load_resets++;
+    end
     cancelled += in_flight;
 
     // Model: reset cancels every accepted column, row and tile.
@@ -358,24 +369,26 @@ module bpu_sa_array_tb;
     if (!$value$plusargs("inject_error=%d", inject_arg)) begin
       inject_arg = 0;
     end
-    inject_error    = (inject_arg != 0);
-    injected        = 1'b0;
-    errors          = 0;
-    columns_sent    = 0;
-    columns_checked = 0;
-    cancelled       = 0;
-    rows_accepted   = 0;
-    a_stalls        = 0;
-    switches        = 0;
-    resets          = 0;
-    mode_checks     = 0;
-    head            = 0;
-    tail            = 0;
-    rows_loaded     = 0;
-    tile_in_use     = 1'b0;
-    a_hold          = 1'b0;
-    cycle           = 0;
-    rng_state       = seed ^ 32'h9e37_79b9;
+    inject_error        = (inject_arg != 0);
+    injected            = 1'b0;
+    errors              = 0;
+    columns_sent        = 0;
+    columns_checked     = 0;
+    cancelled           = 0;
+    rows_accepted       = 0;
+    a_stalls            = 0;
+    switches            = 0;
+    resets              = 0;
+    active_resets       = 0;
+    partial_load_resets = 0;
+    mode_checks         = 0;
+    head                = 0;
+    tail                = 0;
+    rows_loaded         = 0;
+    tile_in_use         = 1'b0;
+    a_hold              = 1'b0;
+    cycle               = 0;
+    rng_state           = seed ^ 32'h9e37_79b9;
     if (rng_state == 0) begin
       rng_state = 1;
     end
@@ -421,7 +434,8 @@ module bpu_sa_array_tb;
     mode = 1'b0;
 
     if (errors != 0 || columns_checked != columns_sent - cancelled || columns_checked == 0
-        || switches < 2 || resets != 1 || mode_checks != 1) begin
+        || switches < 2 || resets != 1 || active_resets != 1
+        || (Rows > 1 && partial_load_resets != 1) || mode_checks != 1) begin
       status = "FAIL";
     end else begin
       status = "PASS";
@@ -431,6 +445,7 @@ module bpu_sa_array_tb;
            columns_checked, cancelled);
     $write(" rows_accepted=%0d a_stalls=%0d switches=%0d resets=%0d", rows_accepted, a_stalls,
            switches, resets);
+    $write(" active_resets=%0d partial_load_resets=%0d", active_resets, partial_load_resets);
     $display(" errors=%0d status=%s", errors, status);
     if (status != "PASS") begin
       $fatal(1, "bpu_sa_array_tb: FAIL (%0d errors)", errors);

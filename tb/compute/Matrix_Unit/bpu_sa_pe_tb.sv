@@ -26,14 +26,9 @@ module bpu_sa_pe_tb;
   parameter int AccW = 32;
   parameter int Seed = 1;
 
-  // Waiver: parameter-name-style, these localparams only. Coding standard §1 names
-  // fixed constants in ALL_CAPS; Verible's default ruleset accepts only CamelCase
-  // localparams. Remove once the repository lint config allows ALL_CAPS localparams.
-  // verilog_lint: waive-start parameter-name-style
   localparam int PAIRS = 256 * 256;
   localparam int CYCLES_PER_PAIR = 5;
   localparam int TIMEOUT_CYCLES = CYCLES_PER_PAIR * PAIRS + 1000;
-  // verilog_lint: waive-stop parameter-name-style
 
   logic                   clk;
   logic                   rst_n;

@@ -7,8 +7,8 @@ MODELS_ROOT ?= ../software
 CONTRACT ?= ../architecture/contracts/mac-v0.json
 VERIFICATION_ROOT ?= ../verification
 doctor: setup
-	$(PYTHON) -c "import shutil; assert shutil.which('iverilog') and shutil.which('vvp'), 'Install Icarus Verilog'; print('PASS Icarus tools found')"
-test:
+	$(PYTHON) scripts/vcs.py check
+test: doctor
 	$(PYTHON) "$(MODELS_ROOT)/generate_vectors.py" --contract "$(CONTRACT)" --output build/mac-vectors.txt
 	$(PYTHON) "$(VERIFICATION_ROOT)/run.py" --rtl-root "$(RTL_ROOT)" --vectors build/mac-vectors.txt
 
@@ -20,7 +20,7 @@ format:
 	$(PYTHON) scripts/check_style.py --fix
 
 # Matrix-unit systolic array regression (tb/compute/Matrix_Unit/run_tests.sh).
-# Pass runner options through MATRIX_UNIT_ARGS, e.g. MATRIX_UNIT_ARGS="--sim verilator".
+# Pass runner options through MATRIX_UNIT_ARGS, e.g. MATRIX_UNIT_ARGS="--seeds 7".
 .PHONY: test-matrix-unit
 MATRIX_UNIT_ARGS ?=
 test-matrix-unit:

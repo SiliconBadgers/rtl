@@ -6,5 +6,8 @@
   ],
   "python": [
     "scripts/*.py"
+  ],
+  "verible_lint_rules": [
+    "parameter-name-style=parameter_style:CamelCase;localparam_style:ALL_CAPS"
   ]
 }

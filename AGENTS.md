@@ -37,6 +37,16 @@ and licensing. Report the exact AI model ID in the PR when available; do not gue
   After code changes, rerun affected checks and refresh the PR evidence.
   Documentation-only PRs must explain why hardware regression is not applicable
   and list the checks actually performed.
+- Use Synopsys VCS for all RTL simulation. The pinned baseline is
+  Y-2026.03_Full64; use scripts/vcs.py for compilation and execution. Keep
+  assertions enabled, use simv -exitstatus, and fail early on missing tools or
+  unsupported versions. Do not substitute Icarus or Verilator simulation.
+  Verilator may be used for lint only. Validate any VCS version change with
+  positive and negative regressions before updating the pin.
+- Tests must fail if a required scenario never occurs. Report observed counts
+  and include a negative check for missing reset/backpressure prerequisites.
+- Keep lint configuration consistent with the coding standard. Put workflow and
+  reproduction requirements in repository guidance, not the Notion coding page.
 - Run `make format` when needed and `make style` before submitting SV/Python
   changes. Style checks are not a substitute for functional verification.
 
