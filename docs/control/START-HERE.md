@@ -14,6 +14,7 @@ Design command receipt, validation, dispatch, coordination and completion. This 
 
 ## Starting evidence
 
+- [32-bit SIMD ISA](../simd-isa.md): command encoding, execution masks, and faults.
 - [Central diagram](https://github.com/SiliconBadgers/architecture/blob/main/docs/accelerator-diagram.md)
 - [Recorded Software profiling package](https://github.com/SiliconBadgers/software/tree/main/experiments/llama-cpp/2026-09-22)
 - [Slide register maps](https://github.com/SiliconBadgers/architecture/blob/main/docs/register-maps.md) (preserved slide baseline from [architecture PR #2](https://github.com/SiliconBadgers/architecture/pull/2))
