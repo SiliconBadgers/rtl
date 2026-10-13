@@ -1,0 +1,21 @@
+docs/command-format.md
+  s_e06e898de70232::t_877204d0d08a5b 1-205
+docs/START-HERE.md
+  s_e06e898de70232::t_877204d0d08a5b 12-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "182e7f8365ae1a2936242e59436f89bb31eed6b0",
+  "prompts": {},
+  "sessions": {
+    "s_e06e898de70232": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12209-4788-7113-84d9-6adb68d509b5",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zeb Taylor <zceboys@gmail.com>"
+    }
+  }
+}
