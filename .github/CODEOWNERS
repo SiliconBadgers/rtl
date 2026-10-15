@@ -1,6 +1,6 @@
 # Review owner for all sources and repository settings.
-* @abhinavnandwani
-/rtl/compute/ @abhinavnandwani
-/rtl/control/ @abhinavnandwani
-/rtl/memory/ @abhinavnandwani
-/rtl/common/ @abhinavnandwani
+* @abhinavnandwani @zebulontaylor
+/rtl/compute/ @abhinavnandwani @zebulontaylor
+/rtl/control/ @abhinavnandwani @zebulontaylor
+/rtl/memory/ @abhinavnandwani @zebulontaylor
+/rtl/common/ @abhinavnandwani @zebulontaylor
