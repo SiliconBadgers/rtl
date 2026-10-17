@@ -31,18 +31,24 @@ module tb_vector_compute_unit;
     // Clock Generation
     always #5 clk = ~clk;
 
+    // Every check below must run; a short count fails the test.
+    localparam EXPECTED_CHECKS = 4;
+    integer checks;
+    integer errors;
+
     // Checker Task
     task check_vector;
         input [127:0] expected;
-        input [120:0] test_name;
+        input [8*48-1:0] test_name; // Up to 48 chars
         begin
             @(posedge clk);
             #1; // Pipeline delay
+            checks = checks + 1;
             if (vd_out !== expected) begin
-                $display("[FAIL] %s\n  Expected: %h\n  Got:      %h", test_name, expected, vd_out);
-                $stop;
+                errors = errors + 1;
+                $display("[FAIL] %0s\n  Expected: %h\n  Got:      %h", test_name, expected, vd_out);
             end else begin
-                $display("[PASS] %s", test_name);
+                $display("[PASS] %0s", test_name);
             end
         end
     endtask
@@ -51,8 +57,11 @@ module tb_vector_compute_unit;
         // Reset and Initialization
         clk = 0; rst_n = 0; v0_mask = 4'b1111; sew = 1; 
         opcode = 0; vs1 = 0; vs2 = 0; old_vd = 128'hDEADBEEF_DEADBEEF_DEADBEEF_DEADBEEF;
-        
-        #15 rst_n = 1;
+        checks = 0; errors = 0;
+
+        // Release reset on a falling edge so it never races a rising clock edge.
+        repeat (2) @(negedge clk);
+        rst_n = 1;
 
         // ---------------------------------------------------------
         // TEST 1: 32-bit Vector Addition (All Lanes Active)
@@ -96,7 +105,12 @@ module tb_vector_compute_unit;
         vs2 = {64'd0, 16'h4200, 16'h4200, 16'h4200, 16'h4200};
         check_vector({64'd0, 16'h4600, 16'h4600, 16'h4600, 16'h4600}, "TEST 4: 16-bit FP Vector Multiply");
 
-        $display("ALL SIMD SYSTEM TESTS PASSED.");
+        $display("RESULT tb_vector_compute_unit checks=%0d expected=%0d errors=%0d status=%0s",
+                 checks, EXPECTED_CHECKS, errors,
+                 (errors == 0 && checks == EXPECTED_CHECKS) ? "PASS" : "FAIL");
+        if (errors != 0 || checks != EXPECTED_CHECKS)
+            $fatal(1, "tb_vector_compute_unit: FAIL (%0d errors, %0d of %0d checks run)",
+                   errors, checks, EXPECTED_CHECKS);
         $finish;
     end
 endmodule

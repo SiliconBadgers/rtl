@@ -16,7 +16,7 @@ module tb_vector_lane;
 
     // Instantiate Lane
     vector_lane_compute uut (
-        .clk(clk),ve
+        .clk(clk),
         .rst_n(rst_n),
         .opcode(opcode),
         .sew(sew),
@@ -31,18 +31,24 @@ module tb_vector_lane;
     // Clock gen
     always #5 clk = ~clk;
 
+    // Every check below must run; a short count fails the test.
+    localparam EXPECTED_CHECKS = 14;
+    integer checks;
+    integer errors;
+
     // Checker Task
     task check_res;
         input [31:0] expected;
-        input [80:0] op_name; // String identifier
+        input [8*32-1:0] op_name; // String identifier (up to 32 chars)
         begin
             @(posedge clk);
             #1; // Wait for writeback pipeline delay
+            checks = checks + 1;
             if (out_vd !== expected) begin
-                $display("[FAIL] %s: Expected %h, Got %h", op_name, expected, out_vd);
-                $stop;
+                errors = errors + 1;
+                $display("[FAIL] %0s: Expected %h, Got %h", op_name, expected, out_vd);
             end else begin
-                $display("[PASS] %s: Got %h", op_name, out_vd);
+                $display("[PASS] %0s: Got %h", op_name, out_vd);
             end
         end
     endtask
@@ -50,8 +56,8 @@ module tb_vector_lane;
     initial begin
         // Initialize
         clk = 0; rst_n = 0; mask = 1; old_vd = 32'hDEADBEEF; sew = 1;
-        in_a = 0; in_b = 0; opcode = 0;
-        
+        in_a = 0; in_b = 0; opcode = 0; checks = 0; errors = 0;
+
         #10 rst_n = 1;
 
         // 1. Bitwise AND
@@ -98,13 +104,23 @@ module tb_vector_lane;
         in_a = {16'b0, 16'h4000}; in_b = {16'b0, 16'h4200}; 
         check_res(32'h00004500, "FADD16 (2.0+3.0=5.0)");
 
-        // 10. FP16 Multiplication (2.0 * 3.0 = 6.0 in Float16)
+        // 10. FP16 Subtraction (5.0 - 3.0 = 2.0 in Float16)
+        opcode = 4'd9;
+        in_a = {16'b0, 16'h4500}; in_b = {16'b0, 16'h4200};
+        check_res(32'h00004000, "FSUB16 (5.0-3.0=2.0)");
+
+        // 11. FP16 Multiplication (2.0 * 3.0 = 6.0 in Float16)
         // 6.0 = 4600
         opcode = 4'd10;
-        in_a = {16'b0, 16'h4000}; in_b = {16'b0, 16'h4200}; 
+        in_a = {16'b0, 16'h4000}; in_b = {16'b0, 16'h4200};
         check_res(32'h00004600, "FMUL16 (2.0*3.0=6.0)");
 
-        $display("ALL TESTS PASSED.");
+        $display("RESULT tb_vector_lane checks=%0d expected=%0d errors=%0d status=%0s",
+                 checks, EXPECTED_CHECKS, errors,
+                 (errors == 0 && checks == EXPECTED_CHECKS) ? "PASS" : "FAIL");
+        if (errors != 0 || checks != EXPECTED_CHECKS)
+            $fatal(1, "tb_vector_lane: FAIL (%0d errors, %0d of %0d checks run)",
+                   errors, checks, EXPECTED_CHECKS);
         $finish;
     end
 endmodule

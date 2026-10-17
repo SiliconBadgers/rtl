@@ -96,6 +96,11 @@ module vector_lane_compute (
     wire [23:0] mant_a = sew ? { (exp_a != 0), in_a[22:0] } : {14'b0, (exp_a != 0), in_a[9:0]};
     wire [23:0] mant_b = sew ? { (exp_b != 0), in_b[22:0] } : {14'b0, (exp_b != 0), in_b[9:0]};
 
+    // Adder mantissas: FP16 is left-aligned so its hidden bit sits at bit 23,
+    // like FP32, and the normalization below works for both widths.
+    wire [23:0] add_mant_a = sew ? mant_a : {mant_a[10:0], 13'b0};
+    wire [23:0] add_mant_b = sew ? mant_b : {mant_b[10:0], 13'b0};
+
     // FP ADDER DATAPATH
     reg [7:0]  add_exp;
     reg [24:0] add_mant_shifted_a, add_mant_shifted_b;
@@ -111,14 +116,14 @@ module vector_lane_compute (
         if (exp_a > exp_b) begin
             add_exp = exp_a;
             exp_diff = exp_a - exp_b;
-            add_mant_shifted_a = {1'b0, mant_a};
-            add_mant_shifted_b = {1'b0, mant_b} >> exp_diff;
+            add_mant_shifted_a = {1'b0, add_mant_a};
+            add_mant_shifted_b = {1'b0, add_mant_b} >> exp_diff;
             add_sign = sign_a;
         end else begin
             add_exp = exp_b;
             exp_diff = exp_b - exp_a;
-            add_mant_shifted_a = {1'b0, mant_a} >> exp_diff;
-            add_mant_shifted_b = {1'b0, mant_b};
+            add_mant_shifted_a = {1'b0, add_mant_a} >> exp_diff;
+            add_mant_shifted_b = {1'b0, add_mant_b};
             add_sign = sign_b;
         end
 
@@ -192,7 +197,7 @@ module vector_lane_compute (
         fp_res = 32'd0;
         if (opcode == OP_FADD || opcode == OP_FSUB) begin
             if (sew) fp_res = {add_sign, norm_exp[7:0], norm_mant[22:0]}; // FP32
-            else     fp_res = {16'b0, add_sign, norm_exp[4:0], norm_mant[9:0]}; // FP16
+            else     fp_res = {16'b0, add_sign, norm_exp[4:0], norm_mant[22:13]}; // FP16
         end else if (opcode == OP_FMUL) begin
             if (sew) fp_res = {mul_sign, mul_norm_exp[7:0], mul_norm_mant[22:0]}; // FP32
             else     fp_res = {16'b0, mul_sign, mul_norm_exp[4:0], mul_norm_mant[9:0]}; // FP16
