@@ -62,7 +62,15 @@ for path in files:
             )
             failed = True
 if files:
-    subprocess.run(["verible-verilog-lint", "--ruleset=default", *map(str, files)], check=True)
+    subprocess.run(
+        [
+            "verible-verilog-lint",
+            "--ruleset=default",
+            *[f"--rules={rule}" for rule in config.get("verible_lint_rules", [])],
+            *map(str, files),
+        ],
+        check=True,
+    )
 else:
     print("No SystemVerilog sources in this checkout; SV checks have no inputs yet")
 python_paths = [str(p.relative_to(ROOT)) for p in discover(config.get("python", []))]

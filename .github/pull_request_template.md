@@ -15,7 +15,8 @@ counts. For documentation-only changes, replace this section with a reason why
 hardware regression is not applicable and the checks actually performed. -->
 
 - Tested commit:
-- Tools and versions:
+- VCS version (required for RTL simulation; baseline Y-2026.03_Full64):
+- Other tools and versions:
 - Dependency revisions:
 
 | Suite / configuration | Seeds | Planned | Run | Passed | Failed | Skipped | Checked vectors / transactions | Elapsed |
@@ -40,6 +41,7 @@ For documentation-only changes, give the documentation validation commands. -->
 - [ ] Coding standard reviewed; applicable formatting and lint checks pass.
 - [ ] Verification results identify the tested commit and match the latest changes.
 - [ ] Applicable regression scripts are checked in, bounded by a timeout, and return nonzero on failure.
+- [ ] Applicable RTL simulations use the pinned VCS version with assertions and `-exitstatus` enabled.
 - [ ] Reproduction instructions and results are complete, or not-applicable cases are explained.
 
 ## Attribution

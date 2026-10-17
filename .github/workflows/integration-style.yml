@@ -19,3 +19,4 @@ jobs:
           echo /tmp/verible/bin >> "$GITHUB_PATH"
           pipx install ruff==0.16.6
       - run: make style
+      - run: python3 -m unittest discover -s scripts -p 'test_*.py'
