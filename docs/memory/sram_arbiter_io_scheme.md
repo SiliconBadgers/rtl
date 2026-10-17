@@ -1,7 +1,4 @@
---- a/docs/memory/sram_arbiter_io_scheme.md
-+++ b/docs/memory/sram_arbiter_io_scheme.md
-@@ -33,11 +33,11 @@
- 
+
    MAT_IF["▶ <b>matrix_req_valid_i</b><br/>◀ <b>matrix_req_ready_o</b><br/>▶ <b>matrix_req_is_write_i</b><br/>▶ <b>matrix_req_size_bytes_i[9:0]</b><br/>▶ matrix_req_addr_i[31:0]<br/>▶ matrix_req_wdata_i[4095:0]<br/>◀ <b>matrix_rsp_valid_o</b><br/>◀ matrix_rsp_rdata_o[4095:0]"]:::intf
    VEC_IF["▶ <b>vec_req_valid_i[3:0]</b><br/>◀ <b>vec_req_ready_o[3:0]</b><br/>▶ <b>vec_req_is_write_i[3:0]</b><br/>▶ <b>vec_req_transpose_i</b><br/>▶ vec_req_addr_i[3:0][31:0]<br/>▶ vec_req_wdata_i[3:0][1023:0]<br/>◀ <b>vec_rsp_valid_o[3:0]</b><br/>◀ vec_rsp_rdata_o[3:0][1023:0]"]:::intf
 -  MM_IF["▶ <b>mm_req_valid_i</b><br/>◀ <b>mm_req_ready_o</b><br/>▶ <b>mm_req_is_write_i</b><br/>▶ <b>mm_req_burst_len_i[8:0]</b><br/>▶ mm_req_addr_i[31:0]<br/>▶ mm_req_wdata_i[4095:0]<br/>◀ <b>mm_rsp_valid_o</b><br/>◀ mm_rsp_rdata_o[4095:0]"]:::intf
