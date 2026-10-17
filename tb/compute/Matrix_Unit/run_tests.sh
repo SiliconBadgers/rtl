@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Regression runner for the matrix-unit systolic array: bpu_sa_array, bpu_sa_pe and
-# bpu_sa_delay (rtl/compute/Matrix_Unit). Builds and runs every configuration below,
+# Regression runner for the matrix unit (rtl/compute/Matrix_Unit): the
+# output-stationary systolic array (bpu_sa_array, bpu_sa_pe, bpu_sa_delay), the
+# block-scaling stage (bpu_sa_scale_acc) and the SRAM wrapper (bpu_sa_sram_wrapper,
+# bpu_sa_read_stream, bpu_sa_fifo). Builds and runs every configuration below,
 # requires exactly one "status=PASS" RESULT line and a zero simulator exit status
 # from each run, and exits nonzero on a compile error, a failed or missing result,
 # or a timeout.
@@ -11,8 +13,8 @@
 #
 # Options:
 #   --sim vcs               only supported simulator (default: vcs)
-#   --seeds "1 2 3"         seeds for the array configurations (default: "1 2 3");
-#                           the PE configurations are exhaustive and use the first
+#   --seeds "1 2 3"         seeds for the array, scale and wrapper configurations
+#                           (default: "1 2 3"); the PE configurations use the first
 #   --only NAME             run one configuration from CONFIGS
 #   --timeout SECONDS       wall-clock limit per run (default: 900)
 #   --inject-failure        every testbench corrupts one expected value on purpose,
@@ -30,15 +32,33 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 TB_DIR="tb/compute/Matrix_Unit"
 RTL_LIST="rtl/compute/Matrix_Unit/bpu_sa_array.f"
 
-# name | testbench top | parameter overrides | seed mode (single: first seed only)
+# name | testbench top | parameter overrides | seed mode (single: first seed only) |
+# extra testbench files, in TB_DIR
+M="sram_arbiter_matrix_model.sv"
 CONFIGS=(
-  "pe_acc32|bpu_sa_pe_tb|AccW=32|single"
-  "pe_acc16|bpu_sa_pe_tb|AccW=16|single"
-  "array_8x8_acc32|bpu_sa_array_tb|Rows=8 Cols=8 AccW=32|all"
-  "array_3x5_acc32|bpu_sa_array_tb|Rows=3 Cols=5 AccW=32|all"
-  "array_5x2_acc17|bpu_sa_array_tb|Rows=5 Cols=2 AccW=17|all"
-  "array_1x1_acc16|bpu_sa_array_tb|Rows=1 Cols=1 AccW=16|all"
-  "array_16x16_acc20|bpu_sa_array_tb|Rows=16 Cols=16 AccW=20|all"
+  "pe_acc32|bpu_sa_pe_tb|AccW=32|single|"
+  "pe_acc16|bpu_sa_pe_tb|AccW=16|single|"
+  "pe_acc32_int8only|bpu_sa_pe_tb|AccW=32 Int4=0|single|"
+  "scale_8x8_acc32|bpu_sa_scale_acc_tb|Rows=8 Cols=8 AccW=32|all|"
+  "scale_3x5_acc25|bpu_sa_scale_acc_tb|Rows=3 Cols=5 AccW=25|all|"
+  "scale_1x2_acc22|bpu_sa_scale_acc_tb|Rows=1 Cols=2 AccW=22|all|"
+  "array_8x8_acc32|bpu_sa_array_tb|Rows=8 Cols=8 AccW=32|all|"
+  "array_8x8_int4|bpu_sa_array_tb|Rows=8 Cols=8 AccW=32 Mode=1|all|"
+  "array_3x5_acc32|bpu_sa_array_tb|Rows=3 Cols=5 AccW=32|all|"
+  "array_3x5_int4|bpu_sa_array_tb|Rows=3 Cols=5 AccW=32 Mode=1|all|"
+  "array_5x2_acc17|bpu_sa_array_tb|Rows=5 Cols=2 AccW=17|all|"
+  "array_1x1_int4_acc16|bpu_sa_array_tb|Rows=1 Cols=1 AccW=16 Mode=1|all|"
+  "array_16x16_acc20|bpu_sa_array_tb|Rows=16 Cols=16 AccW=20|all|"
+  "array_8x8_int8only|bpu_sa_array_tb|Rows=8 Cols=8 AccW=32 Int4=0|all|"
+  "wrap_8x8_lat4|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 Latency=4 ReadyPct=70|all|$M"
+  "wrap_8x8_lat40_noack|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 Latency=40 ReadyPct=100 WriteAcks=0|all|$M"
+  "wrap_4x16_acc24_lat1|bpu_sa_sram_wrapper_tb|Rows=4 Cols=16 AccW=24 Latency=1 ReadyPct=50|all|$M"
+  "wrap_16x4_buf1|bpu_sa_sram_wrapper_tb|Rows=16 Cols=4 BufRows=1 Latency=7 ReadyPct=80|all|$M"
+  "wrap_8x8_block32|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 BlockK=32 MaxBlocks=6 Latency=5 ReadyPct=75|all|$M"
+  "wrap_8x8_int8only|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 Int4=0 Latency=4 ReadyPct=70|all|$M"
+  "wrap_8x8_data256|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 DataW=256 SizeW=6 Latency=3 ReadyPct=60|all|$M"
+  "wrap_2x128_noscale_acc20|bpu_sa_sram_wrapper_tb|Rows=2 Cols=128 AccW=20 Scale=0 BufRows=3 Latency=3 ReadyPct=90 Commands=4 MaxK=300|all|$M"
+  "wrap_1x1_minimal_noack|bpu_sa_sram_wrapper_tb|Rows=1 Cols=1 AccW=16 Int4=0 Scale=0 Latency=2 ReadyPct=60 WriteAcks=0|all|$M"
 )
 
 sim="vcs"
@@ -92,7 +112,7 @@ if [[ "$check_reset_guard" -eq 1 ]]; then
     echo "--check-reset-guard cannot be combined with --only or --inject-failure" >&2
     exit 2
   fi
-  CONFIGS=("reset_guard|bpu_sa_array_tb|Rows=8 Cols=8 AccW=32 TrafficCycles=0 ResetWaitCycles=0|single")
+  CONFIGS=("reset_guard|bpu_sa_array_tb|Rows=8 Cols=8 AccW=32 TrafficCycles=0 ResetWaitCycles=0|single|")
 fi
 
 sim_version="$(python3 scripts/vcs.py check)"
@@ -104,15 +124,16 @@ fi
 
 # Build one configuration; simulator commands are arrays to preserve path boundaries.
 build() {
-  local name="$1" top="$2" params="$3"
-  local dir="$work/build/$name" args=() p
+  local name="$1" top="$2" params="$3" extra="$4"
+  local dir="$work/build/$name" args=() tb_files=() p f
   mkdir -p "$dir"
+  for f in $extra; do tb_files+=("$ROOT/$TB_DIR/$f"); done
   for p in $params; do args+=("-pvalue+$top.$p"); done
   (
     cd "$dir"
     python3 "$ROOT/scripts/vcs.py" --timeout "$run_timeout" \
       --elapsed-file "$dir/build.elapsed" compile -top "$top" "${args[@]}" \
-      -f "$work/sources.f" "$ROOT/$TB_DIR/$top.sv" \
+      -f "$work/sources.f" ${tb_files[@]+"${tb_files[@]}"} "$ROOT/$TB_DIR/$top.sv" \
       -Mdir="$dir/csrc" -o "$dir/simv"
   ) > "$dir/build.log" 2>&1
 
@@ -126,12 +147,12 @@ rows_md=""
 first_seed="${seeds%% *}"
 
 for entry in "${CONFIGS[@]}"; do
-  IFS='|' read -r name top params seed_mode <<< "$entry"
+  IFS='|' read -r name top params seed_mode extra <<< "$entry"
   [[ -n "$only" && "$only" != "$name" ]] && continue
   run_seeds="$seeds"
   [[ "$seed_mode" == single ]] && run_seeds="$first_seed"
 
-  if ! build "$name" "$top" "$params"; then
+  if ! build "$name" "$top" "$params" "$extra"; then
     for seed in $run_seeds; do
       planned=$((planned + 1))
       failed=$((failed + 1))
