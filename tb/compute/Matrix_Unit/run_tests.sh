@@ -51,14 +51,14 @@ CONFIGS=(
   "array_16x16_acc20|bpu_sa_array_tb|Rows=16 Cols=16 AccW=20|all|"
   "array_8x8_int8only|bpu_sa_array_tb|Rows=8 Cols=8 AccW=32 Int4=0|all|"
   "wrap_8x8_lat4|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 Latency=4 ReadyPct=70|all|$M"
-  "wrap_8x8_lat40_noack|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 Latency=40 ReadyPct=100 WriteAcks=0|all|$M"
+  "wrap_8x8_lat40_wrack|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 Latency=40 ReadyPct=100 WriteAcks=1|all|$M"
   "wrap_4x16_acc24_lat1|bpu_sa_sram_wrapper_tb|Rows=4 Cols=16 AccW=24 Latency=1 ReadyPct=50|all|$M"
   "wrap_16x4_buf1|bpu_sa_sram_wrapper_tb|Rows=16 Cols=4 BufRows=1 Latency=7 ReadyPct=80|all|$M"
   "wrap_8x8_block32|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 BlockK=32 MaxBlocks=6 Latency=5 ReadyPct=75|all|$M"
   "wrap_8x8_int8only|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 Int4=0 Latency=4 ReadyPct=70|all|$M"
   "wrap_8x8_data256|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 DataW=256 SizeW=6 Latency=3 ReadyPct=60|all|$M"
   "wrap_2x128_noscale_acc20|bpu_sa_sram_wrapper_tb|Rows=2 Cols=128 AccW=20 Scale=0 BufRows=3 Latency=3 ReadyPct=90 Commands=4 MaxK=300|all|$M"
-  "wrap_1x1_minimal_noack|bpu_sa_sram_wrapper_tb|Rows=1 Cols=1 AccW=16 Int4=0 Scale=0 Latency=2 ReadyPct=60 WriteAcks=0|all|$M"
+  "wrap_1x1_minimal|bpu_sa_sram_wrapper_tb|Rows=1 Cols=1 AccW=16 Int4=0 Scale=0 Latency=2 ReadyPct=60|all|$M"
 )
 
 sim="vcs"

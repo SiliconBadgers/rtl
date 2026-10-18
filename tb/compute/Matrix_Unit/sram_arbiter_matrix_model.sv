@@ -1,6 +1,6 @@
 // Testbench model of the sram_arbiter matrix port with the SRAM behind it, for
 // bpu_sa_sram_wrapper_tb. Behavioural, not synthesizable. It follows the port
-// contract in meeting_docs/sram_arbiter_io_scheme.md (§4): ready/valid requests,
+// contract in docs/memory/sram_arbiter_io_scheme.md (§4): ready/valid requests,
 // one-cycle response pulses with no backpressure, fixed latency (so responses come
 // back in request order), byte addresses and sizes.
 //
@@ -12,8 +12,9 @@
 //            random garbage above, so a client that uses bytes it did not ask for
 //            fails.
 //   Write    bytes 0 .. size_bytes - 1 of req_wdata_i go to mem[addr ..]; nothing
-//            else changes. With WriteAcks = 1 the write also gets a response pulse,
-//            timed like a read's (random rsp_rdata_o); with 0 it gets none.
+//            else changes. With WriteAcks = 0 (the arbiter's specified behaviour)
+//            it gets no response; with 1 it also gets a response pulse, timed like
+//            a read's (random rsp_rdata_o).
 //   Reset    every response still in flight is dropped (the arbiter's proposed
 //            reset contract) and the counters keep their values.
 //
@@ -39,7 +40,7 @@ module sram_arbiter_matrix_model #(
   parameter int MemBytes  = 65536,
   parameter int Latency   = 4,
   parameter int ReadyPct  = 70,
-  parameter bit WriteAcks = 1'b1
+  parameter bit WriteAcks = 1'b0
 ) (
   input logic clk_i,
   input logic rst_ni,

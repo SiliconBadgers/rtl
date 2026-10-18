@@ -13,7 +13,7 @@ These are the tests for the matrix unit in `rtl/compute/Matrix_Unit`; the source
 | `bpu_sa_array_tb.sv` | One array shape and mode per run. Random tiles of random K run against a reference model, checking the data, index, order and latency of every C row. It also checks stalled k-steps under a legal producer, `in_ready_o` every cycle, a streaming phase that must never stall, an active reset, and the mode error. In INT8 mode it puts junk in the unused high A byte. |
 | `bpu_sa_scale_acc_tb.sv` | The block-scaling stage on its own, every output bit against an independent IEEE binary32 reference (subnormals, overflow to infinity, NaN). Directed tiles cover signed zeros, the largest and smallest block sums, cancellation, infinity minus infinity, a NaN scale, 0 × infinity, underflow and subnormal results. Random tiles have 1–6 blocks with random row order and gaps. It checks the 8-cycle latency, idle cycles with junk payload, and a reset with rows in flight. A run fails unless NaN, infinite, zero, subnormal and negative results all occurred. |
 | `bpu_sa_sram_wrapper_tb.sv` | One wrapper configuration per run, against the model below. It runs unscaled and block-scaled commands, in INT8 and INT4. The K values are directed at SRAM-row and scale-table-row boundaries, plus random K. Every C element in memory is checked against an independent reference. It also checks exact read and write counts per stream, illegal commands, a reset while a command is certainly running, and the `busy_o` / `done_o` / `err_o` / `cmd_ready_o` rules. When the arbiter isn't always ready, a run fails unless request stalls occurred. |
-| `sram_arbiter_matrix_model.sv` | A testbench model of the `sram_arbiter` matrix port with an SRAM behind it. It gives random ready, a fixed response latency and optional write responses (`WriteAcks`), and puts random garbage above `size_bytes` in read data. It checks the port protocol: stable stalled requests, alignment, sizes, reads only inside the command's four read windows, and writes only inside C. |
+| `sram_arbiter_matrix_model.sv` | A testbench model of the `sram_arbiter` matrix port with an SRAM behind it. It gives random ready, a fixed response latency and, as the arbiter specifies, no response for writes (`WriteAcks = 1` adds them for one configuration), and puts random garbage above `size_bytes` in read data. It checks the port protocol: stable stalled requests, alignment, sizes, reads only inside the command's four read windows, and writes only inside C. |
 
 ## Run
 
@@ -37,7 +37,7 @@ The runner builds and runs every configuration in its `CONFIGS` table:
 - **PE:** three builds, at two widths, with and without `Int4`.
 - **Scale stage:** three shapes and sum widths.
 - **Array:** eight shapes and modes.
-- **Wrapper:** nine configurations. They cover shapes, latencies, ready rates, write acknowledgements, buffer depths, block size 32, a 256-bit SRAM row, and builds without `Int4` and without `Scale`.
+- **Wrapper:** nine configurations. They cover shapes, latencies, ready rates, writes with and without responses, buffer depths, block size 32, a 256-bit SRAM row, and builds without `Int4` and without `Scale`.
 
 The scale, array and wrapper configurations run three seeds each.
 

@@ -65,7 +65,7 @@ module bpu_sa_sram_wrapper_tb;
   parameter int DataW = 4096;
   parameter int SizeW = 10;
   parameter int BufRows = 2;
-  parameter bit WriteAcks = 1'b1;
+  parameter bit WriteAcks = 1'b0;
   parameter bit Int4 = 1'b1;
   parameter bit Scale = 1'b1;
   parameter int BlockK = 64;

@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="640" viewBox="0 0 1180 640" role="img">
+<title>Matrix unit structure and assertion map</title><desc>Internal blocks of bpu_sa_sram_wrapper, data flow, and labelled assertions.</desc>
+<defs><marker id="ain" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0f6e8c"/></marker><marker id="aout" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b4531b"/></marker><marker id="aink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10z" fill="#1b2430"/></marker></defs>
+<rect width="1180" height="640" fill="#ffffff"/>
+<text x="40" y="42" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="21" fill="#1b2430" font-weight="bold" text-anchor="start">Matrix unit: inside bpu_sa_sram_wrapper, data flow and assertion map</text>
+<text x="40" y="66" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13" fill="#5a6573" font-weight="normal" text-anchor="start">Red: labelled assertion checked in every simulation. Shaded: blocks added for INT4 and block scaling (10/17).</text>
+<rect x="25" y="85" width="880" height="495" rx="12" fill="#f6f8fb" stroke="#1b2430" stroke-width="1.5"/>
+<text x="40" y="106" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="13" fill="#5a6573" font-weight="bold" text-anchor="start">bpu_sa_sram_wrapper</text>
+<rect x="945" y="120" width="210" height="300" rx="8" fill="#f6f8fb" stroke="#c9d0d9" stroke-width="1.2" stroke-dasharray="6 5"/>
+<text x="1050" y="148" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" fill="#1b2430" font-weight="bold" text-anchor="middle">sram_arbiter</text>
+<text x="1050" y="168" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="middle">matrix port</text>
+<text x="1050" y="196" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="11.5" fill="#b4531b" font-weight="normal" text-anchor="middle">req: matrix_req_*</text>
+<text x="1050" y="214" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="11.5" fill="#0f6e8c" font-weight="normal" text-anchor="middle">rsp: matrix_rsp_*</text>
+<rect x="45" y="120" width="260" height="105" rx="8" fill="#ffffff" stroke="#8a96a6" stroke-width="1.4"/>
+<text x="57" y="142" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="13.5" fill="#1b2430" font-weight="bold" text-anchor="start">command decode</text>
+<text x="57" y="162" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="start">cmd_bad: K = 0, misaligned, feature</text>
+<text x="57" y="179" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="start">latch int4_q, scaled_q, k_last_q,</text>
+<text x="57" y="196" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="start">g_last_q · busy_o / done_o / err_o</text>
+<rect x="335" y="120" width="260" height="105" rx="8" fill="#fff4e8" stroke="#1b2430" stroke-width="1.4"/>
+<text x="347" y="142" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="13.5" fill="#1b2430" font-weight="bold" text-anchor="start">u_stream × 4 (A, B, sA, sB)</text>
+<text x="347" y="162" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="start">bpu_sa_read_stream: address, bytes</text>
+<text x="347" y="179" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="start">left, credits ≤ BufRows, row buffer</text>
+<text x="347" y="215" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="11.5" fill="#b42318" font-weight="normal" text-anchor="start">GrantWanted_A  StartIdle_A</text>
+<rect x="625" y="120" width="260" height="105" rx="8" fill="#ffffff" stroke="#8a96a6" stroke-width="1.4"/>
+<text x="637" y="142" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="13.5" fill="#1b2430" font-weight="bold" text-anchor="start">request register</text>
+<text x="637" y="162" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="start">arbitrate(): fewest reserved rows</text>
+<text x="637" y="179" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="start">first; one request held until ready</text>
+<text x="637" y="215" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="11.5" fill="#b42318" font-weight="normal" text-anchor="start">ExpectedResponse_A</text>
+<rect x="45" y="265" width="260" height="105" rx="8" fill="#fff4e8" stroke="#1b2430" stroke-width="1.4"/>
+<text x="57" y="287" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="13.5" fill="#1b2430" font-weight="bold" text-anchor="start">feed</text>
+<text x="57" y="307" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="start">A and B head rows → one array step</text>
+<text x="57" y="324" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="start">per cycle; INT4 pairs k and k+1;</text>
+<text x="57" y="341" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="start">odd K zeroes the last pair's half</text>
+<rect x="335" y="265" width="260" height="105" rx="8" fill="#ffffff" stroke="#8a96a6" stroke-width="1.4"/>
+<text x="347" y="287" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="13.5" fill="#1b2430" font-weight="bold" text-anchor="start">u_order (bpu_sa_fifo)</text>
+<text x="347" y="307" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="start">stream id of each read in flight,</text>
+<text x="347" y="324" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="start">depth 4 × BufRows; replies in order</text>
+<text x="347" y="360" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="11.5" fill="#b42318" font-weight="normal" text-anchor="start">NoOverflow_A  NoUnderflow_A</text>
+<rect x="625" y="265" width="260" height="105" rx="8" fill="#ffffff" stroke="#8a96a6" stroke-width="1.4"/>
+<text x="637" y="287" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="13.5" fill="#1b2430" font-weight="bold" text-anchor="start">C staging + c_write</text>
+<text x="637" y="307" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="start">512 B row of finished C rows;</text>
+<text x="637" y="324" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="start">write when full or at the last row</text>
+<text x="637" y="360" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="11.5" fill="#b42318" font-weight="normal" text-anchor="start">NoReadWriteOverlap_A</text>
+<rect x="45" y="410" width="260" height="115" rx="8" fill="#ffffff" stroke="#8a96a6" stroke-width="1.4"/>
+<text x="57" y="432" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="13.5" fill="#1b2430" font-weight="bold" text-anchor="start">u_array (bpu_sa_array)</text>
+<text x="57" y="452" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="start">Rows × Cols PEs, C stationary,</text>
+<text x="57" y="469" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="start">carry-save, shadow drain; mode_i</text>
+<text x="57" y="486" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="start">= int4_q (INT8 or INT4 pair)</text>
+<text x="57" y="515" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="11.5" fill="#b42318" font-weight="normal" text-anchor="start">CaptureShiftExclusive_A</text>
+<rect x="335" y="410" width="260" height="115" rx="8" fill="#fff4e8" stroke="#1b2430" stroke-width="1.4"/>
+<text x="347" y="432" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="13.5" fill="#1b2430" font-weight="bold" text-anchor="start">u_scale (bpu_sa_scale_acc)</text>
+<text x="347" y="452" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="start">sA, sB from the streams; × (sA·sB),</text>
+<text x="347" y="469" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="start">+ FP32 accumulate; 8 cycles; Scale = 1</text>
+<text x="347" y="515" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="11.5" fill="#b42318" font-weight="normal" text-anchor="start">RowReuseSpacing_A</text>
+<rect x="625" y="410" width="260" height="115" rx="8" fill="#fff4e8" stroke="#1b2430" stroke-width="1.4"/>
+<text x="637" y="432" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="13.5" fill="#1b2430" font-weight="bold" text-anchor="start">u_out (bpu_sa_fifo)</text>
+<text x="637" y="452" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="start">finished rows, OutDepth deep;</text>
+<text x="637" y="469" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="start">space reserved before a row leaves</text>
+<text x="637" y="486" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="start">the array (out_credit_q)</text>
+<text x="637" y="515" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="11.5" fill="#b42318" font-weight="normal" text-anchor="start">NoOverflow_A  NoUnderflow_A</text>
+<polyline points="305,170 331,170" fill="none" stroke="#1b2430" stroke-width="1.5" marker-end="url(#aink)"/>
+<polyline points="175,225 175,261" fill="none" stroke="#1b2430" stroke-width="1.5" marker-end="url(#aink)"/>
+<polyline points="595,160 621,160" fill="none" stroke="#1b2430" stroke-width="1.5" marker-end="url(#aink)"/>
+<polyline points="885,160 941,160" fill="none" stroke="#b4531b" stroke-width="3" marker-end="url(#aout)"/>
+<text x="912" y="152" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="11.5" fill="#b4531b" font-weight="normal" text-anchor="start">req</text>
+<polyline points="945,245 535,245 535,229" fill="none" stroke="#0f6e8c" stroke-width="3" marker-end="url(#ain)"/>
+<polyline points="535,245 535,261" fill="none" stroke="#0f6e8c" stroke-width="1.5" marker-end="url(#ain)"/>
+<text x="912" y="239" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="11.5" fill="#0f6e8c" font-weight="normal" text-anchor="start">rsp</text>
+<polyline points="335,200 320,200 320,315 309,315" fill="none" stroke="#1b2430" stroke-width="1.5" marker-end="url(#aink)"/>
+<polyline points="595,200 610,200 610,465 599,465" fill="none" stroke="#1b2430" stroke-width="1.5" marker-end="url(#aink)"/>
+<polyline points="175,370 175,406" fill="none" stroke="#1b2430" stroke-width="1.5" marker-end="url(#aink)"/>
+<polyline points="305,490 331,490" fill="none" stroke="#1b2430" stroke-width="1.5" marker-end="url(#aink)"/>
+<text x="311" y="484" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="11" fill="#5a6573" font-weight="normal" text-anchor="start">rows</text>
+<polyline points="595,505 621,505" fill="none" stroke="#1b2430" stroke-width="1.5" marker-end="url(#aink)"/>
+<polyline points="105,525 105,547 755,547 755,529" fill="none" stroke="#1b2430" stroke-width="1.5" marker-end="url(#aink)" stroke-dasharray="6 4"/>
+<text x="365" y="541" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11" fill="#5a6573" font-weight="normal" text-anchor="start">unscaled: INT32 rows bypass the scale stage</text>
+<polyline points="825,410 825,374" fill="none" stroke="#1b2430" stroke-width="1.5" marker-end="url(#aink)"/>
+<polyline points="825,265 825,229" fill="none" stroke="#1b2430" stroke-width="1.5" marker-end="url(#aink)"/>
+<text x="831" y="257" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="11" fill="#5a6573" font-weight="normal" text-anchor="start">writes</text>
+<text x="40" y="606" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" fill="#5a6573" font-weight="normal" text-anchor="start">Also in every FIFO: NoOverflow_A / NoUnderflow_A (the read streams' row buffers included). Credits make overflow impossible; the assertions prove it in simulation.</text>
+<text x="40" y="624" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" fill="#5a6573" font-weight="normal" text-anchor="start">Invariants a checker can rely on: replies arrive in request order; no C write while reads are in flight; done_o only after the last write is accepted (writes get no reply).</text>
+</svg>

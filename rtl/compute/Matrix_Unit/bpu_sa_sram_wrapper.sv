@@ -99,9 +99,11 @@
 //            matrix_rsp_valid_i: a one-cycle pulse per read, in request order,
 //            carrying matrix_rsp_rdata_i, with no backpressure. The wrapper only
 //            issues a read when its buffer has room for the response.
-//            WriteAcks = 1: the arbiter also pulses matrix_rsp_valid_i once per
-//            write, and done_o waits for the last one. WriteAcks = 0: writes get
-//            no response, and done_o follows the last write's acceptance.
+//            WriteAcks = 0 (default): writes get no response, as the arbiter's
+//            I/O scheme (docs/memory/sram_arbiter_io_scheme.md) specifies, and
+//            done_o follows the last write's acceptance. WriteAcks = 1: for an
+//            arbiter that also pulses matrix_rsp_valid_i once per write; done_o
+//            then waits for the last one.
 //            The wrapper never has reads and writes outstanding at once
 //            (NoReadWriteOverlap_A), so the two kinds of response are never
 //            confused.
@@ -129,7 +131,7 @@ module bpu_sa_sram_wrapper #(
   parameter int unsigned SizeW     = 10,    // size_bytes width (SIZE_WIDTH)
   parameter int unsigned KW        = 16,    // width of cmd_k_i
   parameter int unsigned BufRows   = 2,     // SRAM rows buffered per stream, >= 1
-  parameter bit          WriteAcks = 1'b1,  // 1: every write gets a response pulse
+  parameter bit          WriteAcks = 1'b0,  // 1: every write also gets a response pulse
   parameter bit          Int4      = 1'b1,  // 1: support packed INT4 weights
   parameter bit          Scale     = 1'b1,  // 1: support block scaling
   parameter int unsigned BlockK    = 64,    // k-steps per scale block, power of two 32..1024
