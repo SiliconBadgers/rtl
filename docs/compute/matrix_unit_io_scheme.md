@@ -153,6 +153,24 @@ L below is the arbiter's round trip, from request to response.
 
 ## 3. Internal data flow
 
+### Module hierarchy
+
+The unit is seven modules in `rtl/compute/Matrix_Unit`:
+- **`bpu_sa_sram_wrapper`**, the top level, instantiates:
+  - four `bpu_sa_read_stream`s, each holding a `bpu_sa_fifo` row buffer;
+  - the order FIFO and the output queue (both `bpu_sa_fifo`);
+  - `bpu_sa_array`;
+  - `bpu_sa_scale_acc`, when built with `Scale`.
+- **`bpu_sa_array`** instantiates `Rows × Cols` `bpu_sa_pe`s and the `bpu_sa_delay` input delays.
+
+Command decode, arbitration, the request register, the response demux, the feed, the output select and C staging are written inline in the wrapper.
+
+![Module hierarchy and wiring](matrix_unit/matrix_unit_hierarchy.svg)
+
+[matrix_unit_modules.svg](matrix_unit/matrix_unit_modules.svg) lists every module's parameters and ports.
+
+### Blocks and assertions
+
 ![Blocks inside the wrapper and where each assertion lives](matrix_unit/matrix_unit_structure.svg)
 
 ### The array (`bpu_sa_array`)

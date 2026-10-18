@@ -7,6 +7,8 @@ parameter changes.
 
 | File | Shows |
 | --- | --- |
+| [matrix_unit_hierarchy.svg](matrix_unit_hierarchy.svg) | The module hierarchy: every instance (name, module, count), the signals between them, and the logic written inline in the wrapper, muxes included. |
+| [matrix_unit_modules.svg](matrix_unit_modules.svg) | One card per module (all seven `.sv` files) with its parameters and every port, parsed from the RTL headers. |
 | [matrix_unit_ports.svg](matrix_unit_ports.svg) | The top-level ports of `bpu_sa_sram_wrapper` and their default parameters. |
 | [matrix_unit_structure.svg](matrix_unit_structure.svg) | The blocks inside the wrapper, the data flow, and where each assertion lives. |
 | [matrix_unit_timeline.svg](matrix_unit_timeline.svg) | A schematic waveform of one block-scaled command, and the rules a checker can enforce. |
