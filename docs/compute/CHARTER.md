@@ -34,7 +34,7 @@ This team owns arithmetic implementation and its internal pipelines. The control
 
 ## Member autonomy
 
-Members choose operators or design questions that serve the charter and their interests. Research, numerical analysis, hardware experiments, educational examples and implementation work are all valid directions. Internal datapath choices belong to the team within agreed interfaces. The current signed MAC can support exploration, but it does not prescribe the team’s next block, final precision or architecture.
+Members choose operators or design questions that serve the charter and their interests. Research, numerical analysis, hardware experiments, educational examples and implementation work are all valid directions. Internal datapath choices belong to the team within agreed interfaces. The current Matrix Unit datapath can support exploration, but it does not prescribe the team’s next block, final precision or architecture.
 
 ## Collaboration
 
