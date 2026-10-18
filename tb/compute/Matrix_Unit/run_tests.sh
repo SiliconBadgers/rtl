@@ -21,12 +21,13 @@
 #   --out DIR               output directory (default: build/matrix_unit)
 #
 # Outputs: DIR/<sim>/logs/<config>_seed<N>.log and DIR/<sim>/summary.md.
-# Requires: Bash 3.2+, Python 3.11+, Git and VCS Y-2026.03_Full64.
+# Requires: Bash 3.2+, uv 0.12.23+, Python 3.11+, Git and VCS Y-2026.03_Full64.
 # On CAE: module load synopsys/vcs-mx/2026.03. No simulator fallback.
 
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+PYTHON_CMD=("${UV:-uv}" run --locked --project "$ROOT" "${PYTHON:-python3}")
 TB_DIR="tb/compute/Matrix_Unit"
 RTL_LIST="rtl/compute/Matrix_Unit/bpu_sa_array.f"
 
@@ -67,15 +68,15 @@ if [[ "$sim" != vcs ]]; then
   echo "run_tests.sh: VCS is the required simulator; --sim must be vcs" >&2
   exit 2
 fi
-for tool in python3 git; do
+for tool in "${UV:-uv}" git; do
   command -v "$tool" > /dev/null || { echo "run_tests.sh: $tool not found on PATH" >&2; exit 2; }
 done
 
-python3 -c 'import sys; assert sys.version_info >= (3, 11), "Python 3.11+ required"'
+"${PYTHON_CMD[@]}" -c 'import sys; assert sys.version_info >= (3, 11), "Python 3.11+ required"'
 cd "$ROOT"
-work="$(python3 -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).resolve())' "$out/$sim")"
+work="$("${PYTHON_CMD[@]}" -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).resolve())' "$out/$sim")"
 mkdir -p "$work/logs" "$work/build"
-python3 - "$ROOT" "$RTL_LIST" "$work/sources.f" <<'SOURCES'
+"${PYTHON_CMD[@]}" - "$ROOT" "$RTL_LIST" "$work/sources.f" <<'SOURCES'
 from pathlib import Path
 import sys
 root, file_list, output = sys.argv[1:]
@@ -95,7 +96,7 @@ if [[ "$check_reset_guard" -eq 1 ]]; then
   CONFIGS=("reset_guard|bpu_sa_array_tb|Rows=8 Cols=8 AccW=32 TrafficCycles=0 ResetWaitCycles=0|single")
 fi
 
-sim_version="$(python3 scripts/vcs.py check)"
+sim_version="$("${PYTHON_CMD[@]}" scripts/vcs.py check)"
 commit="$(git rev-parse HEAD)"
 dirty=""
 if [[ -n "$(git status --porcelain -- rtl/compute/Matrix_Unit "$TB_DIR" scripts Makefile)" ]]; then
@@ -110,7 +111,7 @@ build() {
   for p in $params; do args+=("-pvalue+$top.$p"); done
   (
     cd "$dir"
-    python3 "$ROOT/scripts/vcs.py" --timeout "$run_timeout" \
+    "${PYTHON_CMD[@]}" "$ROOT/scripts/vcs.py" --timeout "$run_timeout" \
       --elapsed-file "$dir/build.elapsed" compile -top "$top" "${args[@]}" \
       -f "$work/sources.f" "$ROOT/$TB_DIR/$top.sv" \
       -Mdir="$dir/csrc" -o "$dir/simv"
@@ -151,7 +152,7 @@ for entry in "${CONFIGS[@]}"; do
     set +e
     (
       cd "$work/build/$name"
-      python3 "$ROOT/scripts/vcs.py" --timeout "$run_timeout" --elapsed-file "$log.elapsed" \
+      "${PYTHON_CMD[@]}" "$ROOT/scripts/vcs.py" --timeout "$run_timeout" --elapsed-file "$log.elapsed" \
         run "${sim_cmd[@]}" "${plusargs[@]}"
     ) > "$log" 2>&1
     rc=$?

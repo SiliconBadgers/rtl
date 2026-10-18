@@ -10,7 +10,7 @@ Tests for the int8 systolic array in `rtl/compute/Matrix_Unit`
 
 ## Run
 
-Prerequisites: Bash 3.2+, Python 3.11+, Git and Synopsys VCS
+Prerequisites: Bash 3.2+, uv 0.12.23+, Python 3.11+, Git and Synopsys VCS
 `Y-2026.03_Full64`. On CAE, run `module load synopsys/vcs-mx/2026.03`
 first. The runner checks the pinned version and does not fall back to another
 simulator. See [the setup guide](../../../SETUP.md).

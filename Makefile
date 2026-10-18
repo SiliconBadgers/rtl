@@ -1,18 +1,21 @@
 .PHONY: setup doctor test
+UV ?= uv
 PYTHON ?= python3
+RUN_PYTHON = "$(UV)" run --locked "$(PYTHON)"
+export UV PYTHON
 setup:
-	$(PYTHON) -c "import sys; assert sys.version_info >= (3, 11), 'Python 3.11+ required'; print('PASS setup: standard-library starter, no packages required')"
+	"$(UV)" sync --locked
 RTL_ROOT ?= .
 doctor: setup
-	$(PYTHON) scripts/vcs.py check
+	$(RUN_PYTHON) scripts/vcs.py check
 test: test-matrix-unit
 
 .PHONY: style format
 style:
-	$(PYTHON) scripts/check_style.py
+	"$(UV)" run --locked --group dev "$(PYTHON)" scripts/check_style.py
 
 format:
-	$(PYTHON) scripts/check_style.py --fix
+	"$(UV)" run --locked --group dev "$(PYTHON)" scripts/check_style.py --fix
 
 # Matrix-unit systolic array regression (tb/compute/Matrix_Unit/run_tests.sh).
 # Pass runner options through MATRIX_UNIT_ARGS, e.g. MATRIX_UNIT_ARGS="--seeds 7".
@@ -20,3 +23,7 @@ format:
 MATRIX_UNIT_ARGS ?=
 test-matrix-unit:
 	bash tb/compute/Matrix_Unit/run_tests.sh $(MATRIX_UNIT_ARGS)
+
+.PHONY: test-tooling
+test-tooling:
+	$(RUN_PYTHON) -m unittest discover -s scripts -p 'test_*.py'
