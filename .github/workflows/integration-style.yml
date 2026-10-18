@@ -10,13 +10,20 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Install pinned style tools
+      - name: Set up pinned uv and Python
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.12.23"
+          python-version: "3.11"
+          enable-cache: true
+      - name: Install locked Python tools
+        run: uv sync --locked --group dev
+      - name: Install pinned Verible
         run: |
           curl --fail --location --retry 3 -o /tmp/verible.tar.gz https://github.com/chipsalliance/verible/releases/download/v0.0-3946-g851d3ff4/verible-v0.0-3946-g851d3ff4-linux-static-x86_64.tar.gz
           echo 'be81036ab5a3d5d5ba4ee677ebf9a09665779c3bd99ffe2e161c5025beaa1f16  /tmp/verible.tar.gz' | sha256sum --check
           mkdir -p /tmp/verible
           tar -xzf /tmp/verible.tar.gz -C /tmp/verible --strip-components=1
           echo /tmp/verible/bin >> "$GITHUB_PATH"
-          pipx install ruff==0.16.6
       - run: make style
-      - run: python3 -m unittest discover -s scripts -p 'test_*.py'
+      - run: make test-tooling

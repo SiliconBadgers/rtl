@@ -1,5 +1,27 @@
 # RTL setup
 
+## Python tooling with uv
+
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) 0.12.23
+or newer (CI uses exactly 0.12.23), then run from this checkout:
+
+```sh
+make setup
+make test-tooling
+make style
+```
+
+Python 3.11+ is required. `uv.lock` is committed; Make and the documented Python
+commands use `uv run --locked`, so a stale lockfile fails instead of changing
+versions silently. The project is tooling-only and is not installed as a package.
+The default environment needs no third-party packages. Style/format select the
+`dev` group, which pins Ruff 0.16.6; Verible remains a separately installed tool.
+No virtual-environment activation or global Ruff installation is required.
+Use `UV=/path/to/uv` and `PYTHON=/path/to/python` to override executable paths;
+use `UV_PYTHON=3.11` to choose the interpreter uv provisions for `.venv`.
+After an intentional dependency edit, run `uv lock`, review and commit the
+lockfile, and rerun the relevant checks. Do not edit `uv.lock` by hand.
+
 Synopsys VCS is the required simulator. The pinned version is
 `Y-2026.03_Full64`, available on UW–Madison CAE Linux through:
 
@@ -32,7 +54,7 @@ in the PR as described in [CONTRIBUTING.md](CONTRIBUTING.md).
 ```sh
 make test-matrix-unit
 make test-matrix-unit MATRIX_UNIT_ARGS="--only array_8x8_acc32 --seeds 7"
-python3 -m unittest discover -s scripts -p 'test_*.py'
+make test-tooling
 ```
 
 The default suite runs 17 configuration/seed pairs. Logs and the result table
@@ -53,8 +75,9 @@ historical evidence for their recorded revisions.
 
 ## Source style
 
-Install Verible v0.0-3946-g851d3ff4 and Ruff 0.16.6, and put their executables on
-PATH. CI pins those versions and checks only tracked project sources.
+Install Verible v0.0-3946-g851d3ff4 and put its executables on PATH.
+Ruff 0.16.6 is supplied by the locked uv dev group. CI pins these versions
+and checks only tracked project sources.
 
 ```sh
 make style
