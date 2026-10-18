@@ -226,3 +226,14 @@ Run `make test-matrix-unit` from the repository root. The
 test cases, and reproduction commands. See the
 [existing verification report](../../tb/compute/Matrix_Unit/reports/2026-10-12-pr14.md)
 for recorded results and their limitations.
+
+## 6. Planned work
+
+Planned work includes an output-stationary redesign, INT4 support,
+scaling/requantization, and an SRAM/control wrapper. These are future
+extensions to the current A-stationary INT8 datapath described above.
+
+Data formats, scaling/requantization behavior, and wrapper interface contracts
+remain open design decisions; this guide does not establish them. Document
+those decisions and update the affected ports, data layout, and timing alongside
+the corresponding RTL changes.
