@@ -22,12 +22,17 @@ an engine count. Team charters and objectives remain under `docs/<area>/`.
 
 ## Existing implementation
 
-The signed INT8 MAC with an INT32 accumulator is a runnable example in
-[rtl/compute/pe_mac.sv](rtl/compute/pe_mac.sv). Control and memory design work
-remains provisional. A [single-command routing pilot](docs/control/command-router.md)
-and its shared command package are also available; the SoC harness exercises
-them with error-returning engine fixtures. The MAC example does not establish full-accelerator
-correctness, throughput or physical feasibility.
+The current INT8 systolic datapath lives in
+[rtl/compute/Matrix_Unit/](rtl/compute/Matrix_Unit/), with its block regression
+under [tb/compute/Matrix_Unit/](tb/compute/Matrix_Unit/). Run `make test` or
+`make test-matrix-unit`. This checks the current array and PE; it does not
+establish full-accelerator correctness, throughput or physical feasibility.
+The obsolete standalone MAC example and its dependent test flow are retired.
+
+Control and memory design work remains provisional. A
+[single-command routing pilot](docs/control/command-router.md) and its shared
+command package are available; the SoC harness exercises them with
+error-returning engine fixtures.
 
 ## Build and contribute
 

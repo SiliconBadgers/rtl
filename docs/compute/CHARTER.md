@@ -8,7 +8,7 @@ replace those deliverables.
 
 Explore and develop the arithmetic capabilities that turn the accelerator’s intended computations into effective hardware. The team seeks a sound balance among numerical behavior, throughput, latency, area and implementation complexity, using approaches its members choose.
 
-Compute is where numerical operations meet hardware organization. Useful contributions can explain an arithmetic choice, investigate a datapath organization, demonstrate an operator, measure a tradeoff or make an existing block easier to understand. The team’s mandate is broader than extending the existing MAC example.
+Compute is where numerical operations meet hardware organization. Useful contributions can explain an arithmetic choice, investigate a datapath organization, demonstrate an operator, measure a tradeoff or make an existing block easier to understand. The team’s mandate is broader than any one example datapath.
 
 ## Responsibilities
 
@@ -34,7 +34,7 @@ This team owns arithmetic implementation and its internal pipelines. The control
 
 ## Member autonomy
 
-Members choose operators or design questions that serve the charter and their interests. Research, numerical analysis, hardware experiments, educational examples and implementation work are all valid directions. Internal datapath choices belong to the team within agreed interfaces. The current signed MAC can support exploration, but it does not prescribe the team’s next block, final precision or architecture.
+Members choose operators or design questions that serve the charter and their interests. Research, numerical analysis, hardware experiments, educational examples and implementation work are all valid directions. Internal datapath choices belong to the team within agreed interfaces. The current Matrix Unit datapath can support exploration, but it does not prescribe the team’s next block, final precision or architecture.
 
 ## Collaboration
 
