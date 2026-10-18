@@ -35,8 +35,10 @@ make test-matrix-unit MATRIX_UNIT_ARGS="--only array_8x8_acc32 --seeds 7"
 python3 -m unittest discover -s scripts -p 'test_*.py'
 ```
 
-The default suite runs 17 configuration/seed pairs. Logs and the result table
-are written under `build/matrix_unit/vcs/`. See
+The default suite runs 63 configuration/seed pairs across 23 configurations:
+the PE, the array, the block-scaling stage, and the SRAM wrapper against a model
+of the arbiter. Logs and the result table are written under
+`build/matrix_unit/vcs/`. See
 [the test instructions](tb/compute/Matrix_Unit/README.md) for failure injection,
 reset prerequisites, configuration selection and result counts.
 
@@ -47,8 +49,8 @@ reset prerequisites, configuration selection and result counts.
 requires the Software vector generator, the standalone MAC contract or the
 retired independent MAC runner in Verification. The obsolete MAC DUT and its
 legacy coverage are removed, not relocated or silently skipped. The Matrix
-Unit tests cover the current array/PE interface, not the retired accumulator
-interface or full-accelerator integration. Existing dated reports remain
+Unit tests cover the unit's blocks and its SRAM wrapper against a model of the
+arbiter, not the retired accumulator interface or full-accelerator integration. Existing dated reports remain
 historical evidence for their recorded revisions.
 
 ## Source style
