@@ -40,19 +40,16 @@ are written under `build/matrix_unit/vcs/`. See
 [the test instructions](tb/compute/Matrix_Unit/README.md) for failure injection,
 reset prerequisites, configuration selection and result counts.
 
-## Independent MAC example
+## Default test entry point
 
-With Architecture, Software and Verification checked out as siblings:
-
-```sh
-make test MODELS_ROOT=../software CONTRACT=../architecture/contracts/mac-v0.json VERIFICATION_ROOT=../verification
-```
-
-This generates reference vectors and runs the independent Verification
-repository's `tb/pe_mac_smoke_tb.sv` against this checkout's
-`rtl/compute/pe_mac.sv`, using VCS. Use the coordinated VCS-enabled `run.py` revision in Verification. Logs, input hashes and actual counts are saved under the
-Verification checkout's `build/mac/vcs/`. The example checks MAC arithmetic and pipeline
-behavior, not the complete accelerator.
+`make test` runs the same current Matrix Unit regression as
+`make test-matrix-unit`, including `MATRIX_UNIT_ARGS` selection. It no longer
+requires the Software vector generator, the standalone MAC contract or the
+retired independent MAC runner in Verification. The obsolete MAC DUT and its
+legacy coverage are removed, not relocated or silently skipped. The Matrix
+Unit tests cover the current array/PE interface, not the retired accumulator
+interface or full-accelerator integration. Existing dated reports remain
+historical evidence for their recorded revisions.
 
 ## Source style
 
