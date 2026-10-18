@@ -2,18 +2,18 @@
 
 This folder holds the figures for the [Matrix Unit I/O scheme](../matrix_unit_io_scheme.md).
 They cover the Matrix Unit only: `bpu_sa_sram_wrapper` and everything under it, plus the
-`sram_arbiter` matrix port it talks to. The SVGs are generated; regenerate them whenever a port or
-parameter changes.
+`sram_arbiter` matrix port it talks to. The SVGs in [svg/](svg) are generated; regenerate them whenever a port or
+parameter changes. [png/](png) holds PNG copies of the same figures, for chat and slides.
 
 | File | Shows |
 | --- | --- |
-| [matrix_unit_hierarchy.svg](matrix_unit_hierarchy.svg) | The module hierarchy: every instance (name, module, count), the signals between them, and the logic written inline in the wrapper, muxes included. |
-| [matrix_unit_modules.svg](matrix_unit_modules.svg) | One card per module (all seven `.sv` files) with its parameters and every port, parsed from the RTL headers. |
-| [matrix_unit_ports.svg](matrix_unit_ports.svg) | The top-level ports of `bpu_sa_sram_wrapper` and their default parameters. |
-| [matrix_unit_structure.svg](matrix_unit_structure.svg) | The blocks inside the wrapper, the data flow, and where each assertion lives. |
-| [matrix_unit_timeline.svg](matrix_unit_timeline.svg) | A schematic waveform of one block-scaled command, and the rules a checker can enforce. |
-| [matrix_unit_8x8_array.svg](matrix_unit_8x8_array.svg) | The 8 × 8 PE grid, its input delays, and the cycle the first k-step reaches each PE. |
-| [matrix_unit_tile_walkthrough.svg](matrix_unit_tile_walkthrough.svg) | One K = 64 tile through the array: filling, steady state, capture and drain. |
+| [matrix_unit_hierarchy.svg](svg/matrix_unit_hierarchy.svg) | The module hierarchy: every instance (name, module, count), the signals between them, and the logic written inline in the wrapper, muxes included. |
+| [matrix_unit_modules.svg](svg/matrix_unit_modules.svg) | One card per module (all seven `.sv` files) with its parameters and every port, parsed from the RTL headers. |
+| [matrix_unit_ports.svg](svg/matrix_unit_ports.svg) | The top-level ports of `bpu_sa_sram_wrapper` and their default parameters. |
+| [matrix_unit_structure.svg](svg/matrix_unit_structure.svg) | The blocks inside the wrapper, the data flow, and where each assertion lives. |
+| [matrix_unit_timeline.svg](svg/matrix_unit_timeline.svg) | A schematic waveform of one block-scaled command, and the rules a checker can enforce. |
+| [matrix_unit_8x8_array.svg](svg/matrix_unit_8x8_array.svg) | The 8 × 8 PE grid, its input delays, and the cycle the first k-step reaches each PE. |
+| [matrix_unit_tile_walkthrough.svg](svg/matrix_unit_tile_walkthrough.svg) | One K = 64 tile through the array: filling, steady state, capture and drain. |
 
 ## Verification plan (what exists today)
 

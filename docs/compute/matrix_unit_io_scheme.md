@@ -20,7 +20,7 @@ this document alongside RTL changes.** The RTL header comments are the detailed 
 
 ## 1. Top-level ports
 
-![Top-level ports of bpu_sa_sram_wrapper](matrix_unit/matrix_unit_ports.svg)
+![Top-level ports of bpu_sa_sram_wrapper](matrix_unit/svg/matrix_unit_ports.svg)
 
 All ports are in the single `clk_i` domain. Widths are at the default parameters.
 
@@ -149,7 +149,7 @@ L below is the arbiter's round trip, from request to response.
 - **Block-scaled commands:** blocks stream without stalls while a block's array steps (`BlockK`, or
   `BlockK/2` for INT4) are at least `2·Rows + Cols`.
 
-![Schematic waveform of one block-scaled command](matrix_unit/matrix_unit_timeline.svg)
+![Schematic waveform of one block-scaled command](matrix_unit/svg/matrix_unit_timeline.svg)
 
 ## 3. Internal data flow
 
@@ -165,13 +165,13 @@ The unit is seven modules in `rtl/compute/Matrix_Unit`:
 
 Command decode, arbitration, the request register, the response demux, the feed, the output select and C staging are written inline in the wrapper.
 
-![Module hierarchy and wiring](matrix_unit/matrix_unit_hierarchy.svg)
+![Module hierarchy and wiring](matrix_unit/svg/matrix_unit_hierarchy.svg)
 
-[matrix_unit_modules.svg](matrix_unit/matrix_unit_modules.svg) lists every module's parameters and ports.
+[matrix_unit_modules.svg](matrix_unit/svg/matrix_unit_modules.svg) lists every module's parameters and ports.
 
 ### Blocks and assertions
 
-![Blocks inside the wrapper and where each assertion lives](matrix_unit/matrix_unit_structure.svg)
+![Blocks inside the wrapper and where each assertion lives](matrix_unit/svg/matrix_unit_structure.svg)
 
 ### The array (`bpu_sa_array`)
 
@@ -182,7 +182,7 @@ PE(i, j) owns C[i][j]. C stays in the PE while the tile accumulates:
 Row i of A is delayed i cycles and column j of B j cycles, so `A[i][k]` and `B[k][j]` meet in
 PE(i, j). The k-step accepted on cycle t reaches PE(i, j) on cycle `t + 1 + i + j`.
 
-![The 8 × 8 array, its input delays, and the cycle k-step 0 reaches each PE](matrix_unit/matrix_unit_8x8_array.svg)
+![The 8 × 8 array, its input delays, and the cycle k-step 0 reaches each PE](matrix_unit/svg/matrix_unit_8x8_array.svg)
 
 **Inside each PE:** a multiply-add tree, an accumulator and a shadow register.
 - **Accumulate:** both registers are carry-save: two vectors whose sum is the value. Each cycle,
@@ -195,7 +195,7 @@ PE(i, j). The k-step accepted on cycle t reaches PE(i, j) on cycle `t + 1 + i + 
 
 In INT4 mode, the same eight rows form two 8 × 4 products, `A[i][k]·B[k][j] + A[i][k+1]·B[k+1][j]`.
 
-![One K = 64 tile moving through the array](matrix_unit/matrix_unit_tile_walkthrough.svg)
+![One K = 64 tile moving through the array](matrix_unit/svg/matrix_unit_tile_walkthrough.svg)
 
 The array also has its own ready/valid interface:
 - **In:** `in_valid_i` / `in_ready_o`, plus one k-step on `in_a_i` / `in_b_i` with `in_first_i` /
