@@ -1,9 +1,8 @@
-// Shared constants and helpers for the BPU compute engines: the numerics contract.
+// Shared constants and helpers for the compute engines' numerics.
 //
-// Everything under "Numerics contract" is part of compute/docs/numerics.md and
-// must be identical in every hardware configuration. Encodings that are interface
-// choices (opcodes, function codes, descriptors) live in bpu_isa_pkg. Throughput knobs (lanes,
-// interleave, pipeline registers) are module parameters, never package constants.
+// Everything under "Numerics contract" must be identical in every hardware
+// configuration. Throughput knobs (lanes, interleave, pipeline registers) are module
+// parameters, never package constants.
 package bpu_compute_pkg;
 
   // Not every importer uses every constant.
@@ -26,11 +25,9 @@ package bpu_compute_pkg;
   // Canonical quiet NaN produced by every fp32 unit.
   localparam logic [31:0] FP32_QNAN = 32'h7fc0_0000;
 
-  // Opcodes, function codes and descriptor layouts: bpu_isa_pkg (provisional).
-
   /* verilator lint_on UNUSEDPARAM */
 
-  // Argmax ordering (bpuref.qmv.f32_order_key): an unsigned key where
+  // Argmax ordering: an unsigned key where
   // -inf < ... < -0 < +0 < ... < +inf, and every NaN ranks below -inf.
   function automatic logic [31:0] f32_order_key(input logic [31:0] b);
     if (b[30:23] == 8'hff && b[22:0] != '0) f32_order_key = 32'd0;

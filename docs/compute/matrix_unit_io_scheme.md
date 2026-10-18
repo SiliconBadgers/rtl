@@ -88,7 +88,7 @@ must be row aligned.
 | --- | --- | --- |
 | A, `Rows × K` INT8 | k-major: column k of A is `Rows` consecutive bytes | `A[i][k]` at `a_addr + k·Rows + i` |
 | B, `K × Cols` INT8 | row-major | `B[k][j]` at `b_addr + k·Cols + j` |
-| B, `K × Cols` INT4 | row-major nibbles, low nibble first (the repository's W4 format) | `B[k][j]` is nibble `n = k·Cols + j` in byte `b_addr + n/2`; the low nibble when n is even |
+| B, `K × Cols` INT4 | row-major nibbles, low nibble first (W4, `WFMT_W4` in `bpu_compute_pkg`) | `B[k][j]` is nibble `n = k·Cols + j` in byte `b_addr + n/2`; the low nibble when n is even |
 | sA, `Rows × G` bf16 | block-major, little-endian | `sA[i][g]` at `sa_addr + 2·(g·Rows + i)` |
 | sB, `G × Cols` bf16 | block-major, little-endian | `sB[g][j]` at `sb_addr + 2·(g·Cols + j)` |
 | C, `Rows × Cols` | row-major, 4 bytes little-endian each | `C[r][j]` at `c_addr + 4·(r·Cols + j)` |
@@ -108,8 +108,8 @@ C[i][j] = Σ over g = 0 .. G−1, in increasing g, of f32(isum[i][j][g]) · (f32
 
 - `isum` is the exact integer sum over block g.
 - Every product and add is binary32 with round-to-nearest-even, starting from +0.0.
-- This is the repository's QMV numerics contract (`compute/docs/numerics.md`, `qmv_ref`) extended
-  from matrix × vector to matrix × matrix.
+- These rules are the complete numerics contract. The testbenches check every result bit-exactly
+  against an independent binary32 model.
 
 **INT4 weights** run the array two k-steps per cycle. With an odd K, the second half of the last pair
 is zeroed.

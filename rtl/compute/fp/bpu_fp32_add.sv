@@ -1,6 +1,6 @@
 // IEEE-754 binary32 adder.
 //   Round to nearest even; subnormal inputs and outputs; canonical quiet NaN;
-//   no exception flags. Bit-exact with numpy float32 (see docs/numerics.md).
+//   no exception flags. Bit-exact with IEEE float32 on a host FPU (see README.md).
 //
 // Three combinational stages; PipeMask[i] registers the boundary after stage i:
 //   stage 0: classify, order by magnitude, align the smaller operand (G/R/S bits)

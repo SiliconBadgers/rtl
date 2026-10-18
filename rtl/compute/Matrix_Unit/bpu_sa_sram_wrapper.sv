@@ -24,7 +24,7 @@
 //   B   K x Cols, row-major. INT8: B[k][j] at b_addr + k*Cols + j.
 //       INT4 (cmd_int4_i = 1): two signed codes per byte, low nibble first:
 //       B[k][j] is nibble n = k*Cols + j, in byte b_addr + n/2, low nibble when n
-//       is even (the repository's W4 format).
+//       is even (W4, WFMT_W4 in bpu_compute_pkg).
 //   SA  activation scales (block-scaled only), bf16, block-major:
 //       sA[i][g] at sa_addr + 2*(g*Rows + i), little-endian.
 //   SB  weight scales (block-scaled only), bf16, block-major:
@@ -43,11 +43,9 @@
 //     C[i][j] = sum over g = 0..G-1, in increasing g, of
 //               f32(isum[i][j][g]) * (f32(sA[i][g]) * f32(sB[g][j]))
 //   where isum is the exact integer sum over block g and every product and add is
-//   IEEE binary32, round to nearest even, starting from +0.0. This is the
-//   repository's QMV numerics contract (compute/docs/numerics.md, model
-//   compute/model/bpuref/qmv.py: qmv_ref) extended from matrix x vector to
-//   matrix x matrix. Each block runs as its own array tile; the block's rows drain
-//   into bpu_sa_scale_acc while the next block accumulates.
+//   IEEE binary32, round to nearest even, starting from +0.0. Each block runs as
+//   its own array tile; the block's rows drain into bpu_sa_scale_acc while the
+//   next block accumulates.
 //   INT4 B runs the array in its INT4-pair mode: two k-steps per array step, so
 //   twice the MACs per cycle. With an odd K the last pair's second half is zeroed.
 //

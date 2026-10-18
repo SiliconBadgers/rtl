@@ -8,10 +8,9 @@
 //   acc[r][j] = acc[r][j] + f32(isum[r][j]) * (f32(sA[r][g]) * f32(sB[g][j]))
 //
 // with acc starting at +0.0 for the first block, every product and add in IEEE
-// binary32, round to nearest even, and the blocks added in increasing g (the
-// repository's numerics contract for QMV, compute/docs/numerics.md, extended to
-// matrix x matrix). Scales are bf16; f32(bf16) appends 16 zero bits. On the
-// tile's last block the finished row leaves on out_row_o instead of being stored.
+// binary32, round to nearest even, and the blocks added in increasing g. Scales
+// are bf16; f32(bf16) appends 16 zero bits. On the tile's last block the finished
+// row leaves on out_row_o instead of being stored.
 // Each block sum must lie in -2^24 .. 2^24 - 1 (and fit AccW bits); the conversion
 // to binary32 is then exact. The wrapper's block sums are within +-2^20.
 //
@@ -19,8 +18,8 @@
 //   1  bpu_int2fp32 (exact)                  ||  bpu_fp32_mul sA * sB
 //   3  bpu_fp32_mul f32(isum) * scale
 //   3  bpu_fp32_add acc + product
-// The FP32 units come from the repository's compute library (rtl/compute/fp),
-// where they were checked bit-exact against the host FPU.
+// The FP32 units are in rtl/compute/fp; its README records how they were checked
+// bit-exact against a host FPU.
 //
 // Flow: a valid-only pipeline, 8 cycles from in_valid_i to out_valid_o (LATENCY);
 // it never stalls, so the wrapper admits a row only when it has room for the
