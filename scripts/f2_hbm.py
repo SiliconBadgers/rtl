@@ -35,6 +35,11 @@ CASES = {
     "missing_reset": (["+SKIP_RESET=1"], "HBM_RESET_REQUIRED"),
     "missing_backpressure": (["+SKIP_BACKPRESSURE=1"], "HBM_BACKPRESSURE_REQUIRED"),
 }
+TIMING_WARNING = re.compile(
+    r"(?:HBM\[CH_[A-H]\]\s*:\s*Warning tCHmax violation at \d+(?:\.\d+)? ns\. "
+    r"tCH is \d+(?:\.\d+)? ns|IEEE1500\s*:\s*Warning "
+    r"(?:tWRSTL violation on WRST_n|tHF violation on UpdateWR)\s+at \d+(?:\.\d+)? ns)[ \t]*"
+)
 
 
 def run(command, **kwargs):
@@ -167,6 +172,18 @@ def classify(code, output, expected_failure):
     )
 
 
+def filter_timing_warnings(content):
+    """Remove only the three identified vendor timing-warning line formats."""
+    kept = []
+    suppressed = 0
+    for line in content.splitlines(keepends=True):
+        if TIMING_WARNING.fullmatch(line.rstrip("\r\n")):
+            suppressed += 1
+        else:
+            kept.append(line)
+    return "".join(kept), suppressed
+
+
 def simulate(args):
     verify_assets()
     output = args.output.resolve()
@@ -227,7 +244,7 @@ def simulate(args):
                 f"+SEED={args.seed}",
                 *flags,
             ]
-            with (case / "run.log").open("w") as log:
+            with (case / "run.raw.log").open("w") as log:
                 result = subprocess.run(
                     list(map(str, command)),
                     cwd=case,
@@ -235,7 +252,9 @@ def simulate(args):
                     stderr=subprocess.STDOUT,
                     check=False,
                 )
-            content = (case / "run.log").read_text(errors="replace")
+            content = (case / "run.raw.log").read_text(errors="replace")
+            filtered, suppressed = filter_timing_warnings(content)
+            (case / "run.log").write_text(filtered)
             passed = classify(result.returncode, content, expected)
             counts = re.search(r"F2_HBM_PASS (.*)", content)
             record = {
@@ -246,11 +265,12 @@ def simulate(args):
                 "elapsed_seconds": time.monotonic() - before,
                 "observed": counts[1] if counts else None,
                 "model_timing_warnings": len(re.findall(r"Warning.*violation", content)),
+                "suppressed_timing_warnings": suppressed,
             }
             summary["cases"].append(record)
             print(json.dumps(record), flush=True)
             if not passed:
-                print(content[-6000:], flush=True)
+                print(filtered[-6000:], flush=True)
                 raise ValueError(f"HBM case failed: {name}; see {case / 'run.log'}")
     finally:
         summary["elapsed_seconds"] = time.monotonic() - start

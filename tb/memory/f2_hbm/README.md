@@ -9,6 +9,47 @@ This test exercises the HBM model directly. It does not instantiate the AWS
 PCIe shell, a SiliconBadgers memory controller, or the complete accelerator.
 It is a functional integration check, not a bandwidth benchmark.
 
+## HBM interface
+
+The generated `cl_hbm` module exposes 32 AXI3 slave ports, `AXI_00` through
+`AXI_31`, across two HBM stacks with 16 GiB total capacity. Our logic acts as
+the AXI master. Each port has these widths:
+
+| Signals | Width and meaning |
+| --- | --- |
+| `WDATA`, `RDATA` | 256 bits, or 32 bytes per accepted beat |
+| `AWADDR`, `ARADDR` | 34-bit byte address |
+| `AWID`, `ARID`, `BID`, `RID` | 6-bit transaction ID |
+| `AWLEN`, `ARLEN` | 4 bits; burst length minus one, for 1–16 beats |
+| `AWSIZE`, `ARSIZE` | Set to `5` for 32-byte beats |
+| `WSTRB` | 32 byte enables |
+| `BRESP`, `RRESP` | 2-bit response status |
+
+Address, data and response channels use independent `VALID`/`READY` handshakes.
+Writes use `AW`, `W` and `B`; reads use `AR` and `R`. Hold a request or data
+beat stable until its handshake, assert `WLAST` on the final write beat, and
+check `RLAST` on the final read beat. Responses have variable latency.
+
+With global addressing enabled in this configuration, each port can address
+the full HBM space through the internal switch. Address bit `[33]` selects
+the stack, `[32:29]` selects one of its 16 pseudo-channels, and `[28:0]` is
+the byte offset within a 512 MiB pseudo-channel. Use 32-byte-aligned addresses.
+See AMD's [address map](https://docs.amd.com/r/en-US/pg276-axi-hbm/HBM-Address-Map-and-Protocol-Considerations)
+and [AXI requirements](https://docs.amd.com/r/en-US/pg276-axi-hbm/AXI-Considerations).
+
+The native IP also has per-port clocks and active-low resets, two 100 MHz
+reference clocks, two APB control interfaces, per-stack initialization and
+temperature status, data-parity signals, and APB monitor connections for the
+AWS shell. Wait for both `apb_complete` outputs before sending traffic.
+For an AFI, connect the shell monitor interfaces as specified in AWS's
+[shell interface guide](https://github.com/aws/aws-fpga/blob/c34f88e97eaf8a9b6ea7a3516ab65ee64690ab82/hdk/docs/AWS_Shell_Interface_Specification.md#hbm-monitor-interface).
+
+AWS's optional [`hbm_wrapper`](https://github.com/aws/aws-fpga/blob/c34f88e97eaf8a9b6ea7a3516ab65ee64690ab82/hdk/common/lib/hbm_wrapper.sv)
+accepts a configurable number of ports and can insert AXI4-to-AXI3 converters
+with `AXI4_INTERFACE=1`. It generates 450 MHz AXI and 100 MHz reference/APB
+clocks from a 250 MHz input and exposes a ready signal and reset/status bus.
+The current test instantiates `cl_hbm` directly, so it does not test that wrapper.
+
 ## Prepare the local checkout
 
 Use Python 3.11+, Git, and a Vivado 2024.2 installation. No Python packages or
@@ -109,9 +150,13 @@ records the SSH destination, retained scratch path and local Git revision.
 Coverage is not measured. The cases do not establish performance, concurrent
 traffic behavior, ECC recovery, APB monitoring, or hardware timing closure.
 
-The vendor model emits `tCHmax` and IEEE1500 timing warnings in this setup.
-The runner retains them in the logs and records their count for each case;
-the functional pass does not resolve those warnings or establish timing-model
-accuracy. Compiler messages about unused VIP interfaces also remain visible.
+The runner suppresses the identified `tCHmax`, IEEE1500 `tWRSTL`, and IEEE1500
+`tHF` warning lines from `run.log` and failure excerpts. It preserves the full
+simulator output in `<case>/run.raw.log` and records the suppressed count in
+`summary.json`. Other warnings and errors remain visible. Result classification
+uses the raw output and simulator exit status. Filtering does not disable model
+checks or resolve the underlying timing warnings; the functional pass does not
+establish timing-model accuracy. Compiler messages about unused VIP interfaces
+also remain visible.
 
 Run Python failure-classification checks with `make test-tooling`.
