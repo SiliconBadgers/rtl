@@ -1,0 +1,24 @@
+scripts/test_f2_hbm.py
+  s_15c0c7c49f988a::t_0a48d7cb09a5f7 9-31
+tb/memory/f2_hbm/README.md
+  s_15c0c7c49f988a::t_0a48d7cb09a5f7 153-160
+  s_15c0c7c49f988a::t_675ffa87922dd0 12-52
+scripts/f2_hbm.py
+  s_15c0c7c49f988a::t_0a48d7cb09a5f7 38-42,175-186,247,255-257,268,273
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8b5e9a1985007c4c224207d2096434e697b56c10",
+  "prompts": {},
+  "sessions": {
+    "s_15c0c7c49f988a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a155aa-80a2-7052-a3e5-3b8c3a6f2261",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zeb Taylor <zceboys@gmail.com>"
+    }
+  }
+}
