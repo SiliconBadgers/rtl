@@ -1,0 +1,383 @@
+VCS Y-2026.03_Full64
+$ synopsys-run vcs -full64 -sverilog -timescale=1ns/1ps -assert svaext -timescale=1ps/1ps +define+VCS +libext+.v -y /tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/verilog/src/unisims +librescan +incdir+/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/include +incdir+/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/aws-fpga/hdk/common/ip/cl_ip/cl_ip.gen/sources_1/ip/cl_hbm/hdl/rtl +incdir+/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/aws-fpga/hdk/common/ip/cl_ip/cl_ip.ip_user_files/ipstatic/verif/model -top f2_hbm_tb -top glbl -o /tmp/sibadgers-f2-hbm.TYiMG8eK/build/f2_hbm/simv /tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/axi4stream_vip_axi4streampc.sv /tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/axi_vip_axi4pc.sv /tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/xil_common_vip_pkg.sv /tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/axi4stream_vip_pkg.sv /tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/axi_vip_pkg.sv /tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/axi4stream_vip_if.sv /tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/axi_vip_if.sv /tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/clk_vip_if.sv /tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/rst_vip_if.sv /tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv /tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/ip/xpm/xpm_memory/hdl/xpm_memory.sv /tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/secureip/hbm_two_stack_intf/hbm_two_stack_intf_001.sv /tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/secureip/hbm_two_stack_intf/hbm_two_stack_intf_002.svp /tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/aws-fpga/hdk/common/ip/cl_ip/cl_ip.gen/sources_1/ip/cl_hbm/hdl/rtl/hbm_v1_0_16.sv /tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/aws-fpga/hdk/common/ip/cl_ip/cl_ip.ip_user_files/ipstatic/hdl/hbm_v1_0_vl_rfs.sv /tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/aws-fpga/hdk/common/ip/cl_ip/cl_ip.gen/sources_1/ip/cl_hbm/verif/model/hbm_model.sv /tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/aws-fpga/hdk/common/ip/cl_ip/cl_ip.gen/sources_1/ip/cl_hbm/sim/cl_hbm.sv /tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/verilog/src/glbl.v /tmp/sibadgers-f2-hbm.TYiMG8eK/tb/memory/f2_hbm/f2_hbm_tb.sv
+                         Chronologic VCS (TM)
+         Version Y-2026.03_Full64 -- Mon Oct 19 16:56:18 2026
+
+                    Copyright (c) 1991 - 2026 Synopsys, Inc.
+   This software and the associated documentation are proprietary to Synopsys,
+      Inc.  This software may only be used in accordance with the terms and
+  conditions of a written license agreement with Synopsys, Inc.  All other use,
+   reproduction, or distribution of this software is strictly prohibited.  By
+   installing, accessing, using, or executing this software, you agree that it
+  will reside on, operate within, and have access to the computers and networks
+    where such software is used ("Host System"), and that Synopsys may access
+     components and data of the Host System as necessary for it to function
+ properly, to authenticate and validate license keys, to verify that it is used
+ only in conformity with the applicable license restrictions, and to communicate
+                 error messages and associated data to Synopsys.
+
+
+Parsing design file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/axi4stream_vip_axi4streampc.sv'
+Parsing design file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/axi_vip_axi4pc.sv'
+Parsing design file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/xil_common_vip_pkg.sv'
+Parsing included file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/include/xil_common_vip_macros.svh'.
+Back to file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/xil_common_vip_pkg.sv'.
+Parsing design file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/axi4stream_vip_pkg.sv'
+Parsing included file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/include/xil_common_vip_macros.svh'.
+Back to file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/axi4stream_vip_pkg.sv'.
+Parsing design file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/axi_vip_pkg.sv'
+Parsing included file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/include/xil_common_vip_macros.svh'.
+Back to file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/axi_vip_pkg.sv'.
+Parsing design file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/axi4stream_vip_if.sv'
+Parsing design file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/axi_vip_if.sv'
+Parsing design file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/clk_vip_if.sv'
+Parsing design file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/rst_vip_if.sv'
+Parsing design file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv'
+Parsing design file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/ip/xpm/xpm_memory/hdl/xpm_memory.sv'
+Parsing design file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/secureip/hbm_two_stack_intf/hbm_two_stack_intf_001.sv'
+Parsing design file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/secureip/hbm_two_stack_intf/hbm_two_stack_intf_002.svp'
+Parsing design file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/aws-fpga/hdk/common/ip/cl_ip/cl_ip.gen/sources_1/ip/cl_hbm/hdl/rtl/hbm_v1_0_16.sv'
+Parsing design file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/aws-fpga/hdk/common/ip/cl_ip/cl_ip.ip_user_files/ipstatic/hdl/hbm_v1_0_vl_rfs.sv'
+Parsing included file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/aws-fpga/hdk/common/ip/cl_ip/cl_ip.gen/sources_1/ip/cl_hbm/hdl/rtl/defines.vh'.
+Back to file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/aws-fpga/hdk/common/ip/cl_ip/cl_ip.ip_user_files/ipstatic/hdl/hbm_v1_0_vl_rfs.sv'.
+Parsing design file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/aws-fpga/hdk/common/ip/cl_ip/cl_ip.gen/sources_1/ip/cl_hbm/verif/model/hbm_model.sv'
+Parsing included file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/aws-fpga/hdk/common/ip/cl_ip/cl_ip.ip_user_files/ipstatic/verif/model/HBM_vcs.vp'.
+Parsing included file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/aws-fpga/hdk/common/ip/cl_ip/cl_ip.ip_user_files/ipstatic/verif/model/./hbm_parameter.v'.
+Back to file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/aws-fpga/hdk/common/ip/cl_ip/cl_ip.ip_user_files/ipstatic/verif/model/HBM_vcs.vp'.
+Back to file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/aws-fpga/hdk/common/ip/cl_ip/cl_ip.gen/sources_1/ip/cl_hbm/verif/model/hbm_model.sv'.
+Parsing design file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/aws-fpga/hdk/common/ip/cl_ip/cl_ip.gen/sources_1/ip/cl_hbm/sim/cl_hbm.sv'
+Parsing design file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/verilog/src/glbl.v'
+Parsing design file '/tmp/sibadgers-f2-hbm.TYiMG8eK/tb/memory/f2_hbm/f2_hbm_tb.sv'
+Parsing library directory file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/verilog/src/unisims/HBM_ONE_STACK_INTF.v'
+Parsing library directory file '/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/verilog/src/unisims/HBM_TWO_STACK_INTF.v'
+Top Level Modules:
+       glbl
+       f2_hbm_tb
+
+Warning-[UII-L] Interface not instantiated
+/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/axi4stream_vip_axi4streampc.sv, 177
+axi4stream_vip_axi4streampc
+  Interface 'axi4stream_vip_axi4streampc' defined in logic library 'work' is 
+  never instantiated in design. It will be ignored.
+
+
+Warning-[UII-L] Interface not instantiated
+/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/axi_vip_axi4pc.sv, 559
+axi_vip_axi4pc
+  Interface 'axi_vip_axi4pc' defined in logic library 'work' is never 
+  instantiated in design. It will be ignored.
+
+
+Warning-[UII-L] Interface not instantiated
+/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/axi4stream_vip_if.sv, 71
+axi4stream_vip_if
+  Interface 'axi4stream_vip_if' defined in logic library 'work' is never 
+  instantiated in design. It will be ignored.
+
+
+Warning-[UII-L] Interface not instantiated
+/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/axi_vip_if.sv, 118
+axi_vip_if
+  Interface 'axi_vip_if' defined in logic library 'work' is never instantiated
+  in design. It will be ignored.
+
+
+Warning-[UII-L] Interface not instantiated
+/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/clk_vip_if.sv, 51
+clk_vip_if
+  Interface 'clk_vip_if' defined in logic library 'work' is never instantiated
+  in design. It will be ignored.
+
+
+Warning-[UII-L] Interface not instantiated
+/tmp/sibadgers-f2-hbm.TYiMG8eK/third_party/vivado-2024.2/data/xilinx_vip/hdl/rst_vip_if.sv, 50
+rst_vip_if
+  Interface 'rst_vip_if' defined in logic library 'work' is never instantiated
+  in design. It will be ignored.
+
+TimeScale is 1 ps / 1 ps
+Notice: Ports coerced to inout, use -notice for details
+Starting vcs inline pass...
+271 modules and 7 UDPs read.
+recompiling package vcs_paramclassrepository
+recompiling package xil_common_vip_pkg
+recompiling package axi4stream_vip_pkg
+recompiling package axi_vip_pkg
+recompiling module xpm_memory_spram
+recompiling module <protected>
+recompiling module xil_hbm_two_stack_intf_mod1
+recompiling package <protected>
+recompiling module xil_hbm_two_stack_intf_mod2
+recompiling module <protected>
+recompiling module xil_hbm_two_stack_intf_mod6
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+50 of 271 modules done
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+100 of 271 modules done
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling package <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+150 of 271 modules done
+recompiling module <protected>
+recompiling module <protected>
+recompiling package <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+200 of 271 modules done
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module xil_hbm_two_stack_intf_mod786
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+250 of 271 modules done
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module hbm_apb_mst
+recompiling module hbm_temp_rd
+recompiling module hbm_apb_arbiter
+recompiling module hbm_data_fetch
+recompiling module HBM
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module <protected>
+recompiling module glbl
+recompiling module f2_hbm_tb
+All of 271 modules done
+rm -f _cuarc*.so _csrc*.so pre_vcsobj_*.so share_vcsobj_*.so
+if [ -x /tmp/sibadgers-f2-hbm.TYiMG8eK/build/f2_hbm/simv ]; then chmod a-x /tmp/sibadgers-f2-hbm.TYiMG8eK/build/f2_hbm/simv; fi
+g++  -o /tmp/sibadgers-f2-hbm.TYiMG8eK/build/f2_hbm/simv      -rdynamic  -Wl,-rpath='$ORIGIN'/simv.daidir -Wl,-rpath=./simv.daidir -Wl,-rpath=/srv/auto/apps/synopsys-2026/vcs/Y-2026.03/linux64/lib -L/srv/auto/apps/synopsys-2026/vcs/Y-2026.03/linux64/lib   -Wl,-rpath-link=./  /usr/lib64/libnuma.so.1   objs/amcQw_d.o   _1695481_archive_1.so objs/udps/yjSCJ.o objs/udps/j6i9d.o objs/udps/NxtFP.o objs/udps/Mn8DU.o objs/udps/iCVwq.o objs/udps/agf4c.o objs/udps/yrsry.o   SIM_l.o      rmapats_mop.o rmapats.o rmar.o rmar_nd.o  rmar_llvm_0_1.o rmar_llvm_0_0.o            -lvirsim -lerrorinf -lsnpsmalloc -lvfs       -lnuma_stubs -lvcsnew -ldistsimclient -lsimprofile -luclinative -lmemprof_init /srv/auto/apps/synopsys-2026/vcs/Y-2026.03/linux64/lib/vcs_tls.o   -Wl,-whole-archive  -lvcsucli    -Wl,-no-whole-archive       ./../simv.daidir/vc_hdrs.o    /srv/auto/apps/synopsys-2026/vcs/Y-2026.03/linux64/lib/vcs_save_restore_new.o -ldl  -lc -lm -lpthread -ldl 
+/tmp/sibadgers-f2-hbm.TYiMG8eK/build/f2_hbm/simv up to date
+CPU time: 20.566 seconds to compile + 4.143 seconds to elab + .218 seconds to link

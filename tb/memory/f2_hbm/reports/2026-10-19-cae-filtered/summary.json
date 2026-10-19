@@ -1,0 +1,63 @@
+{
+  "dependencies": {
+    "aws_url": "https://github.com/aws/aws-fpga.git",
+    "aws_revision": "c34f88e97eaf8a9b6ea7a3516ab65ee64690ab82",
+    "resources_url": "https://github.com/aws/aws-fpga-resources.git",
+    "resources_revision": "ce27e8888f7a07c34316ebcbc786505d7e5440a7",
+    "vivado_version": "2024.2"
+  },
+  "vcs_baseline": "Y-2026.03_Full64",
+  "seed": 1,
+  "host": "linux-2005",
+  "cases": [
+    {
+      "name": "read_write",
+      "passed": true,
+      "exit_code": 0,
+      "expected_failure": null,
+      "elapsed_seconds": 27.316893625073135,
+      "observed": "ports=32 writes=672 reads=672 responses=96 reset_cycles=144 read_stalls=1856 write_stalls=288",
+      "model_timing_warnings": 469988,
+      "suppressed_timing_warnings": 469988
+    },
+    {
+      "name": "bad_data",
+      "passed": true,
+      "exit_code": 3,
+      "expected_failure": "HBM_DATA_MISMATCH",
+      "elapsed_seconds": 12.279895535903051,
+      "observed": null,
+      "model_timing_warnings": 194356,
+      "suppressed_timing_warnings": 194356
+    },
+    {
+      "name": "missing_reset",
+      "passed": true,
+      "exit_code": 3,
+      "expected_failure": "HBM_RESET_REQUIRED",
+      "elapsed_seconds": 1.8240698028821498,
+      "observed": null,
+      "model_timing_warnings": 0,
+      "suppressed_timing_warnings": 0
+    },
+    {
+      "name": "missing_backpressure",
+      "passed": true,
+      "exit_code": 3,
+      "expected_failure": "HBM_BACKPRESSURE_REQUIRED",
+      "elapsed_seconds": 20.478027277160436,
+      "observed": null,
+      "model_timing_warnings": 407380,
+      "suppressed_timing_warnings": 407380
+    }
+  ],
+  "coverage": "Not measured",
+  "asset_manifest_sha256": "ee013b1c46cd7be175d471fd577e7ed6c50f3eb76624af09092e8dae561a0659",
+  "inputs": {
+    "tb/memory/f2_hbm/f2_hbm_tb.sv": "5cc35204b56b51150db1a5d4a79ce3c79975d07a5e94f99eb5b23a9c9a39b412",
+    "scripts/f2_hbm.py": "b22cd0dba0219065ec052c5a3568568325e6dadf004ab21e8f9cb29058c878b9",
+    "scripts/vcs.py": "37098e414480ca95a650f6ffae1bfde7ce3583bd97a95b96c557f5187c40746d"
+  },
+  "elapsed_seconds": 111.42764293495566,
+  "passed": true
+}
