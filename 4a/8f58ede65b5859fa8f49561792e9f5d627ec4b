@@ -1,0 +1,27 @@
+tb/memory/f2_hbm/reports/2026-10-19-cae-vcs/README.md
+  s_15c0c7c49f988a::t_2313fee9bad106 1-74
+tb/memory/f2_hbm/reports/2026-10-19-cae-vcs/compile.log
+  s_15c0c7c49f988a::t_3d4d331ee50465 1-383
+tb/memory/f2_hbm/reports/2026-10-19-cae-vcs/full-log-sha256.txt
+  s_15c0c7c49f988a::t_2ba41c821d44c4 1-4
+tb/memory/f2_hbm/reports/2026-10-19-cae-vcs/simulation-excerpts.log
+  s_15c0c7c49f988a::t_3466964d90ec0c 1-38
+tb/memory/f2_hbm/reports/2026-10-19-cae-vcs/summary.json
+  s_15c0c7c49f988a::t_09c0b4b86d9080 1-59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4a8f58ede65b5859fa8f49561792e9f5d627ec4b",
+  "prompts": {},
+  "sessions": {
+    "s_15c0c7c49f988a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a155aa-80a2-7052-a3e5-3b8c3a6f2261",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zeb Taylor <zceboys@gmail.com>"
+    }
+  }
+}
