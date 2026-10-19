@@ -3,6 +3,8 @@
 __pycache__/
 *.pyc
 .DS_Store
+/third_party/aws-fpga/
+/third_party/vivado-2024.2/
 
 # Local/generated tooling outputs
 __pycache__/
