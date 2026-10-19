@@ -212,7 +212,8 @@ L below is the arbiter's round trip, from request to response.
   first A and B rows are back.
 - **Streaming:** array steps then go one per cycle while the read buffers keep up.
 - **C rows:** they leave the array `Rows + Cols − 1` cycles after the last array step, plus 4
-  when block-scaled. They are written one SRAM row at a time.
+  when block-scaled. They reach the write-back queue one cycle later, after the wrapper's
+  conversion register, and are written one SRAM row at a time.
 - **Block-scaled commands:** block ends never stall the array, at any `BlockK`: each PE scales a
   finished block while the next one accumulates.
 
@@ -279,9 +280,10 @@ In a block-scaled command, `first` and `last` mark every block, and the block's 
 through the array with the data: `sA[i][g]` moves right along row i with A, and `sB[g][j]` moves
 down column j with B. So each scale reaches PE(i, j) on the cycle that PE finishes the block. At
 each block end the PE:
-1. resolves the block sum and multiplies the two bf16 mantissas;
-2. multiplies the block sum by that product (exact);
-3. shifts the result into Q23.24, rounding;
+1. resolves the block sum, multiplies the two bf16 mantissas and adds the exponents;
+2. multiplies the block sum by that product (exact), and works out the shift into Q23.24 from
+   the exponents;
+3. shifts the product into Q23.24, rounding to nearest even with a guard and a sticky bit;
 4. adds it into its 48-bit accumulator, saturating.
 
 These are four pipeline stages, so the next block accumulates meanwhile. Two more flags ride with
@@ -291,7 +293,10 @@ These are four pipeline stages, so the next block accumulates meanwhile. Two mor
   `cmd_write_output_i`).
 
 The whole command is one tile and drains once. The wrapper converts each drained value to
-binary32.
+binary32 in two cycles:
+1. **Registered:** the magnitude and the position of its leading 1, found with a log-depth prefix
+   OR.
+2. **On the way into the write-back queue:** normalize, round and pack.
 
 **Why inside the PEs.** The alternative is to drain every block's integer sums to a shared
 scaling stage at the array edge. Draining a tile takes about `2·Rows + Cols` cycles (about 24 on

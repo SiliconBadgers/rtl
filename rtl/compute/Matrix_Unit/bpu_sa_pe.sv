@@ -238,6 +238,11 @@ module bpu_sa_pe
     end
   end
 
+  // Every PE on an anti-diagonal (i + j constant) sees the same flag timing, so
+  // synthesis would merge these registers across PEs: one register would then drive
+  // many PEs (3.7 ns of buffering on 8 x 8 with Scale). keep holds one copy per PE;
+  // it only works when every copy carries it.
+  (* keep *)
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
       first_o <= 1'b0;
@@ -257,69 +262,78 @@ module bpu_sa_pe
   // ---------------------------------------------------------------------------
   if (Scale) begin : g_scale
     // isum * ma * mb is below 2^(BsumW + 15) in magnitude; PROD_W also holds its
-    // negation. SH_W holds ea + eb - SCALE_SHIFT_BIAS (-242 .. 264).
+    // negation. SH_W holds ea + eb - SCALE_SHIFT_BIAS (-244 .. 266). Only shifts below
+    // FX_W (left) or PROD_W - 1 (right) reach stage 3, so SHAMT_W bits hold them.
     localparam int unsigned PROD_W = BsumW + 17;
     localparam int unsigned SH_W = 10;
+    localparam int unsigned SHAMT_W = $clog2((FX_W > PROD_W) ? FX_W : PROD_W);
     localparam int unsigned WIDE_W = PROD_W + FX_W;
     localparam logic signed [FX_W-1:0] FX_MAX = {1'b0, {(FX_W - 1) {1'b1}}};
     localparam logic signed [FX_W-1:0] FX_MIN = {1'b1, {(FX_W - 1) {1'b0}}};
 
     // Stage 0: the block end, as the PE saw it.
-    logic                     p0_valid_q;
-    logic                     p0_first_q;
-    logic                     p0_final_q;
-    logic        [ BsumW-1:0] p0_sum_q;
-    logic        [ BsumW-1:0] p0_carry_q;
-    logic        [      15:0] p0_sa_q;
-    logic        [      15:0] p0_sb_q;
+    logic                      p0_valid_q;
+    logic                      p0_first_q;
+    logic                      p0_final_q;
+    logic        [  BsumW-1:0] p0_sum_q;
+    logic        [  BsumW-1:0] p0_carry_q;
+    logic        [       15:0] p0_sa_q;
+    logic        [       15:0] p0_sb_q;
     // Stage 1: isum resolved, the scales decoded and their mantissas multiplied.
-    logic                     p1_valid_q;
-    logic                     p1_first_q;
-    logic                     p1_final_q;
-    logic                     p1_zero_q;  // a scale is zero or subnormal
-    logic                     p1_bad_q;  // a scale is inf or NaN
-    logic                     p1_neg_q;  // sa * sb < 0
-    logic signed [ BsumW-1:0] p1_isum_q;
-    logic        [      15:0] p1_m_q;  // ma * mb
-    logic        [       8:0] p1_esum_q;  // ea + eb
-    // Stage 2: the exact signed product isum * ma * mb.
-    logic                     p2_valid_q;
-    logic                     p2_first_q;
-    logic                     p2_final_q;
-    logic                     p2_bad_q;
-    logic signed [PROD_W-1:0] p2_prod_q;
-    logic        [       8:0] p2_esum_q;
+    logic                      p1_valid_q;
+    logic                      p1_first_q;
+    logic                      p1_final_q;
+    logic                      p1_zero_q;  // a scale is zero or subnormal
+    logic                      p1_bad_q;  // a scale is inf or NaN
+    logic                      p1_neg_q;  // sa * sb < 0
+    logic signed [  BsumW-1:0] p1_isum_q;
+    logic        [       15:0] p1_m_q;  // ma * mb
+    logic        [        8:0] p1_esum_q;  // ea + eb
+    // Stage 2: the exact signed product isum * ma * mb, and the shift into fixed point.
+    logic                      p2_valid_q;
+    logic                      p2_first_q;
+    logic                      p2_final_q;
+    logic                      p2_bad_q;
+    logic signed [ PROD_W-1:0] p2_prod_q;
+    logic                      p2_left_q;  // shift left (sh >= 0)
+    logic                      p2_lbig_q;  // left by FX_W or more: overflows unless 0
+    logic                      p2_rbig_q;  // right by PROD_W - 1 or more: rounds to 0
+    logic        [SHAMT_W-1:0] p2_shamt_q;  // |sh|, when neither is set
     // Stage 3: the rounded contribution in fixed point.
-    logic                     p3_valid_q;
-    logic                     p3_first_q;
-    logic                     p3_final_q;
-    logic                     p3_bad_q;
-    logic                     p3_neg_q;  // the contribution's sign, for saturation
-    logic signed [  FX_W-1:0] p3_contrib_q;
-    logic                     p3_ovf_q;
+    logic                      p3_valid_q;
+    logic                      p3_first_q;
+    logic                      p3_final_q;
+    logic                      p3_bad_q;
+    logic                      p3_neg_q;  // the contribution's sign, for saturation
+    logic signed [   FX_W-1:0] p3_contrib_q;
+    logic                      p3_ovf_q;
     // The scaled accumulator and its sticky flags.
-    logic signed [  FX_W-1:0] acc_fx_q;
-    logic                     ovf_q;
-    logic                     nan_q;
+    logic signed [   FX_W-1:0] acc_fx_q;
+    logic                      ovf_q;
+    logic                      nan_q;
 
-    // Stage 3 (combinational): shift into fixed point and round. Stage 4: saturate
-    // and accumulate.
-    logic signed [  SH_W-1:0] sh;
-    logic        [  SH_W-1:0] rsh;  // -sh, for right shifts
-    logic signed [WIDE_W-1:0] wide;
-    logic signed [PROD_W-1:0] quot;
-    logic        [PROD_W-1:0] rem;
-    logic        [PROD_W-1:0] half;
-    logic                     round_up;
-    logic signed [  FX_W-1:0] contrib;
-    logic                     contrib_ovf;
-    logic signed [  FX_W-1:0] base;
-    logic signed [    FX_W:0] total;
-    logic                     add_ovf;
-    logic signed [  FX_W-1:0] acc_next;
-    logic                     ovf_next;
-    logic                     nan_next;
+    // Stage 2 (combinational, beside the multiply): sh = ea + eb - SCALE_SHIFT_BIAS.
+    // Stage 3: shift into fixed point and round. Stage 4: saturate and accumulate.
+    logic signed [   SH_W-1:0] sh;
+    logic        [   SH_W-1:0] rsh;  // -sh, for right shifts
+    logic signed [ WIDE_W-1:0] wide;
+    logic signed [ PROD_W-1:0] quot;
+    logic        [ PROD_W-1:0] guard_mask;  // the highest bit shifted out
+    logic        [ PROD_W-1:0] sticky_mask;  // the bits below it
+    logic                      guard;
+    logic                      sticky;
+    logic                      round_up;
+    logic signed [   FX_W-1:0] contrib;
+    logic                      contrib_ovf;
+    logic signed [   FX_W-1:0] base;
+    logic signed [     FX_W:0] total;
+    logic                      add_ovf;
+    logic signed [   FX_W-1:0] acc_next;
+    logic                      ovf_next;
+    logic                      nan_next;
 
+    // Flags, kept per PE like first_o and last_o.
+    (* keep *)
     always_ff @(posedge clk_i or negedge rst_ni) begin
       if (!rst_ni) begin
         p0_valid_q <= 1'b0;
@@ -338,32 +352,49 @@ module bpu_sa_pe
       end
     end
 
+    (* keep *)
+    always_ff @(posedge clk_i) begin
+      if (scaled_i && last_i) begin
+        p0_first_q <= sfirst_i;
+        p0_final_q <= slast_i;
+      end
+      if (p0_valid_q) begin
+        p1_first_q <= p0_first_q;
+        p1_final_q <= p0_final_q;
+      end
+      if (p1_valid_q) begin
+        p2_first_q <= p1_first_q;
+        p2_final_q <= p1_final_q;
+      end
+      if (p2_valid_q) begin
+        p3_first_q <= p2_first_q;
+        p3_final_q <= p2_final_q;
+      end
+    end
+
     always_ff @(posedge clk_i) begin
       sa_o <= sa_i;
       sb_o <= sb_i;
       if (scaled_i && last_i) begin
-        p0_first_q <= sfirst_i;
-        p0_final_q <= slast_i;
         p0_sum_q   <= s50[BsumW-1:0];
         p0_carry_q <= c50[BsumW-1:0];
         p0_sa_q    <= sa_i;
         p0_sb_q    <= sb_i;
       end
       if (p0_valid_q) begin
-        p1_first_q <= p0_first_q;
-        p1_final_q <= p0_final_q;
-        p1_zero_q  <= (p0_sa_q[14:7] == 8'h00) || (p0_sb_q[14:7] == 8'h00);
-        p1_bad_q   <= (p0_sa_q[14:7] == 8'hff) || (p0_sb_q[14:7] == 8'hff);
-        p1_neg_q   <= p0_sa_q[15] ^ p0_sb_q[15];
-        p1_isum_q  <= $signed(p0_sum_q + p0_carry_q);
-        p1_m_q     <= {1'b1, p0_sa_q[6:0]} * {1'b1, p0_sb_q[6:0]};
-        p1_esum_q  <= 9'(p0_sa_q[14:7]) + 9'(p0_sb_q[14:7]);
+        p1_zero_q <= (p0_sa_q[14:7] == 8'h00) || (p0_sb_q[14:7] == 8'h00);
+        p1_bad_q  <= (p0_sa_q[14:7] == 8'hff) || (p0_sb_q[14:7] == 8'hff);
+        p1_neg_q  <= p0_sa_q[15] ^ p0_sb_q[15];
+        p1_isum_q <= $signed(p0_sum_q + p0_carry_q);
+        p1_m_q    <= {1'b1, p0_sa_q[6:0]} * {1'b1, p0_sb_q[6:0]};
+        p1_esum_q <= 9'(p0_sa_q[14:7]) + 9'(p0_sb_q[14:7]);
       end
       if (p1_valid_q) begin
-        p2_first_q <= p1_first_q;
-        p2_final_q <= p1_final_q;
         p2_bad_q   <= p1_bad_q;
-        p2_esum_q  <= p1_esum_q;
+        p2_left_q  <= !sh[SH_W-1];
+        p2_lbig_q  <= (sh >= $signed(SH_W'(FX_W)));
+        p2_rbig_q  <= sh[SH_W-1] && (rsh >= SH_W'(PROD_W - 1));
+        p2_shamt_q <= sh[SH_W-1] ? SHAMT_W'(rsh) : SHAMT_W'(sh);
         if (p1_zero_q || p1_bad_q) begin
           p2_prod_q <= '0;
         end else if (p1_neg_q) begin
@@ -373,8 +404,6 @@ module bpu_sa_pe
         end
       end
       if (p2_valid_q) begin
-        p3_first_q   <= p2_first_q;
-        p3_final_q   <= p2_final_q;
         p3_bad_q     <= p2_bad_q;
         p3_neg_q     <= p2_prod_q[PROD_W-1];
         p3_contrib_q <= contrib;
@@ -387,28 +416,33 @@ module bpu_sa_pe
       end
     end
 
-    // contribution = round(prod * 2^sh), sh = ea + eb - SCALE_SHIFT_BIAS.
-    assign sh = $signed(SH_W'(p2_esum_q)) - $signed(SH_W'(SCALE_SHIFT_BIAS));
+    // contribution = round(prod * 2^sh), sh = ea + eb - SCALE_SHIFT_BIAS, decided in
+    // stage 2 so stage 3 starts from registers.
+    assign sh = $signed(SH_W'(p1_esum_q)) - $signed(SH_W'(SCALE_SHIFT_BIAS));
     assign rsh = SH_W'(-sh);
-    assign wide = WIDE_W'(p2_prod_q) <<< sh[5:0];
-    // Right shift, rounding to nearest even: floor quotient, remainder, half an ulp.
-    assign quot = p2_prod_q >>> rsh;
-    assign rem = PROD_W'(p2_prod_q) & ((PROD_W'(1) << rsh) - 1'b1);
-    assign half = PROD_W'(1) << (rsh - 1'b1);
-    assign round_up = (rem > half) || (rem == half && quot[0]);
+    assign wide = WIDE_W'(p2_prod_q) <<< p2_shamt_q;
+    // Right shift, rounding to nearest even: the floor quotient, plus 1 when the bits
+    // shifted out exceed half an ulp (guard and sticky) or equal it with an odd quotient.
+    // With a left shift (p2_shamt_q may be 0) these are unused.
+    assign quot = p2_prod_q >>> p2_shamt_q;
+    assign sticky_mask = ~({PROD_W{1'b1}} << (p2_shamt_q - 1'b1));
+    assign guard_mask = ~({PROD_W{1'b1}} << p2_shamt_q) & ~sticky_mask;
+    assign guard = |(p2_prod_q & guard_mask);
+    assign sticky = |(p2_prod_q & sticky_mask);
+    assign round_up = guard && (sticky || quot[0]);
 
     always_comb begin
       contrib     = '0;
       contrib_ovf = 1'b0;
-      if (!sh[SH_W-1]) begin
+      if (p2_left_q) begin
         // Left shift (exact): overflows unless the result fits FX_W signed bits.
-        if (sh >= $signed(SH_W'(FX_W))) begin
+        if (p2_lbig_q) begin
           contrib_ovf = (p2_prod_q != '0);
         end else begin
           contrib_ovf = (wide[WIDE_W-1:FX_W-1] != '0) && (wide[WIDE_W-1:FX_W-1] != '1);
           contrib     = wide[FX_W-1:0];
         end
-      end else if (rsh < SH_W'(PROD_W - 1)) begin
+      end else if (!p2_rbig_q) begin
         contrib = FX_W'(quot) + FX_W'(round_up);
       end
       // Otherwise |prod| * 2^sh < 1/2: rounds to 0.

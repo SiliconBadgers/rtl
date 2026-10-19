@@ -226,6 +226,7 @@ module bpu_sa_sram_wrapper
   // PE's scaling takes SCALE_PIPE more.
   localparam int unsigned KEEP_WAIT = Rows + Cols + SCALE_PIPE;
   localparam int unsigned KEEP_WAIT_WIDTH = $clog2(KEEP_WAIT + 1);
+  localparam int unsigned FX_IDX_W = $clog2(FX_W);  // a bit index into a Q23.24 value
 
   // Command.
   logic cmd_fire;
@@ -322,7 +323,18 @@ module bpu_sa_sram_wrapper
   // Drain: room for finished rows, and each row as 32-bit values.
   logic [OUT_CREDIT_WIDTH-1:0] out_credit_q;  // free queue entries
   logic [Cols*32-1:0] c_row32;  // unscaled row, int32
-  logic [Cols*32-1:0] f_row32;  // block-scaled row, binary32
+  logic [Cols*32-1:0] f_row32;  // block-scaled row, binary32 (from the conversion register)
+  logic [Cols*32-1:0] i_row32;  // unscaled row, int32 (from the conversion register)
+  // The conversion register, one entry per column: the magnitude (or, unscaled, the
+  // int32 value) and the flags and leading-one position of a block-scaled value.
+  logic cv_valid_q;
+  logic cv_last_q;
+  logic [Cols*FX_W-1:0] cv_mag_q;
+  logic [Cols*FX_IDX_W-1:0] cv_msb_q;
+  logic [Cols-1:0] cv_nan_q;
+  logic [Cols-1:0] cv_ovf_q;
+  logic [Cols-1:0] cv_neg_q;
+  logic [Cols-1:0] cv_zero_q;
 
   // Finished rows queued for write-back, and the C staging row.
   logic out_push;
@@ -385,35 +397,49 @@ module bpu_sa_sram_wrapper
   end
 `endif
 
-  // A packed block-scaled result {nan, overflow, value} (value: Q23.24, FX_W bits)
-  // as IEEE binary32: NaN -> 0x7FC00000; overflow -> +-infinity (the value's sign);
-  // otherwise value / 2^FX_FRAC rounded to nearest even, which is always a normal
-  // number or +0.
-  function automatic logic [31:0] fx_to_f32(input logic [FX_PACK_W-1:0] fx);
-    logic            neg;
-    logic [FX_W-1:0] mag;
+  // fx_to_f32: a packed block-scaled result {nan, overflow, value} (value: Q23.24,
+  // FX_W bits) as IEEE binary32. NaN -> 0x7FC00000; overflow -> +-infinity (the
+  // value's sign); otherwise value / 2^FX_FRAC rounded to nearest even, which is
+  // always a normal number or +0. It takes two cycles, split after the leading-one
+  // search: fx_to_f32_lead, then fx_to_f32_round.
+
+  // The position of the highest 1 in x (0 when x is 0), in log depth: smear the
+  // leading 1 into every lower bit, keep the top of the smear, encode its index.
+  function automatic logic [FX_IDX_W-1:0] fx_to_f32_lead(input logic [FX_W-1:0] x);
+    logic [    FX_W-1:0] smear;
+    logic [    FX_W-1:0] onehot;
+    logic [FX_IDX_W-1:0] idx;
+    smear = x;
+    for (int d = 1; d < FX_W; d = 2 * d) begin
+      smear = smear | (smear >> d);
+    end
+    onehot = smear & ~(smear >> 1);
+    idx    = '0;
+    for (int b = 0; b < FX_W; b++) begin
+      if (onehot[b]) begin
+        idx = idx | FX_IDX_W'(b);
+      end
+    end
+    return idx;
+  endfunction
+
+  // Normalize, round to nearest even and pack; mag != 0 has its highest 1 at msb.
+  function automatic logic [31:0] fx_to_f32_round(input logic nan, input logic ovf, input logic neg,
+                                                  input logic zero, input logic [FX_IDX_W-1:0] msb,
+                                                  input logic [FX_W-1:0] mag);
     logic [FX_W-1:0] norm;  // mag with its leading 1 at bit FX_W - 1
     logic [    24:0] mant;  // the 24 kept bits, rounded (bit 24: carry out)
     logic            round_up;
-    int              msb;
     logic [     7:0] expo;
-    neg = fx[FX_W-1];
-    mag = neg ? FX_W'(-fx[FX_W-1:0]) : fx[FX_W-1:0];
-    msb = 0;
-    for (int b = 0; b < FX_W; b++) begin
-      if (mag[b]) begin
-        msb = b;
-      end
-    end
-    norm     = mag << (FX_W - 1 - msb);
+    norm     = mag << (FX_W - 1 - int'(msb));
     round_up = norm[FX_W-25] && ((norm[FX_W-26:0] != '0) || norm[FX_W-24]);
     mant     = {1'b0, norm[FX_W-1:FX_W-24]} + 25'(round_up);
-    expo     = 8'(msb - FX_FRAC + 127) + 8'(mant[24]);
-    if (fx[FX_W+1]) begin
+    expo     = 8'(int'(msb) - FX_FRAC + 127) + 8'(mant[24]);
+    if (nan) begin
       return 32'h7fc0_0000;
-    end else if (fx[FX_W]) begin
+    end else if (ovf) begin
       return {neg, 8'hff, 23'h0};
-    end else if (mag == '0) begin
+    end else if (zero) begin
       return 32'h0000_0000;
     end
     return {neg, expo, mant[24] ? mant[23:1] : mant[22:0]};
@@ -793,9 +819,49 @@ module bpu_sa_sram_wrapper
   assign sa_out_ready = busy_q && (out_credit_q != '0);
   assign sa_out_fire  = sa_out_valid && sa_out_ready;
 
+  // Conversion stage 1, per column: the magnitude and its leading 1 (block-scaled), or
+  // the int32 value (unscaled), into the conversion register. Stage 2 below.
   for (genvar j = 0; j < Cols; j++) begin : g_c_row
+    logic [FX_PACK_W-1:0] fx;
+    logic [     FX_W-1:0] mag;
+    assign fx = sa_out_fx[FX_PACK_W*j+:FX_PACK_W];
+    assign mag = fx[FX_W-1] ? FX_W'(-fx[FX_W-1:0]) : fx[FX_W-1:0];
     assign c_row32[32*j+:32] = 32'($signed(sa_out_row[AccW*j+:AccW]));
-    assign f_row32[32*j+:32] = fx_to_f32(sa_out_fx[FX_PACK_W*j+:FX_PACK_W]);
+
+    always_ff @(posedge clk_i) begin
+      if (sa_out_fire) begin
+        cv_mag_q[FX_W*j+:FX_W]         <= scaled_q ? mag : FX_W'(c_row32[32*j+:32]);
+        cv_msb_q[FX_IDX_W*j+:FX_IDX_W] <= fx_to_f32_lead(mag);
+        cv_nan_q[j]                    <= fx[FX_W+1];
+        cv_ovf_q[j]                    <= fx[FX_W];
+        cv_neg_q[j]                    <= fx[FX_W-1];
+        cv_zero_q[j]                   <= (mag == '0);
+      end
+    end
+
+    assign i_row32[32*j+:32] = cv_mag_q[FX_W*j+:32];
+    assign f_row32[32*j+:32] = fx_to_f32_round(
+      cv_nan_q[j],
+      cv_ovf_q[j],
+      cv_neg_q[j],
+      cv_zero_q[j],
+      cv_msb_q[FX_IDX_W*j+:FX_IDX_W],
+      cv_mag_q[FX_W*j+:FX_W]
+    );
+  end
+
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if (!rst_ni) begin
+      cv_valid_q <= 1'b0;
+    end else begin
+      cv_valid_q <= sa_out_fire;
+    end
+  end
+
+  always_ff @(posedge clk_i) begin
+    if (sa_out_fire) begin
+      cv_last_q <= sa_out_last;
+    end
   end
 
   // Keeping the sums: the last contribution is in when the feed sends the
@@ -818,10 +884,11 @@ module bpu_sa_sram_wrapper
     end
   end
 
-  // Finished rows go to the write-back queue. Only one command runs at a time, so
-  // the two kinds never mix.
-  assign out_push = sa_out_fire;
-  assign out_data = {sa_out_last, scaled_q ? f_row32 : c_row32};
+  // Finished rows go to the write-back queue one cycle after the array hands them over
+  // (conversion stage 2). Only one command runs at a time, so the two kinds never mix,
+  // and scaled_q still describes the row in the conversion register.
+  assign out_push = cv_valid_q;
+  assign out_data = {cv_last_q, scaled_q ? f_row32 : i_row32};
 
   bpu_sa_fifo #(
     .Width(Cols * 32 + 1),
