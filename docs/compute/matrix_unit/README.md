@@ -8,21 +8,20 @@ parameter changes. [png/](png) holds PNG copies of the same figures, for chat an
 | File | Shows |
 | --- | --- |
 | [matrix_unit_hierarchy.svg](svg/matrix_unit_hierarchy.svg) | The module hierarchy: every instance (name, module, count), the signals between them, and the logic written inline in the wrapper, muxes included. |
-| [matrix_unit_modules.svg](svg/matrix_unit_modules.svg) | One card per module (all seven `.sv` files) with its parameters and every port, parsed from the RTL headers. |
+| [matrix_unit_modules.svg](svg/matrix_unit_modules.svg) | One card per module (all six module files) with its parameters and every port, parsed from the RTL headers (widths use `bpu_sa_pkg`). |
 | [matrix_unit_ports.svg](svg/matrix_unit_ports.svg) | The top-level ports of `bpu_sa_sram_wrapper` and their default parameters. |
 | [matrix_unit_structure.svg](svg/matrix_unit_structure.svg) | The blocks inside the wrapper, the data flow, and where each assertion lives. |
 | [matrix_unit_timeline.svg](svg/matrix_unit_timeline.svg) | A schematic waveform of one block-scaled command, and the rules a checker can enforce. |
 | [matrix_unit_8x8_array.svg](svg/matrix_unit_8x8_array.svg) | The 8 × 8 PE grid, its input delays, and the cycle the first k-step reaches each PE. |
-| [matrix_unit_tile_walkthrough.svg](svg/matrix_unit_tile_walkthrough.svg) | One K = 64 tile through the array: filling, steady state, capture and drain. |
+| [matrix_unit_tile_walkthrough.svg](svg/matrix_unit_tile_walkthrough.svg) | One unscaled K = 64 tile through the array: filling, steady state, capture and drain. |
 
 ## Verification plan (what exists today)
 
 | Testbench | DUT | Stimulus | Checked against | Must happen or the run fails | Runs |
 | --- | --- | --- | --- | --- | --- |
-| `bpu_sa_pe_tb` | One PE | Every INT8 pair; every (INT8, INT4) pair in both halves; random modes, flags and drain shifts | Exact integer model of the accumulator and shadow | Drain shifts, captures, INT4 cycles (with `Int4`) | 3 builds × 1 seed |
-| `bpu_sa_array_tb` | `bpu_sa_array` | Random tiles of random K; legal stalling producer; random out-ready; a streaming phase | Integer model: data, row index, order, latency (Rows + Cols − 1 edges) | Input stalls; zero stalls while streaming; an active reset | 8 shapes/modes × 3 seeds |
-| `bpu_sa_scale_acc_tb` | `bpu_sa_scale_acc` | Directed IEEE boundary tiles; random tiles of 1–6 blocks; rows one per cycle | Independent binary32 model with full rounding (subnormals, infinity, NaN) | NaN, infinite, zero, subnormal and negative results; a reset with rows in flight | 3 shapes × 3 seeds |
-| `bpu_sa_sram_wrapper_tb` | `bpu_sa_sram_wrapper` + `sram_arbiter_matrix_model` | Unscaled and block-scaled commands, INT8 and INT4, K at SRAM-row and scale-table boundaries plus random; illegal commands | Every C element in memory; exact read/write counts and bytes; port protocol (in the model) | Arbiter stalls (when ready < 100%); a reset while a command runs; scaled and INT4 commands | 9 configs × 3 seeds |
+| `bpu_sa_pe_tb` | One PE | Every INT8 pair; every (INT8, INT4) pair in both halves; random modes, flags and drain shifts; 3,000 block-scaled tiles with special scales and extreme operands | Exact integer model; independent double-precision model of the fixed-point contract | Drain shifts, captures, INT4 cycles; with `Scale`: saturation, NaN, rounding to zero, a continued tile, a subnormal scale paired with a giant one (only the flush keeps it out of the sum) | 3 builds × 1 seed |
+| `bpu_sa_array_tb` | `bpu_sa_array` | Random tiles of random K, unscaled or split into random blocks with random scales; legal stalling producer; random out-ready; a streaming phase | Integer model, or the fixed-point model: data, row index, order, latency (Rows + Cols − 1 edges, + 4 block-scaled) | Input stalls; zero stalls while streaming; an active reset; block-scaled: multi-block tiles and a continued tile | 11 shapes/modes × 3 seeds |
+| `bpu_sa_sram_wrapper_tb` | `bpu_sa_sram_wrapper` + `sram_arbiter_matrix_model` | Unscaled and block-scaled commands, INT8 and INT4, K at SRAM-row and scale-table boundaries plus random; chains with clear/write; a NaN scale and commands saturating to +∞ and to −∞; illegal commands | Every C element in memory (block-scaled: the fixed-point model, then binary32); exact read/write counts and bytes; port protocol (in the model) | Arbiter stalls (when ready < 100%); a reset while a command runs; scaled, INT4, kept and continued commands; NaN, +∞ and −∞ results | 9 configs × 3 seeds |
 
 **Regression modes** (`tb/compute/Matrix_Unit/run_tests.sh`, VCS):
 - **Default:** every run must pass.

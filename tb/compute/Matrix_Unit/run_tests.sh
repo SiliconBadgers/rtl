@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Regression runner for the matrix unit (rtl/compute/Matrix_Unit): the
 # output-stationary systolic array (bpu_sa_array, bpu_sa_pe, bpu_sa_delay), the
-# block-scaling stage (bpu_sa_scale_acc) and the SRAM wrapper (bpu_sa_sram_wrapper,
+# block scaling in every PE, and the SRAM wrapper (bpu_sa_sram_wrapper,
 # bpu_sa_read_stream, bpu_sa_fifo). Builds and runs every configuration below,
 # requires exactly one "status=PASS" RESULT line and a zero simulator exit status
 # from each run, and exits nonzero on a compile error, a failed or missing result,
@@ -38,22 +38,22 @@ RTL_LIST="rtl/compute/Matrix_Unit/bpu_sa_array.f"
 M="sram_arbiter_matrix_model.sv"
 CONFIGS=(
   "pe_acc32|bpu_sa_pe_tb|AccW=32|single|"
-  "pe_acc16|bpu_sa_pe_tb|AccW=16|single|"
+  "pe_acc16|bpu_sa_pe_tb|AccW=16 Scale=0|single|"
   "pe_acc32_int8only|bpu_sa_pe_tb|AccW=32 Int4=0|single|"
-  "scale_8x8_acc32|bpu_sa_scale_acc_tb|Rows=8 Cols=8 AccW=32|all|"
-  "scale_3x5_acc25|bpu_sa_scale_acc_tb|Rows=3 Cols=5 AccW=25|all|"
-  "scale_1x2_acc22|bpu_sa_scale_acc_tb|Rows=1 Cols=2 AccW=22|all|"
   "array_8x8_acc32|bpu_sa_array_tb|Rows=8 Cols=8 AccW=32|all|"
   "array_8x8_int4|bpu_sa_array_tb|Rows=8 Cols=8 AccW=32 Mode=1|all|"
+  "array_8x8_scaled|bpu_sa_array_tb|Rows=8 Cols=8 AccW=32 Scaled=1|all|"
+  "array_8x8_int4_scaled|bpu_sa_array_tb|Rows=8 Cols=8 AccW=32 Mode=1 Scaled=1|all|"
   "array_3x5_acc32|bpu_sa_array_tb|Rows=3 Cols=5 AccW=32|all|"
   "array_3x5_int4|bpu_sa_array_tb|Rows=3 Cols=5 AccW=32 Mode=1|all|"
-  "array_5x2_acc17|bpu_sa_array_tb|Rows=5 Cols=2 AccW=17|all|"
-  "array_1x1_int4_acc16|bpu_sa_array_tb|Rows=1 Cols=1 AccW=16 Mode=1|all|"
-  "array_16x16_acc20|bpu_sa_array_tb|Rows=16 Cols=16 AccW=20|all|"
+  "array_3x5_acc25_scaled|bpu_sa_array_tb|Rows=3 Cols=5 AccW=25 BlockK=32 Scaled=1|all|"
+  "array_5x2_acc17|bpu_sa_array_tb|Rows=5 Cols=2 AccW=17 Scale=0|all|"
+  "array_1x1_int4_acc16|bpu_sa_array_tb|Rows=1 Cols=1 AccW=16 Mode=1 Scale=0|all|"
+  "array_16x16_acc20|bpu_sa_array_tb|Rows=16 Cols=16 AccW=20 Scale=0|all|"
   "array_8x8_int8only|bpu_sa_array_tb|Rows=8 Cols=8 AccW=32 Int4=0|all|"
   "wrap_8x8_lat4|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 Latency=4 ReadyPct=70|all|$M"
   "wrap_8x8_lat40_wrack|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 Latency=40 ReadyPct=100 WriteAcks=1|all|$M"
-  "wrap_4x16_acc24_lat1|bpu_sa_sram_wrapper_tb|Rows=4 Cols=16 AccW=24 Latency=1 ReadyPct=50|all|$M"
+  "wrap_4x16_acc26_lat1|bpu_sa_sram_wrapper_tb|Rows=4 Cols=16 AccW=26 Latency=1 ReadyPct=50|all|$M"
   "wrap_16x4_buf1|bpu_sa_sram_wrapper_tb|Rows=16 Cols=4 BufRows=1 Latency=7 ReadyPct=80|all|$M"
   "wrap_8x8_block32|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 BlockK=32 MaxBlocks=6 Latency=5 ReadyPct=75|all|$M"
   "wrap_8x8_int8only|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 Int4=0 Latency=4 ReadyPct=70|all|$M"

@@ -1,14 +1,7 @@
-rtl/common/bpu_compute_pkg.sv
-rtl/compute/common/bpu_delay.sv
-rtl/compute/common/bpu_lzc_pow2.sv
-rtl/compute/common/bpu_lzc.sv
-rtl/compute/fp/bpu_int2fp32.sv
-rtl/compute/fp/bpu_fp32_mul.sv
-rtl/compute/fp/bpu_fp32_add.sv
+rtl/compute/Matrix_Unit/bpu_sa_pkg.sv
 rtl/compute/Matrix_Unit/bpu_sa_delay.sv
 rtl/compute/Matrix_Unit/bpu_sa_pe.sv
 rtl/compute/Matrix_Unit/bpu_sa_array.sv
 rtl/compute/Matrix_Unit/bpu_sa_fifo.sv
 rtl/compute/Matrix_Unit/bpu_sa_read_stream.sv
-rtl/compute/Matrix_Unit/bpu_sa_scale_acc.sv
 rtl/compute/Matrix_Unit/bpu_sa_sram_wrapper.sv

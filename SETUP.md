@@ -58,8 +58,8 @@ make test-tooling
 ```
 
 The default suite runs 63 configuration/seed pairs across 23 configurations:
-the PE, the array, the block-scaling stage, and the SRAM wrapper against a model
-of the arbiter. Logs and the result table are written under
+the PE (with its block-scaling pipeline), the array, and the SRAM wrapper
+against a model of the arbiter. Logs and the result table are written under
 `build/matrix_unit/vcs/`. See
 [the test instructions](tb/compute/Matrix_Unit/README.md) for failure injection,
 reset prerequisites, configuration selection and result counts.

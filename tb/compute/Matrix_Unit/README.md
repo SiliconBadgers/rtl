@@ -2,17 +2,14 @@
 
 These are the tests for the matrix unit in `rtl/compute/Matrix_Unit`; the source list is `bpu_sa_array.f`.
 
-- **The array:** `bpu_sa_array`, `bpu_sa_pe` and `bpu_sa_delay`. It's output-stationary and computes INT8 × INT8, or INT8 × INT4 at two k-steps per cycle.
-- **The block-scaling stage:** `bpu_sa_scale_acc`.
+- **The array:** `bpu_sa_array`, `bpu_sa_pe`, `bpu_sa_delay` and the package `bpu_sa_pkg`. It's output-stationary and computes INT8 × INT8, or INT8 × INT4 at two k-steps per cycle, unscaled or block-scaled (each PE scales its block sums into a 48-bit fixed-point accumulator).
 - **The SRAM wrapper:** `bpu_sa_sram_wrapper`, `bpu_sa_read_stream` and `bpu_sa_fifo`.
-- **The FP32 units** in `rtl/compute/fp`, `rtl/compute/common` and `rtl/common/bpu_compute_pkg.sv`.
 
 | Testbench | What it checks |
 | --- | --- |
-| `bpu_sa_pe_tb.sv` | One PE. Every signed INT8 pair (65,536) and, with `Int4`, every (INT8, INT4) pair in each half of the INT4-pair mode goes through a restart, one carry-save accumulation and a capture. Then random modes, tile flags, data and drain shifts run against a model. Then the flag reset. |
-| `bpu_sa_array_tb.sv` | One array shape and mode per run. Random tiles of random K run against a reference model, checking the data, index, order and latency of every C row. It also checks stalled k-steps under a legal producer, `in_ready_o` every cycle, a streaming phase that must never stall, an active reset, and the mode error. In INT8 mode it puts junk in the unused high A byte. |
-| `bpu_sa_scale_acc_tb.sv` | The block-scaling stage on its own, every output bit against an independent IEEE binary32 reference (subnormals, overflow to infinity, NaN). Directed tiles cover signed zeros, the largest and smallest block sums, cancellation, infinity minus infinity, a NaN scale, 0 × infinity, underflow and subnormal results. Random tiles have 1–6 blocks with random row order and gaps. It checks the 8-cycle latency, idle cycles with junk payload, and a reset with rows in flight. A run fails unless NaN, infinite, zero, subnormal and negative results all occurred. |
-| `bpu_sa_sram_wrapper_tb.sv` | One wrapper configuration per run, against the model below. It runs unscaled and block-scaled commands, in INT8 and INT4. The K values are directed at SRAM-row and scale-table-row boundaries, plus random K. Every C element in memory is checked against an independent reference. It also checks exact read and write counts per stream, illegal commands, a reset while a command is certainly running, and the `busy_o` / `done_o` / `err_o` / `cmd_ready_o` rules. When the arbiter isn't always ready, a run fails unless request stalls occurred. |
+| `bpu_sa_pe_tb.sv` | One PE. Every signed INT8 pair (65,536) and, with `Int4`, every (INT8, INT4) pair in each half of the INT4-pair mode goes through a restart, one carry-save accumulation and a capture. Then random modes, tile flags, data and drain shifts run against a model. With `Scale`, 3,000 block-scaled tiles (1–4 blocks of 1–16 k-steps, random bf16 scales including huge, giant, tiny, zero, subnormal, inf and NaN, extreme operands, continued sums) run against an independent double-precision reference of the fixed-point contract; the run fails unless saturation, NaN, rounding to zero, a continued tile and a subnormal scale that only the flush keeps out of the sum (paired with a giant one) all occurred. Then the flag reset. |
+| `bpu_sa_array_tb.sv` | One array shape and mode per run, unscaled or block-scaled (`Scaled`). Random tiles of random K run against a reference model, checking the data, index, order and latency of every C row. Block-scaled tiles are split into random blocks with random row and column scales, checked bit for bit against the fixed-point reference, with a fifth of the tiles continuing the previous sums. It also checks stalled k-steps under a legal producer, `in_ready_o` every cycle, a streaming phase that must never stall, an active reset, and the mode error. In INT8 mode it puts junk in the unused high A byte; outside a block's last k-step it puts junk in the scale inputs. |
+| `bpu_sa_sram_wrapper_tb.sv` | One wrapper configuration per run, against the model below. It runs unscaled and block-scaled commands, in INT8 and INT4. The K values are directed at SRAM-row and scale-table-row boundaries, plus random K. Commands are also chained along K with `cmd_clear_acc_i` / `cmd_write_output_i`, in directed chains (including an INT8/INT4 switch right after a command that keeps its sums) and at random. Every C element written is checked against an independent reference that carries kept sums across commands, and a command that keeps its sums must write nothing. Illegal continuations (nothing kept, the wrong kind, after a reset) must be rejected. It also checks exact read and write counts per stream, illegal commands, a reset while a command is certainly running, and the `busy_o` / `done_o` / `err_o` / `cmd_ready_o` rules. When the arbiter isn't always ready, a run fails unless request stalls occurred. |
 | `sram_arbiter_matrix_model.sv` | A testbench model of the `sram_arbiter` matrix port with an SRAM behind it. It gives random ready, a fixed response latency and, as the arbiter specifies, no response for writes (`WriteAcks = 1` adds them for one configuration), and puts random garbage above `size_bytes` in read data. It checks the port protocol: stable stalled requests, alignment, sizes, reads only inside the command's four read windows, and writes only inside C. |
 
 ## Run
@@ -34,12 +31,11 @@ bash tb/compute/Matrix_Unit/run_tests.sh --only wrap_8x8_lat4 --seeds 7
 
 The runner builds and runs every configuration in its `CONFIGS` table:
 
-- **PE:** three builds, at two widths, with and without `Int4`.
-- **Scale stage:** three shapes and sum widths.
-- **Array:** eight shapes and modes.
+- **PE:** three builds, at two widths, with and without `Int4` and `Scale`.
+- **Array:** eleven shapes and modes, three of them block-scaled (INT8, INT4, and the narrowest `AccW` = 25 with block size 32).
 - **Wrapper:** nine configurations. They cover shapes, latencies, ready rates, writes with and without responses, buffer depths, block size 32, a 256-bit SRAM row, and builds without `Int4` and without `Scale`.
 
-The scale, array and wrapper configurations run three seeds each.
+The array and wrapper configurations run three seeds each.
 
 The runner enforces compile and simulation timeouts. It exits nonzero on a compile error, a failed or missing result, or a timeout. Each run must end with one `RESULT ... status=PASS` line and a zero exit status; the testbenches call `$fatal(1, ...)` on any failure.
 
@@ -58,7 +54,7 @@ The array test's reset needs a finished tile still draining while the next tile 
 2. Once the point is reached, it lets the rising edge accept the prepared transfer, then asserts reset.
 3. Every array result must report `active_resets=1`.
 
-The wrapper and scale tests likewise fail if their reset never catches a running command or rows in flight.
+The wrapper test likewise fails if its reset never catches a running command.
 
 Exercise the missing-condition failure separately:
 
@@ -71,7 +67,7 @@ This disables the traffic phase and the wait for active work. Expect exit status
 ### Notes
 
 **Assertions:**
-- Assertions stay enabled through `-assert svaext`. The labelled ones are `CaptureShiftExclusive_A`, `NoOverflow_A`, `NoUnderflow_A`, `GrantWanted_A`, `StartIdle_A`, `ExpectedResponse_A`, `NoReadWriteOverlap_A`, `RowReuseSpacing_A` and the testbench monitors.
+- Assertions stay enabled through `-assert svaext`. The labelled ones are `CaptureShiftExclusive_A`, `NoOverflow_A`, `NoUnderflow_A`, `GrantWanted_A`, `StartIdle_A`, `ExpectedResponse_A`, `NoReadWriteOverlap_A` and the testbench monitors.
 - Every simulator invocation uses `-exitstatus`, so assertion and testbench fatal failures reach the shell.
 
 **Runner:**
