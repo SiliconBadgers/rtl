@@ -52,3 +52,6 @@ compute, control and memory repositories; existing source notices remain intact.
 
 [Preserved development history](docs/history/README.md) contains the original
 control and memory reviews, branch mappings and authorship records.
+
+Python tooling uses uv 0.12.23+ and the committed `uv.lock`. Start with
+`make setup`; see [SETUP.md](SETUP.md) for locked commands and tool versions.

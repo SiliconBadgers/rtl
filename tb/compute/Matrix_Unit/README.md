@@ -17,7 +17,7 @@ These are the tests for the matrix unit in `rtl/compute/Matrix_Unit`; the source
 
 ## Run
 
-You need Bash 3.2+, Python 3.11+, Git and Synopsys VCS `Y-2026.03_Full64`. On CAE, run `module load synopsys/vcs-mx/2026.03` first. The runner checks the pinned version and does not fall back to another simulator; see [the setup guide](../../../SETUP.md).
+You need Bash 3.2+, uv 0.12.23+, Python 3.11+, Git and Synopsys VCS `Y-2026.03_Full64`. On CAE, run `module load synopsys/vcs-mx/2026.03` first, then `make setup` once to create the locked tool environment. The runner checks the pinned version and does not fall back to another simulator; see [the setup guide](../../../SETUP.md).
 
 From the repository root:
 
