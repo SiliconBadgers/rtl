@@ -1,0 +1,29 @@
+tb/memory/f2_hbm/reports/2026-10-19-cae-filtered/README.md
+  s_15c0c7c49f988a::t_a7142661a788e4 1-72
+tb/memory/f2_hbm/reports/2026-10-19-cae-filtered/compile.log
+  s_15c0c7c49f988a::t_149277de6393a0 1-383
+tb/memory/f2_hbm/reports/2026-10-19-cae-filtered/full-log-sha256.txt
+  s_15c0c7c49f988a::t_c00b5de372a050 1-8
+tb/memory/f2_hbm/reports/2026-10-19-cae-filtered/remote.json
+  s_15c0c7c49f988a::t_8b81ce4af8dddf 1-6
+tb/memory/f2_hbm/reports/2026-10-19-cae-filtered/simulation-excerpts.log
+  s_15c0c7c49f988a::t_dcd48326c66eb2 1-27
+tb/memory/f2_hbm/reports/2026-10-19-cae-filtered/summary.json
+  s_15c0c7c49f988a::t_871f077b876746 1-63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cb8a5777e70411cf6f2537615f9c9f5b3f0e4799",
+  "prompts": {},
+  "sessions": {
+    "s_15c0c7c49f988a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a155aa-80a2-7052-a3e5-3b8c3a6f2261",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zeb Taylor <zceboys@gmail.com>"
+    }
+  }
+}
