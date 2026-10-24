@@ -1,0 +1,51 @@
+docs/memory/hbm_controller_spec.md
+  h_ef9e838b06a174 1-200
+  s_caffbfd80bd00b::t_16a524b3dc99fe 201-211
+docs/memory/memory_unit_spec.md
+  s_14d49ef54ad644::t_0bab5c4c1c7893 22,33-35,70-72,92,100-105,107,128,234-236,293-294,313,325-326
+  s_14d49ef54ad644::t_beded48e04b748 5-8,11-13,40-43,50,52,54-55,60-62,74-76,96-99,106,108-109,132,153,155,157,165-167,169,172,184,191-194,199-201,203,216,220,231,237-238,242-258,268-279,289,295-296,306,311,314,321-322,330,334-336,338-339
+  s_14d49ef54ad644::t_a863df67c8a124 195-196,223,319-320
+  h_ef9e838b06a174 53,68,113,152,159-160,164,170,221-222,328
+  s_14d49ef54ad644::t_7bcec29506f8c9 130,141-151,208,219,264-266,283,323-324,337
+  s_14d49ef54ad644::t_8dfab0d9522c6b 1-4,9-10,14-21,23-32,36-39,44-49,51,56-59,63-67,69,73,77-91,93-95,110-112,114-127,129,131,133-140,154,156,158,161-163,168,171,173-183,185-190,197-198,202,204-207,209-215,217-218,224-230,232-233,239-241,259-263,267,280-282,284-288,290-292,297-305,307-310,312,315-318,327,329,331-333
+  s_418581b9e4fdbd::t_0e1195832ca4f3 340
+docs/memory/hbm_wrapper_spec.md
+  s_caffbfd80bd00b::t_46488751425765 1-258
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3544e72e2c946763686d43fbda4238a0c61a5cfe",
+  "prompts": {},
+  "humans": {
+    "h_ef9e838b06a174": {
+      "author": "Zeb Taylor <zceboys@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_14d49ef54ad644": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16f52-82a0-7b62-9753-8dccfcf94f64",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zeb Taylor <zceboys@gmail.com>"
+    },
+    "s_418581b9e4fdbd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16fb9-d772-7a73-9762-a392a76f62e9",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zeb Taylor <zceboys@gmail.com>"
+    },
+    "s_caffbfd80bd00b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16f53-c5c3-76a2-9964-7be5f821f6c5",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zeb Taylor <zceboys@gmail.com>"
+    }
+  }
+}
