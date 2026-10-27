@@ -28,7 +28,7 @@ test-matrix-unit:
 test-tooling:
 	$(RUN_PYTHON) -m unittest discover -s scripts -p 'test_*.py'
 
-.PHONY: prepare-f2-hbm test-f2-hbm test-f2-hbm-cae
+.PHONY: prepare-f2-hbm test-f2-hbm test-f2-hbm-cae test-f2-hbm-latency test-f2-hbm-latency-cae
 F2_HBM_ARGS ?=
 prepare-f2-hbm:
 	$(RUN_PYTHON) scripts/f2_hbm.py prepare $(F2_HBM_ARGS)
@@ -38,3 +38,9 @@ test-f2-hbm:
 
 test-f2-hbm-cae:
 	$(RUN_PYTHON) scripts/f2_hbm.py remote $(F2_HBM_ARGS)
+
+test-f2-hbm-latency:
+	$(RUN_PYTHON) scripts/f2_hbm.py simulate --bench latency $(F2_HBM_ARGS)
+
+test-f2-hbm-latency-cae:
+	$(RUN_PYTHON) scripts/f2_hbm.py remote --bench latency $(F2_HBM_ARGS)
