@@ -27,3 +27,14 @@ test-matrix-unit:
 .PHONY: test-tooling
 test-tooling:
 	$(RUN_PYTHON) -m unittest discover -s scripts -p 'test_*.py'
+
+.PHONY: prepare-f2-hbm test-f2-hbm test-f2-hbm-cae
+F2_HBM_ARGS ?=
+prepare-f2-hbm:
+	$(RUN_PYTHON) scripts/f2_hbm.py prepare $(F2_HBM_ARGS)
+
+test-f2-hbm:
+	$(RUN_PYTHON) scripts/f2_hbm.py simulate $(F2_HBM_ARGS)
+
+test-f2-hbm-cae:
+	$(RUN_PYTHON) scripts/f2_hbm.py remote $(F2_HBM_ARGS)

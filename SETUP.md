@@ -78,6 +78,9 @@ historical evidence for their recorded revisions.
 
 ## Source style
 
+For AWS F2 HBM simulation and copying local Vivado dependencies to CAE,
+see [the HBM test instructions](tb/memory/f2_hbm/README.md).
+
 Install Verible v0.0-3946-g851d3ff4 and put its executables on PATH.
 Ruff 0.16.6 is supplied by the locked uv dev group. CI pins these versions
 and checks only tracked project sources.
