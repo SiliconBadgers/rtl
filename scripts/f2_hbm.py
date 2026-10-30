@@ -15,6 +15,8 @@ import time
 import urllib.request
 from pathlib import Path
 
+import f2_hbm_latency
+
 ROOT = Path(__file__).resolve().parents[1]
 TEST = ROOT / "tb/memory/f2_hbm"
 PINS = json.loads((TEST / "dependencies.json").read_text())
@@ -29,12 +31,33 @@ VENDOR_DIRS = [
     "data/verilog/src/unisims",
     "data/secureip/hbm_two_stack_intf",
 ]
-CASES = {
-    "read_write": ([], None),
-    "bad_data": (["+CORRUPT_EXPECTED=1"], "HBM_DATA_MISMATCH"),
-    "missing_reset": (["+SKIP_RESET=1"], "HBM_RESET_REQUIRED"),
-    "missing_backpressure": (["+SKIP_BACKPRESSURE=1"], "HBM_BACKPRESSURE_REQUIRED"),
+BENCHES = {
+    "functional": {
+        "top": "f2_hbm_tb",
+        "source": "f2_hbm_tb.sv",
+        "output": "build/f2_hbm",
+        "marker": "F2_HBM_PASS ",
+        "cases": {
+            "read_write": ([], None),
+            "bad_data": (["+CORRUPT_EXPECTED=1"], "HBM_DATA_MISMATCH"),
+            "missing_reset": (["+SKIP_RESET=1"], "HBM_RESET_REQUIRED"),
+            "missing_backpressure": (["+SKIP_BACKPRESSURE=1"], "HBM_BACKPRESSURE_REQUIRED"),
+        },
+    },
+    "latency": {
+        "top": "f2_hbm_latency_tb",
+        "source": "f2_hbm_latency_tb.sv",
+        "output": "build/f2_hbm_latency",
+        "marker": "F2_HBM_LATENCY_DONE ",
+        "cases": {
+            "latency": ([], None),
+            # Idle (phase 1) traffic is withheld, so its record count must fail.
+            "missing_phase": (["+DROP_PHASE=1", "+PHASES=1"], "HBM_LATENCY_MISSING"),
+            "missing_reset": (["+SKIP_RESET=1"], "HBM_RESET_REQUIRED"),
+        },
+    },
 }
+CASES = BENCHES["functional"]["cases"]
 TIMING_WARNING = re.compile(
     r"(?:HBM\[CH_[A-H]\]\s*:\s*Warning tCHmax violation at \d+(?:\.\d+)? ns\. "
     r"tCH is \d+(?:\.\d+)? ns|IEEE1500\s*:\s*Warning "
@@ -133,7 +156,7 @@ def verify_assets():
     return manifest
 
 
-def sources():
+def sources(bench="functional"):
     vip = VIVADO / "data/xilinx_vip/hdl"
     names = [
         "axi4stream_vip_axi4streampc.sv",
@@ -158,16 +181,26 @@ def sources():
         HBM / "verif/model/hbm_model.sv",
         HBM / "sim/cl_hbm.sv",
         VIVADO / "data/verilog/src/glbl.v",
-        TEST / "f2_hbm_tb.sv",
+        TEST / BENCHES[bench]["source"],
     ]
 
 
-def classify(code, output, expected_failure):
+def summarize_latency(case):
+    """Summarize latency.csv next to the run log; a missing or empty file fails the case."""
+    path = case / "latency.csv"
+    if not path.is_file():
+        raise ValueError(f"Latency case passed without {path}")
+    result = f2_hbm_latency.summarize(f2_hbm_latency.load(path))
+    (case / "latency_summary.json").write_text(json.dumps(result, indent=2) + "\n")
+    return {"records": result["records"], "summary": "latency_summary.json"}
+
+
+def classify(code, output, expected_failure, marker="F2_HBM_PASS "):
     if expected_failure:
         return code not in (0, 124) and expected_failure in output
     return (
         code == 0
-        and "F2_HBM_PASS " in output
+        and marker in output
         and not re.search(r"\b(?:error|fatal)(?:-\[[^]]+\])?\s*:", output, re.IGNORECASE)
     )
 
@@ -186,11 +219,13 @@ def filter_timing_warnings(content):
 
 def simulate(args):
     verify_assets()
-    output = args.output.resolve()
+    bench = BENCHES[args.bench]
+    output = (args.output or ROOT / bench["output"]).resolve()
     output.mkdir(parents=True, exist_ok=True)
     summary = {
         "dependencies": PINS,
         "vcs_baseline": "Y-2026.03_Full64",
+        "bench": args.bench,
         "seed": args.seed,
         "host": os.uname().nodename,
         "cases": [],
@@ -198,7 +233,12 @@ def simulate(args):
         "asset_manifest_sha256": digest(VIVADO / "manifest.json"),
         "inputs": {
             str(p.relative_to(ROOT)): digest(p)
-            for p in [TEST / "f2_hbm_tb.sv", Path(__file__), ROOT / "scripts/vcs.py"]
+            for p in [
+                TEST / bench["source"],
+                Path(__file__),
+                ROOT / "scripts/vcs.py",
+                ROOT / "scripts/f2_hbm_latency.py",
+            ]
         },
     }
     start = time.monotonic()
@@ -219,16 +259,16 @@ def simulate(args):
             "+incdir+" + str(HBM / "hdl/rtl"),
             "+incdir+" + str(STATIC / "verif/model"),
             "-top",
-            "f2_hbm_tb",
+            bench["top"],
             "-top",
             "glbl",
             "-o",
             output / "simv",
-            *sources(),
+            *sources(args.bench),
         ]
         with (output / "compile.log").open("w") as log:
             run(command, cwd=output, stdout=log, stderr=subprocess.STDOUT)
-        for name, (flags, expected) in CASES.items():
+        for name, (flags, expected) in bench["cases"].items():
             case = output / name
             case.mkdir(exist_ok=True)
             for path in (HBM / "hdl/rtl").glob("*.mem"):
@@ -255,8 +295,8 @@ def simulate(args):
             content = (case / "run.raw.log").read_text(errors="replace")
             filtered, suppressed = filter_timing_warnings(content)
             (case / "run.log").write_text(filtered)
-            passed = classify(result.returncode, content, expected)
-            counts = re.search(r"F2_HBM_PASS (.*)", content)
+            passed = classify(result.returncode, content, expected, bench["marker"])
+            counts = re.search(re.escape(bench["marker"]) + r"(.*)", content)
             record = {
                 "name": name,
                 "passed": passed,
@@ -267,6 +307,8 @@ def simulate(args):
                 "model_timing_warnings": len(re.findall(r"Warning.*violation", content)),
                 "suppressed_timing_warnings": suppressed,
             }
+            if passed and args.bench == "latency" and not expected:
+                record["latency"] = summarize_latency(case)
             summary["cases"].append(record)
             print(json.dumps(record), flush=True)
             if not passed:
@@ -274,7 +316,7 @@ def simulate(args):
                 raise ValueError(f"HBM case failed: {name}; see {case / 'run.log'}")
     finally:
         summary["elapsed_seconds"] = time.monotonic() - start
-        summary["passed"] = len(summary["cases"]) == len(CASES) and all(
+        summary["passed"] = len(summary["cases"]) == len(bench["cases"]) and all(
             case["passed"] for case in summary["cases"]
         )
         (output / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
@@ -332,6 +374,8 @@ def remote(args):
                     "python3",
                     "scripts/f2_hbm.py",
                     "simulate",
+                    "--bench",
+                    args.bench,
                     "--seed",
                     str(args.seed),
                     "--timeout",
@@ -350,7 +394,8 @@ def remote(args):
                 [*ssh, args.host, "bash -lc " + shlex.quote(body)],
                 check=False,
             )
-            destination = args.output.resolve() / Path(directory).name
+            bench = BENCHES[args.bench]
+            destination = (args.output or ROOT / bench["output"]).resolve() / Path(directory).name
             destination.mkdir(parents=True, exist_ok=True)
             run(
                 [
@@ -361,10 +406,11 @@ def remote(args):
                     "--include=*/",
                     "--include=*.log",
                     "--include=*.json",
+                    "--include=*.csv",
                     "--exclude=*",
                     "-e",
                     shlex.join(ssh),
-                    f"{args.host}:{directory}/build/f2_hbm/",
+                    f"{args.host}:{directory}/{bench['output']}/",
                     str(destination) + "/",
                 ]
             )
@@ -404,7 +450,12 @@ def main():
         run_parser = sub.add_parser(action)
         run_parser.add_argument("--seed", type=int, default=1)
         run_parser.add_argument("--timeout", type=int, default=1200)
-        run_parser.add_argument("--output", type=Path, default=ROOT / "build/f2_hbm")
+        run_parser.add_argument("--bench", choices=sorted(BENCHES), default="functional")
+        run_parser.add_argument(
+            "--output",
+            type=Path,
+            help="Results parent (default build/f2_hbm or build/f2_hbm_latency)",
+        )
         if action == "remote":
             run_parser.add_argument("--host", default=os.environ.get("RTL_CAE_HOST"))
     args = parser.parse_args()
