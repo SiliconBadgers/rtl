@@ -180,7 +180,7 @@ beat) and completion, in 450 MHz AXI cycles counted from reset deassertion.
 | 3 depth | Port 0 sequential reads with 1 to 64 outstanding | Latency and bandwidth versus queue depth |
 | 4 random | Port 0, 16 outstanding, random within 64 MiB | Latency under page misses |
 | 5 all_ports | All 32 ports stream to their own channels | Aggregate bandwidth, tail latency, refresh stalls |
-| 6 mixed | Port 0 alternating reads and writes, then writes only | Read/write turnaround and write latency |
+| 6 mixed | Port 0 alternating reads and writes; after they drain, writes only | Read/write turnaround and write latency |
 
 Each phase must log its exact expected record count or the run fails with
 `HBM_LATENCY_MISSING`. The runner also runs two expected-failure cases: phase 1
@@ -191,9 +191,14 @@ the phase 5 length (default 9000 cycles, several refresh intervals) and
 
 After a passing run the runner writes `latency/latency_summary.json` with
 `scripts/f2_hbm_latency.py`: queue, first-beat and completion percentiles per
-phase, the stride table, bandwidth, and a calibration block (page-hit cycles,
-row-conflict cycles, stall probability and size) for the software team's HBM
-counter study. Rerun the analysis on a retrieved CSV with
+phase, the stride table, bandwidth, per-phase completion order (reads, writes
+and both together, per port), and a calibration block for the software team's
+HBM counter study. The calibration's hit and row-conflict cycles both use reads
+within the port's own pseudo-channel; reads through the switch are reported as
+`switched_hit_cycles`.
+
+WDATA and WLAST are a function of the burst ID and beat and stay stable while
+WVALID waits for WREADY; an assertion checks this on every port. Rerun the analysis on a retrieved CSV with
 `python3 scripts/f2_hbm_latency.py PATH/latency.csv --output summary.json`.
 
 These are measurements of AMD's simulation model in this configuration. They

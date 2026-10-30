@@ -213,6 +213,17 @@ module f2_hbm_latency_tb;
   `undef CONNECT_AXI
   `undef CONNECT_APB
 
+  for (genvar port_idx = 0; port_idx < NUM_PORTS; port_idx++) begin : gen_protocol_checks
+    WriteDataStable_A :
+    assert property (
+      @(posedge axi_clk) disable iff (!rst_n)
+      wvalid[port_idx] && !wready[port_idx] |=>
+      wvalid[port_idx] && $stable(
+      {wdata[port_idx], wlast[port_idx]}
+    ))
+    else $fatal(1, "HBM write data changed while stalled on port %0d", port_idx);
+  end
+
   // Global address: bit 33 selects the stack, [32:29] the pseudo-channel.
   function automatic logic [33:0] pc_address(input int unsigned pc, input longint unsigned offset);
     return (34'(pc) << 29) | 34'(offset & 64'h1fff_ffe0);
@@ -359,10 +370,14 @@ module f2_hbm_latency_tb;
           end
         end
 
-        // Write data follows accepted write addresses in order.
+        // Write data follows accepted write addresses in order. The payload is a
+        // function of the burst ID and beat, which only change on a handshake, so
+        // WDATA and WLAST hold steady while WVALID waits for WREADY.
         wvalid[port] <= write_data_ids[port].size() > 0;
         wlast[port]  <= write_beat[port] == BURST_BEATS - 1;
-        wdata[port]  <= {8{32'(cycle)}};
+        if (write_data_ids[port].size() > 0) begin
+          wdata[port] <= {8{32'(write_data_ids[port][0]) << 16 | 32'(write_beat[port])}};
+        end
       end
     end
   end
@@ -495,6 +510,8 @@ module f2_hbm_latency_tb;
     for (int unsigned burst = 0; burst < MIXED_BURSTS; burst++) begin
       push(0, pc_address(0, 64'h1000_0000 + 64'(burst) * BURST_BYTES), burst % 2 == 1, 0);
     end
+    // Finish the mixed segment before the write-only segment starts.
+    drain();
     for (int unsigned burst = 0; burst < WRITE_ONLY_BURSTS; burst++) begin
       push(0, pc_address(0, 64'h1800_0000 + 64'(burst) * BURST_BYTES), 1'b1, 1);
     end

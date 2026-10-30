@@ -66,6 +66,39 @@ class LatencyAnalyzerTests(unittest.TestCase):
         self.assertGreater(calibration["stall_probability"], 0.02)
         self.assertLess(calibration["stall_probability"], 0.10)
 
+    def test_calibration_keeps_routes_apart(self):
+        header = ",".join(f2_hbm_latency.COLUMNS)
+        rows = [header]
+        cycle = 0
+        # Port 3 idle reads: own channel 50 cycles, switched to PC 0 and PC 16 80 cycles.
+        for dst, latency in ((3, 50), (0, 80), (16, 80)):
+            for repeat in range(3):
+                rows.append(
+                    f"PhaseIdle,3,R,{len(rows)},0,{dst * 256 + repeat},"
+                    f"{cycle},{cycle + 1},{cycle + 1 + latency},{cycle + 16 + latency}"
+                )
+                cycle += 200
+        self.path.write_text("\n".join(rows) + "\n")
+        calibration = f2_hbm_latency.summarize(f2_hbm_latency.load(self.path))["calibration"]
+        self.assertEqual(calibration["hit_cycles"], 50)
+        self.assertEqual(calibration["switched_hit_cycles"], 80)
+
+    def test_completion_order_separates_reads_and_writes(self):
+        header = ",".join(f2_hbm_latency.COLUMNS)
+        # seq 0 read finishes after seq 1 write; each direction alone stays in order.
+        self.path.write_text(
+            header + "\n"
+            "PhaseMixed,0,R,0,0,0,0,1,60,80\n"
+            "PhaseMixed,0,W,1,0,0,2,3,20,40\n"
+            "PhaseMixed,0,R,2,0,0,4,5,90,110\n"
+        )
+        order = f2_hbm_latency.summarize(f2_hbm_latency.load(self.path))["phases"]["PhaseMixed"][
+            "completion_order"
+        ]
+        self.assertTrue(order["reads"]["in_order"])
+        self.assertTrue(order["writes"]["in_order"])
+        self.assertEqual(order["combined"], {"in_order": False, "overtakes": 1})
+
     def test_writes_are_summarized_separately(self):
         result = f2_hbm_latency.summarize(f2_hbm_latency.load(self.path))
         writes = result["phases"]["PhaseMixed"]["writes"]

@@ -144,6 +144,23 @@ def by_tag(rows):
     return {tag: {**describe(group), **throughput(group)} for tag, group in sorted(groups.items())}
 
 
+def completion_order(rows):
+    """Count completions that overtake an earlier-issued request on the same port."""
+    result = {}
+    for name, keep in (("reads", "R"), ("writes", "W"), ("combined", None)):
+        overtaken = 0
+        by_port = defaultdict(list)
+        for row in rows:
+            if keep is None or row["dir"] == keep:
+                by_port[row["port"]].append(row)
+        for group in by_port.values():
+            group.sort(key=lambda r: (r["done_cycle"], r["seq"]))
+            seqs = [r["seq"] for r in group]
+            overtaken += sum(1 for a, b in zip(seqs, seqs[1:]) if b < a)
+        result[name] = {"in_order": overtaken == 0, "overtakes": overtaken}
+    return result
+
+
 def calibration(phases):
     """Fit hit/miss/stall values from one-at-a-time reads (idle, stride, depth 1)."""
     classes = defaultdict(list)
@@ -162,7 +179,20 @@ def calibration(phases):
         if values:
             base = percentile(values, 0.5)
             residuals.extend(v - base for v in values)
-    hit = [v for key, values in classes.items() if key[0] == "idle" for v in values]
+    # The miss comes from port 0 striding within its own pseudo-channel, so the hit
+    # uses the same route; reads through the switch are reported separately.
+    hit = [
+        v
+        for key, values in classes.items()
+        if key[0] == "idle" and key[1] == key[2]
+        for v in values
+    ]
+    switched = [
+        v
+        for key, values in classes.items()
+        if key[0] == "idle" and key[1] != key[2]
+        for v in values
+    ]
     strides = stride_summary(phases.get("PhaseStride", [])) if stride else None
     miss = None
     if strides and strides["slow_stride_bits"]:
@@ -172,7 +202,10 @@ def calibration(phases):
     stalls = [r for r in residuals if r > STALL_MARGIN_CYCLES]
     return {
         "hit_cycles": percentile(hit, 0.5) if hit else None,
+        "hit_route": "own pseudo-channel",
+        "switched_hit_cycles": percentile(switched, 0.5) if switched else None,
         "miss_cycles": miss,
+        "miss_route": "port 0 within its own pseudo-channel",
         "stall_probability": round(len(stalls) / len(residuals), 4) if residuals else None,
         "stall_max_cycles": max(stalls) if stalls else 0,
         "samples": len(residuals),
@@ -187,7 +220,10 @@ def summarize(rows):
     for name, group in sorted(phases.items()):
         reads = [r for r in group if r["dir"] == "R"]
         writes = [r for r in group if r["dir"] == "W"]
-        entry = {"reads": describe(reads) if reads else None}
+        entry = {
+            "reads": describe(reads) if reads else None,
+            "completion_order": completion_order(group),
+        }
         if writes:
             entry["writes"] = describe(writes)
         if name == "PhaseIdle":
