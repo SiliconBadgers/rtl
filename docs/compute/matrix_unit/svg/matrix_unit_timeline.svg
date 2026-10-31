@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="652" viewBox="0 0 1180 652" role="img">
+<title>One block-scaled command</title><desc>Schematic waveform of a block-scaled command on an 8 x 8 array, K = 64 (four blocks).</desc>
+<defs><marker id="ain" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0f6e8c"/></marker><marker id="aout" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b4531b"/></marker><marker id="aink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10z" fill="#1b2430"/></marker></defs>
+<rect width="1180" height="652" fill="#ffffff"/>
+<text x="40" y="42" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="21" fill="#1b2430" font-weight="bold" text-anchor="start">One block-scaled command: what a checker should see</text>
+<text x="40" y="66" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13" fill="#5a6573" font-weight="normal" text-anchor="start">8 × 8 array, K = 64 (four 16-wide blocks), INT8, arbiter always ready, response latency 4. Schematic: cycle numbers approximate, not to scale.</text>
+<text x="40" y="114" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="12.5" fill="#1b2430" font-weight="normal" text-anchor="start">cmd_valid_i / cmd_ready_o</text>
+<text x="40" y="129" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10.5" fill="#5a6573" font-weight="normal" text-anchor="start">handshake</text>
+<polyline points="230,122 1140,122" fill="none" stroke="#eef1f5" stroke-width="1"/>
+<polyline points="230,122 230.0,122 230.0,102 237.58333333333334,102 237.58333333333334,122 1140,122" fill="none" stroke="#0f6e8c" stroke-width="1.8"/>
+<text x="40" y="160" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="12.5" fill="#1b2430" font-weight="normal" text-anchor="start">busy_o</text>
+<polyline points="230,168 1140,168" fill="none" stroke="#eef1f5" stroke-width="1"/>
+<polyline points="230,168 237.58333333333334,168 237.58333333333334,148 1094.5,148 1094.5,168 1140,168" fill="none" stroke="#b4531b" stroke-width="1.8"/>
+<text x="40" y="206" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="12.5" fill="#1b2430" font-weight="normal" text-anchor="start">matrix_req_*</text>
+<text x="40" y="221" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10.5" fill="#5a6573" font-weight="normal" text-anchor="start">reads, then one write</text>
+<polyline points="230,214 1140,214" fill="none" stroke="#eef1f5" stroke-width="1"/>
+<rect x="245.16666666666666" y="193" width="22.75000000000003" height="20" rx="3" fill="#ffffff" stroke="#b4531b" stroke-width="1.3"/>
+<text x="256.5416666666667" y="207" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="10" fill="#b4531b" font-weight="normal" text-anchor="middle">A</text>
+<rect x="267.9166666666667" y="193" width="22.75" height="20" rx="3" fill="#ffffff" stroke="#b4531b" stroke-width="1.3"/>
+<text x="279.2916666666667" y="207" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="10" fill="#b4531b" font-weight="normal" text-anchor="middle">B</text>
+<rect x="290.6666666666667" y="193" width="22.75" height="20" rx="3" fill="#ffffff" stroke="#b4531b" stroke-width="1.3"/>
+<text x="302.0416666666667" y="207" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="10" fill="#b4531b" font-weight="normal" text-anchor="middle">sA</text>
+<rect x="313.4166666666667" y="193" width="22.75" height="20" rx="3" fill="#ffffff" stroke="#b4531b" stroke-width="1.3"/>
+<text x="324.7916666666667" y="207" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="10" fill="#b4531b" font-weight="normal" text-anchor="middle">sB</text>
+<rect x="1041.4166666666665" y="193" width="37.91666666666697" height="20" rx="3" fill="#ffffff" stroke="#b4531b" stroke-width="1.3"/>
+<text x="1060.375" y="207" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="10" fill="#b4531b" font-weight="normal" text-anchor="middle">W</text>
+<text x="40" y="252" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="12.5" fill="#1b2430" font-weight="normal" text-anchor="start">matrix_rsp_valid_i</text>
+<text x="40" y="267" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10.5" fill="#5a6573" font-weight="normal" text-anchor="start">read data only, in order</text>
+<polyline points="230,260 1140,260" fill="none" stroke="#eef1f5" stroke-width="1"/>
+<polyline points="230,260 283.0833333333333,260 283.0833333333333,240 290.6666666666667,240 290.6666666666667,260 305.8333333333333,260 305.8333333333333,240 313.4166666666667,240 313.4166666666667,260 328.5833333333333,260 328.5833333333333,240 336.1666666666667,240 336.1666666666667,260 351.3333333333333,260 351.3333333333333,240 358.91666666666663,240 358.91666666666663,260 1140,260" fill="none" stroke="#0f6e8c" stroke-width="1.8"/>
+<text x="40" y="298" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="12.5" fill="#1b2430" font-weight="normal" text-anchor="start">array in (feed)</text>
+<text x="40" y="313" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10.5" fill="#5a6573" font-weight="normal" text-anchor="start">block flags; scales on last</text>
+<polyline points="230,306 1140,306" fill="none" stroke="#eef1f5" stroke-width="1"/>
+<polyline points="230,306 336.1666666666667,306 336.1666666666667,286 821.5,286 821.5,306 1140,306" fill="none" stroke="#1b2430" stroke-width="1.8"/>
+<text x="336.1666666666667" y="282" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10" fill="#5a6573" font-weight="normal" text-anchor="middle">first</text>
+<text x="821.5" y="282" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10" fill="#5a6573" font-weight="normal" text-anchor="middle">last + slast</text>
+<polyline points="457.5,284 457.5,308" fill="none" stroke="#5a6573" stroke-width="1" stroke-dasharray="3 3"/>
+<polyline points="578.8333333333333,284 578.8333333333333,308" fill="none" stroke="#5a6573" stroke-width="1" stroke-dasharray="3 3"/>
+<polyline points="700.1666666666667,284 700.1666666666667,308" fill="none" stroke="#5a6573" stroke-width="1" stroke-dasharray="3 3"/>
+<text x="578.8333333333333" y="282" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10" fill="#5a6573" font-weight="normal" text-anchor="middle">block edges (last | first)</text>
+<text x="40" y="344" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="12.5" fill="#1b2430" font-weight="normal" text-anchor="start">array out rows</text>
+<text x="40" y="359" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10.5" fill="#5a6573" font-weight="normal" text-anchor="start">once, after the last block</text>
+<polyline points="230,352 1140,352" fill="none" stroke="#eef1f5" stroke-width="1"/>
+<polyline points="230,352 965.5833333333334,352 965.5833333333334,332 1026.25,332 1026.25,352 1140,352" fill="none" stroke="#1b2430" stroke-width="1.8"/>
+<text x="40" y="390" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="12.5" fill="#1b2430" font-weight="normal" text-anchor="start">done_o</text>
+<polyline points="230,398 1140,398" fill="none" stroke="#eef1f5" stroke-width="1"/>
+<polyline points="230,398 1094.5,398 1094.5,378 1102.0833333333335,378 1102.0833333333335,398 1140,398" fill="none" stroke="#b4531b" stroke-width="1.8"/>
+<polyline points="245.16666666666666,438 358.91666666666663,438" fill="none" stroke="#5a6573" stroke-width="1.2"/>
+<text x="245.16666666666666" y="452" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11" fill="#5a6573" font-weight="normal" text-anchor="start">read ahead (credits)</text>
+<polyline points="336.1666666666667,460 821.5,460" fill="none" stroke="#5a6573" stroke-width="1.2"/>
+<text x="336.1666666666667" y="474" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11" fill="#5a6573" font-weight="normal" text-anchor="start">blocks 0-3 accumulate; each PE scales block g while g+1 accumulates</text>
+<polyline points="821.5,438 965.5833333333334,438" fill="none" stroke="#5a6573" stroke-width="1.2"/>
+<text x="821.5" y="452" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11" fill="#5a6573" font-weight="normal" text-anchor="start">last k-step reaches PE(7,7), + 4 to scale</text>
+<polyline points="965.5833333333334,460 1094.5,460" fill="none" stroke="#5a6573" stroke-width="1.2"/>
+<text x="965.5833333333334" y="474" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11" fill="#5a6573" font-weight="normal" text-anchor="start">rows → binary32, write, done</text>
+<text x="230.0" y="500" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10" fill="#5a6573" font-weight="normal" text-anchor="middle">0</text>
+<text x="381.66666666666663" y="500" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10" fill="#5a6573" font-weight="normal" text-anchor="middle">20</text>
+<text x="533.3333333333333" y="500" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10" fill="#5a6573" font-weight="normal" text-anchor="middle">40</text>
+<text x="685.0" y="500" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10" fill="#5a6573" font-weight="normal" text-anchor="middle">60</text>
+<text x="836.6666666666666" y="500" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10" fill="#5a6573" font-weight="normal" text-anchor="middle">80</text>
+<text x="988.3333333333334" y="500" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10" fill="#5a6573" font-weight="normal" text-anchor="middle">100</text>
+<text x="1140.0" y="500" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10" fill="#5a6573" font-weight="normal" text-anchor="middle">120</text>
+<text x="220" y="500" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10" fill="#5a6573" font-weight="normal" text-anchor="end">cycle</text>
+<text x="40" y="530" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13" fill="#1b2430" font-weight="bold" text-anchor="start">Rules a checker can enforce</text>
+<text x="52" y="552" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" fill="#5a6573" font-weight="normal" text-anchor="start">• Replies arrive in request order, one pulse each; read data byte n is the byte at the request address + n.</text>
+<text x="52" y="570" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" fill="#5a6573" font-weight="normal" text-anchor="start">• No C write is requested while any read is in flight (NoReadWriteOverlap_A).</text>
+<text x="52" y="588" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" fill="#5a6573" font-weight="normal" text-anchor="start">• Rows leave the array Rows + Cols − 1 cycles after the last k-step, + 4 when block-scaled (the PE's scaling pipeline); block ends never stall.</text>
+<text x="52" y="606" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" fill="#5a6573" font-weight="normal" text-anchor="start">• done_o pulses once, after the last write is accepted (writes get no reply); err_o never without done_o.</text>
+<text x="52" y="624" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" fill="#5a6573" font-weight="normal" text-anchor="start">• Reads total exactly K·Rows + K·Cols (or K·Cols/2 for INT4) + 2·(Rows + Cols)·K/BlockK bytes; writes exactly 4·Rows·Cols bytes.</text>
+</svg>
