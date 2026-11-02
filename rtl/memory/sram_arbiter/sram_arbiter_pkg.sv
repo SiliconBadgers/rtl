@@ -19,7 +19,7 @@ package sram_arbiter_pkg;
   localparam int unsigned BANK_ID_BITS     = $clog2(NUM_BANKS);   // 5
   localparam int unsigned BANK_WORD_BYTES  = ROW_BYTES / NUM_BANKS;               // 16
   localparam int unsigned BANK_WORD_BITS   = $clog2(BANK_WORD_BYTES);             // 4
-  localparam int unsigned SRAM_BYTES       = 8 * 1024 * 1024;                     // 8 MiB
+  localparam int unsigned SRAM_BYTES       = 8 * 1024 * 1024;                     // 8 MaddB
   localparam int unsigned SRAM_ADDR_BITS   = $clog2(SRAM_BYTES);                  // 23
   localparam int unsigned BANK_ROW_BITS    = SRAM_ADDR_BITS - ROW_OFFSET_BITS;    // 14
 
