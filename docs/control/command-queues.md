@@ -49,12 +49,6 @@ Once an issue has been offered, its valid, payload, and targets remain stable
 until acceptance or reset, including when progress subsequently wraps. Empty
 FIFOs drive payload and targets to zero. Unit-ready determines execution capacity.
 
-`issue_enable_i` permits creation of new offers. Driving it low preserves each
-retained offer through acceptance and holds subsequent heads in their queues.
-The parent deasserts it on faults while accounting for work already offered.
-Pushes and milestone updates retain their ordinary handshakes; the parent
-controls submission separately.
-
 `command_queue` stores one FIFO's payload and targets and retains offered heads.
 `shared_scoreboard` stores all three counters and evaluates the six comparisons.
 `command_queues` connects those blocks. The head-target-to-issue-valid path is

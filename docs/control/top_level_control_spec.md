@@ -53,7 +53,7 @@ flowchart TB
 | CSRs | SystemRDL, [PeakRDL-regblock][peakrdl], and [PeakRDL-CHeader][cheader] | Generate register storage, decode, hardware-interface types, and software definitions from one register description. |
 | Local memory | True dual-port synchronous RAM; [AMD `XPM_MEMORY_TDPRAM`][xpm-ram] for F2 | One instruction port and one data port. Host loading shares the data port while the processor is stopped. |
 | Local interconnect | Native address decoder and response routing | Connect Ibex instruction/data request interfaces to RAM and the firmware CSR view. Each request retains its response destination through completion. |
-| Queues and scoreboard | Project `command_queues`, `command_queue`, and `shared_scoreboard` | One FIFO and one progress counter per unit, with the dependency mapping below. |
+| Queues and scoreboard | Project `command_queues`, `command_queue`, and `shared_scoreboard` from [RTL #29](https://github.com/SiliconBadgers/rtl/pull/29) | Select three queues and three counters, with the dependency mapping below. TLC adapts the queue arrays to the unit ports and retains fault-control state. |
 | Host transport | [AWS F2 shell OCL][aws-shell], 32-bit AXI4-Lite | The shell supplies the PCIe endpoint. TLC supplies the application register and RAM windows. |
 | Host interrupt adapter | Project pending/delivery state around the shell user-interrupt interface | Convert controller events to shell request/acknowledgment transactions. |
 | Timing and diagnostics | Ibex cycle counters, firmware trap handler, and host status/result registers | Firmware measures elapsed cycles with `mcycle`/`mcycleh` and reports software errors through the job result. |
@@ -304,9 +304,10 @@ reset and reserves event capacity when admitting work.
 A CPU instruction/data access error or an asserted `engine_fault_i` latches
 `FAULT`, sets fault interrupt pending, and holds the processor in reset.
 The host CSR path remains active. A detected fault blocks subsequent CPU side
-effects. Queue offers already made retain their ready/valid obligations, and
-the scoreboard continues to account for issued work. TLC deasserts the queues'
-`issue_enable_i` on a detected fault, holding subsequent heads until reset.
+effects. TLC retains each unit-facing offer through acceptance and holds
+subsequent heads in their queues until reset. The controller adapter tracks
+which offers have reached the units and gates queue acceptance accordingly.
+The scoreboard continues to account for issued work.
 Valid accesses accepted on the fault-detection edge remain part of the failed
 epoch.
 
