@@ -1,6 +1,7 @@
 # Silicon Badgers top level command format
 
-Top-level commands coordinate three ordered queues: Memory, Matrix, and Vector.
+This proposal defines top-level commands for three ordered queues: Memory,
+Matrix, and Vector.
 Software supplies operation parameters and cross-queue dependencies. The
 sequencer dispatches eligible commands, and each queue publishes progress through
 one wrapping counter. Commands use one fixed-size record per hardware
@@ -11,10 +12,13 @@ arguments, generates memory operations, and issues the existing
 [32-bit SIMD instructions](simd-isa.md). Individual SIMD instructions are not
 top-level commands.
 
-The shared [command format decisions](https://github.com/SiliconBadgers/architecture/blob/main/decisions/command-format-decisions.md)
-record the selected organization. This specification defines the agreed fields
-and scheduling behavior; the implementation details listed at the end still
-need concrete definitions before a binary interface is frozen.
+The accompanying [command format decisions](command-format-decisions.md)
+record the proposed fields, queue organization, and milestone counts. These
+remain subject to review. The transfer baseline below follows the merged
+[SRAM arbiter contract](https://github.com/SiliconBadgers/rtl/blob/a3687fb919773fb0b9948c13a7d941315e344a64/docs/memory/sram_arbiter_io_scheme.md#4-interface-contracts).
+Partial-row transfers and early streaming require extensions to that contract.
+The implementation details listed at the end still need concrete definitions
+before a binary interface is frozen.
 
 ## Command record
 
@@ -74,18 +78,51 @@ Transfers preserve raw bytes. They do not unpack weights, convert numerical
 formats, or describe strided copies. The SRAM interface handles diagonal bank
 mapping from logical addresses.
 
-The first Memory milestone is tied to a physical SRAM row, whose size is fixed
-by the SRAM interface. Early streaming consumption requires a row-aligned SRAM
-destination and a supported writer/reader schedule. Once the first row is
-committed, a non-transposed consumer can begin reading under the arbiter's
-non-revocable access schedule. That schedule must keep each read behind its
-corresponding committed write; no per-row readiness stalls are introduced.
-Transpose consumers wait for full transfer completion.
+### Mapping to the current SRAM contract
 
-For a transfer shorter than one SRAM row, committing the transferred bytes
-satisfies the first milestone. It does not make the rest of that row valid.
-Transfers outside the early-streaming conditions wait for full completion before
-their destination is consumed.
+The [SRAM arbiter contract](https://github.com/SiliconBadgers/rtl/blob/a3687fb919773fb0b9948c13a7d941315e344a64/docs/memory/sram_arbiter_io_scheme.md#4-interface-contracts)
+defines the SRAM side of a transfer. The compatible baseline requires a
+512-byte-aligned `sram_address` and a positive `length_bytes` that is a multiple
+of 512. These are SRAM-side constraints; HBM alignment, legal address ranges,
+and command validation remain part of the upstream integration work in
+[issue #20](https://github.com/SiliconBadgers/rtl/issues/20).
+
+The Memory Manager splits a transfer into `length_bytes / 512` full-row beats.
+Beat `i` accesses `sram_address + 512*i`. Each beat has a separate ready/valid
+handshake; its valid, address, direction, and write data remain stable while
+stalled. All 512 byte enables are set for a Memory Manager write. SRAM readiness
+and bank conflicts can stall any beat; priority does not guarantee an
+uninterrupted burst. Read responses have no backpressure, so the Memory Manager
+must reserve space to capture every outstanding read response.
+
+The Memory Manager and scoreboard count per-beat completions in source order.
+For a load, `sb_wr_done_o` with `TagMm` marks a row written and visible; request
+acceptance alone does not. For a store, `sb_rd_done_o` with `TagMm` marks a
+source row read. Store completion also requires the HBM destination writes to
+complete; the SRAM read-completion pulse does not establish HBM visibility.
+The HBM completion interface and its aggregation into command completion remain
+to be specified in issue #20.
+
+Dependent consumers, including transposed consumers, wait for full transfer
+completion in this baseline. The scoreboard gates dependent dispatch using
+completed SRAM accesses, rather than arbitration or issue order. The first-row
+milestone reports progress only: it neither authorizes early consumption nor
+releases the whole source buffer for reuse.
+
+For example, a 1024-byte load to SRAM address `0x1000` writes full rows at
+`0x1000` and `0x1200`. The first write completion reports first-row progress;
+the second completes the SRAM writes. A dependent Matrix command waits for the
+whole-transfer milestone. A store of the same range reads those two rows and
+waits for both HBM destination writes before reporting whole-transfer completion.
+
+Partial rows and early streaming are proposed extensions, unsupported by this
+baseline. A 32-byte load cannot be sent as a Memory Manager write: it would
+overwrite all 512 bytes, including the other 480 bytes. Waiting for completion
+does not preserve those bytes. Software can instead transfer a full padded row
+when it owns every byte; arbitrary partial transfers need a specified byte
+preservation mechanism. Early streaming needs a schedule that keeps every read
+behind its completed write under both HBM and SRAM stalls. The arbiter supplies
+no non-revocable writer/reader schedule.
 
 ## Matrix command
 
@@ -149,7 +186,7 @@ The following targets are taken modulo `2^CounterWidth`.
 
 | Queue | Target | Milestone |
 | --- | --- | --- |
-| Memory | `2*j + 1` | First destination SRAM row committed for a load; first source SRAM row read for a store. For shorter transfers, the entire transferred SRAM portion has been written/read. |
+| Memory | `2*j + 1` | First full destination SRAM row completed for a load; first full source SRAM row read completed for a store. Progress only under the current SRAM contract. |
 | Memory | `2*j + 2` | Transfer complete, including destination writes |
 | Matrix | `3*j + 1` | All SRAM input reads finished; input buffers released |
 | Matrix | `3*j + 2` | Next compatible K-tile operation can launch |
@@ -165,12 +202,14 @@ Commands issue in queue order, but Matrix and Vector can overlap successive
 commands using their early readiness milestones. Milestones publish in command
 order within each queue. A later command's event cannot advance the counter past
 an unpublished event of an earlier command. Simultaneous ordered milestones can
-advance the counter by more than one; a short transfer can advance it by two.
+advance the counter by more than one; a one-row load can advance it by two
+when its first-row and whole-transfer completions coincide.
 
 Software encodes read-after-write, write-after-read, and write-after-write
-dependencies and buffer lifetimes. A first-row event permits the supported
-streaming read, not reuse of the entire source buffer. Matrix input release
-does not release an overlapping output buffer that is still being written.
+dependencies and buffer lifetimes. Under the current SRAM contract, a dependent
+consumer or whole-buffer reuse waits for the whole-transfer milestone, not the
+first-row event. Matrix input release does not release an overlapping output
+buffer that is still being written.
 
 ### Counter wraparound
 
@@ -193,8 +232,10 @@ waits are not used because a delayed consumer can miss a counter value.
 
 - Concrete width parameters, bit offsets, payload field packing, and Transfer
   direction encoding.
-- The fixed SRAM matrix layout, row/alignment rules, partial-row handling, and
-  writer/reader timing guarantees for streaming consumption.
+- The fixed SRAM matrix layout and the remaining command-to-Memory Manager/HBM
+  contract in issue #20, including HBM alignment and destination-write completion.
+  Partial-row preservation and stall-safe streaming require explicit extensions
+  to the full-row/full-completion baseline above.
 - Matrix packing/scaling fields, scale representations, numerical accumulation
   and requantization rules, and accumulator initialization/lifetime details.
 - Vector firmware operation IDs and their inline argument schemas.
