@@ -1,0 +1,19 @@
+docs/control/top_level_control_spec.md
+  s_25734fe2812e2e::t_0353ae761d3ccc 56,307-310
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cda317be60eebadc7ff35527190efa7458fc11e4",
+  "prompts": {},
+  "sessions": {
+    "s_25734fe2812e2e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1bbf2-1b43-7e23-ae07-bd9098fb24c5",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zeb Taylor <zceboys@gmail.com>"
+    }
+  }
+}
