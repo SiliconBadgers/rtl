@@ -8,29 +8,29 @@ module command_queues #(
   parameter int unsigned NumCounters = 3,
   // -1 selects the legacy mapping for queues 0..2. Additional queues must map
   // both slots explicitly; each command still carries exactly two wait targets.
-  parameter int WaitCounter0 [NumQueues] = '{default: -1},
-  parameter int WaitCounter1 [NumQueues] = '{default: -1}
+  parameter int signed WaitCounter0[NumQueues] = '{default: -1},
+  parameter int signed WaitCounter1[NumQueues] = '{default: -1}
 ) (
   input logic clk_i,
   input logic rst_ni,
-  input logic push_valid_i [NumQueues],
-  output logic push_ready_o [NumQueues],
-  input logic [PayloadWidth-1:0] push_payload_i [NumQueues],
-  input logic [CounterWidth-1:0] push_wait_target_0_i [NumQueues],
-  input logic [CounterWidth-1:0] push_wait_target_1_i [NumQueues],
-  output logic issue_valid_o [NumQueues],
-  input logic issue_ready_i [NumQueues],
-  output logic [PayloadWidth-1:0] issue_payload_o [NumQueues],
-  input logic [1:0] increment_i [NumCounters],
-  output logic [CounterWidth-1:0] progress_o [NumCounters]
+  input logic push_valid_i[NumQueues],
+  output logic push_ready_o[NumQueues],
+  input logic [PayloadWidth-1:0] push_payload_i[NumQueues],
+  input logic [CounterWidth-1:0] push_wait_target_0_i[NumQueues],
+  input logic [CounterWidth-1:0] push_wait_target_1_i[NumQueues],
+  output logic issue_valid_o[NumQueues],
+  input logic issue_ready_i[NumQueues],
+  output logic [PayloadWidth-1:0] issue_payload_o[NumQueues],
+  input logic [1:0] increment_i[NumCounters],
+  output logic [CounterWidth-1:0] progress_o[NumCounters]
 );
-  logic [CounterWidth-1:0] head_wait_target_0 [NumQueues];
-  logic [CounterWidth-1:0] head_wait_target_1 [NumQueues];
-  logic dependencies_met [NumQueues];
+  logic [CounterWidth-1:0] head_wait_target_0[NumQueues];
+  logic [CounterWidth-1:0] head_wait_target_1[NumQueues];
+  logic dependencies_met[NumQueues];
 
   for (genvar queue_index = 0; queue_index < NumQueues; queue_index++) begin : gen_queues
     command_queue #(
-      .QueueDepth(QueueDepth),
+      .QueueDepth  (QueueDepth),
       .PayloadWidth(PayloadWidth),
       .CounterWidth(CounterWidth)
     ) u_command_queue (

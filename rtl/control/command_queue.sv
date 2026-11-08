@@ -1,7 +1,7 @@
 // A non-fallthrough FIFO with dependency-gated issue of its head command.
-// See docs/control/command-queues.md for handshake, reset and integration rules.
+// See docs/control/command-scoreboard.md for handshake, reset and integration rules.
 module command_queue #(
-  parameter int unsigned QueueDepth = 4,
+  parameter int unsigned QueueDepth   = 4,
   parameter int unsigned PayloadWidth = 32,
   parameter int unsigned CounterWidth = 16
 ) (
@@ -22,9 +22,9 @@ module command_queue #(
   localparam int unsigned POINTER_WIDTH = (QueueDepth > 1) ? $clog2(QueueDepth) : 1;
   localparam int unsigned COUNT_WIDTH = (QueueDepth > 0) ? $clog2(QueueDepth + 1) : 1;
 
-  logic [PayloadWidth-1:0] payload_q [QueueDepth];
-  logic [CounterWidth-1:0] wait_target_0_q [QueueDepth];
-  logic [CounterWidth-1:0] wait_target_1_q [QueueDepth];
+  logic [PayloadWidth-1:0] payload_q[QueueDepth];
+  logic [CounterWidth-1:0] wait_target_0_q[QueueDepth];
+  logic [CounterWidth-1:0] wait_target_1_q[QueueDepth];
   logic [POINTER_WIDTH-1:0] read_pointer_q;
   logic [POINTER_WIDTH-1:0] write_pointer_q;
   logic [COUNT_WIDTH-1:0] count_q;
@@ -34,8 +34,7 @@ module command_queue #(
   logic pop;
 
   function automatic logic [POINTER_WIDTH-1:0] next_pointer(
-    input logic [POINTER_WIDTH-1:0] pointer
-  );
+    input logic [POINTER_WIDTH-1:0] pointer);
     if (pointer == POINTER_WIDTH'(QueueDepth - 1)) begin
       return '0;
     end
@@ -75,10 +74,18 @@ module command_queue #(
       if (pop) begin
         read_pointer_q <= next_pointer(read_pointer_q);
       end
-      case ({push, pop})
-        2'b10: count_q <= count_q + COUNT_WIDTH'(1);
-        2'b01: count_q <= count_q - COUNT_WIDTH'(1);
-        default: count_q <= count_q;
+      case ({
+        push, pop
+      })
+        2'b10: begin
+          count_q <= count_q + COUNT_WIDTH'(1);
+        end
+        2'b01: begin
+          count_q <= count_q - COUNT_WIDTH'(1);
+        end
+        default: begin
+          count_q <= count_q;
+        end
       endcase
       // Once valid has been offered, advancing or wrapping other counters must
       // not retract it while the consumer is stalled. Only pop/reset clears it.
@@ -91,26 +98,49 @@ module command_queue #(
   end
 
   initial begin
-    QueueDepthValid_A: assert (QueueDepth > 0)
-      else $fatal(1, "QueueDepth must be positive");
-    PayloadWidthValid_A: assert (PayloadWidth > 0)
-      else $fatal(1, "PayloadWidth must be positive");
-    CounterWidthValid_A: assert (CounterWidth > 0)
-      else $fatal(1, "CounterWidth must be positive");
+    QueueDepthValid_A :
+    assert (QueueDepth > 0)
+    else begin
+      $fatal(1, "QueueDepth must be positive");
+    end
+    PayloadWidthValid_A :
+    assert (PayloadWidth > 0)
+    else begin
+      $fatal(1, "PayloadWidth must be positive");
+    end
+    CounterWidthValid_A :
+    assert (CounterWidth > 0)
+    else begin
+      $fatal(1, "CounterWidth must be positive");
+    end
   end
 
-  OccupancyBounded_A: assert property (
-    @(posedge clk_i) disable iff (!rst_ni) count_q <= COUNT_WIDTH'(QueueDepth)
-  ) else $fatal(1, "Command queue overflow");
-  ReadPointerBounded_A: assert property (
-    @(posedge clk_i) disable iff (!rst_ni) int'(read_pointer_q) < QueueDepth
-  ) else $fatal(1, "Command queue read pointer out of range");
-  WritePointerBounded_A: assert property (
-    @(posedge clk_i) disable iff (!rst_ni) int'(write_pointer_q) < QueueDepth
-  ) else $fatal(1, "Command queue write pointer out of range");
-  IssueStable_A: assert property (
+  OccupancyBounded_A :
+  assert property (@(posedge clk_i) disable iff (!rst_ni) count_q <= COUNT_WIDTH'(QueueDepth))
+  else begin
+    $fatal(1, "Command queue overflow");
+  end
+  ReadPointerBounded_A :
+  assert property (@(posedge clk_i) disable iff (!rst_ni) int'(read_pointer_q) < QueueDepth)
+  else begin
+    $fatal(1, "Command queue read pointer out of range");
+  end
+  WritePointerBounded_A :
+  assert property (@(posedge clk_i) disable iff (!rst_ni) int'(write_pointer_q) < QueueDepth)
+  else begin
+    $fatal(1, "Command queue write pointer out of range");
+  end
+  IssueStable_A :
+  assert property (
     @(posedge clk_i) disable iff (!rst_ni)
-    issue_valid_o && !issue_ready_i |=> issue_valid_o && $stable(issue_payload_o) &&
-        $stable(head_wait_target_0_o) && $stable(head_wait_target_1_o)
-  ) else $fatal(1, "Stalled command queue issue changed");
+    issue_valid_o && !issue_ready_i |=> issue_valid_o && $stable(
+    issue_payload_o
+  ) && $stable(
+    head_wait_target_0_o
+  ) && $stable(
+    head_wait_target_1_o
+  ))
+  else begin
+    $fatal(1, "Stalled command queue issue changed");
+  end
 endmodule
