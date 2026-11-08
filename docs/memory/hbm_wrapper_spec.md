@@ -66,9 +66,8 @@ corresponding controller port. The
 [controller specification](hbm_controller_spec.md) defines the client protocol,
 request handling, ordering, errors, and backpressure.
 
-Both clients use `o_clk_450m` and `o_rst_450m_n` for these interfaces. If the rest
-of a client uses another clock, its integration supplies a clock-domain bridge.
-The wrapper contains no asynchronous MU/TLC bridge. Clients reset their interface
+Both clients use `o_clk_450m` and `o_rst_450m_n` for these interfaces. The MU,
+TLC, and SRAM response pipeline share this clock. Clients reset their interface
 tracking with the controller, following its
 [reset contract](hbm_controller_spec.md#errors-and-reset).
 

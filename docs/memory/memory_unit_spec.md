@@ -71,7 +71,8 @@ buffer and a destination merge buffer, each at least 512 bytes for this geometry
 `clk_i` clocks all MU interfaces. For a direct F2 connection it is the wrapper's
 450 MHz client clock, and `rst_ni` follows its active-low client run reset.
 Reset asserts asynchronously and releases synchronously to `clk_i`.
-Integration must bridge any SRAM or TLC interface in a different domain.
+SRAM and TLC use the same `clk_i` as the MU. The SRAM response pipeline uses
+this clock to complete each accepted operation exactly one cycle later.
 
 Reset clears active-command state, response tracking, milestone state, and fault
 status, and drives the scoreboard increment output to zero. The external
