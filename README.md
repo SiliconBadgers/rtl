@@ -22,11 +22,14 @@ an engine count. Team charters and objectives remain under `docs/<area>/`.
 
 ## Existing implementation
 
-The current INT8 systolic datapath lives in
+The Matrix Unit (an output-stationary systolic array with its SRAM-arbiter
+wrapper, INT4 weights and block scaling) lives in
 [rtl/compute/Matrix_Unit/](rtl/compute/Matrix_Unit/), with its block regression
-under [tb/compute/Matrix_Unit/](tb/compute/Matrix_Unit/). Run `make test` or
-`make test-matrix-unit`. This checks the current array and PE; it does not
-establish full-accelerator correctness, throughput or physical feasibility.
+under [tb/compute/Matrix_Unit/](tb/compute/Matrix_Unit/) and its interface in
+[docs/compute/matrix_unit_io_scheme.md](docs/compute/matrix_unit_io_scheme.md).
+Run `make test` or `make test-matrix-unit`. This checks the Matrix Unit's blocks
+and their integration with a model of the SRAM arbiter; it does not establish
+full-accelerator correctness, throughput or physical feasibility.
 The obsolete standalone MAC example and its dependent test flow are retired.
 
 Control and memory design work remains provisional. A
