@@ -1,0 +1,21 @@
+docs/memory/hbm_wrapper_spec.md
+  s_85b5fb0bb06e32::t_e223a69d3e82fc 69-70
+docs/memory/memory_unit_spec.md
+  s_85b5fb0bb06e32::t_e223a69d3e82fc 74-75
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1a3b513cfe987f118da085feb275619c79d26267",
+  "prompts": {},
+  "sessions": {
+    "s_85b5fb0bb06e32": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1bbd3-c373-7693-a2c9-e5f1e5962347",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zeb Taylor <zceboys@gmail.com>"
+    }
+  }
+}
