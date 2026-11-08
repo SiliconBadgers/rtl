@@ -231,6 +231,11 @@ data is valid for capture at its completion edge. An ordinary write has committe
 and is visible to subsequent reads by edge `n + 1`. Arbitration affects
 acceptance time; the accepted operation's completion edge is fixed.
 
+Clients derive write completion by tracking an accepted write to the next edge;
+the arbiter exposes no separate client write-acknowledgment pulse. The
+[Matrix completion contract](../compute/matrix_unit_spec.md#sram-access-and-completion)
+defines its local tracking and command-completion rules.
+
 | SRAM response signal | Width | Contract |
 | --- | --- | --- |
 | `sram_rsp_valid_i` | 1 | Completion on the edge reserved by the accepted access mode. |
@@ -289,7 +294,6 @@ reset boundary, so source tags refer to the new sequence of accepted accesses.
 | --- | --- |
 | FPGA memory mapping | Map the generic 128-bit banks and byte write enables to target storage primitives and close timing for the one-/two-cycle contracts. Future Vector widths require matching changes to the shared package and access rules. |
 | Early-streaming reservation | Define admission, start event, row cadence, writer/reader slots, and reservation lifetime for the [guaranteed row schedule](https://github.com/SiliconBadgers/rtl/blob/182e7f8365ae1a2936242e59436f89bb31eed6b0/docs/command-format.md#transfer-command). Every scheduled read follows its row's committed write. The guarantee must cover row-data availability through HBM response gaps as well as SRAM port allocation, and remains effective under competing requests. Transpose consumption begins after full transfer completion. |
-| Completion notifications | Reconcile the sketch's per-access `sb_rd_done_o` / `sb_wr_done_o` and source tags with the current queue-milestone interface. Define any retained access-event outputs and their consumers using the visibility points above. |
 
 ## Design references
 

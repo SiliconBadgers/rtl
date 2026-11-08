@@ -270,11 +270,19 @@ does not cancel or bypass commands already accepted behind it. An independent
 new context can launch when those outstanding commands have completed. A chain's
 final writing command waits for SRAM visibility before releasing subsequent work.
 
-With default `WriteAcks = 0`, `matrix_wr_done_i` carries `sb_wr_done_o` qualified
-by `sb_wr_tag_o == TagMatrix`. Every accepted write requires exactly one
-completion. `WriteAcks = 1` instead accepts write-completion pulses on
-`matrix_rsp_valid_i` for an adapter with that convention. Write-data storage can
-be reused at acceptance, but dependent readers wait for write completion.
+A write is accepted on rising edge `n` when `matrix_req_valid_o`,
+`matrix_req_ready_i`, and `matrix_req_is_write_o` are all asserted. Under the
+arbiter's [fixed completion contract](../memory/sram_arbiter_spec.md#completion-and-visibility),
+it commits on edge `n + 1`. Arbitration and SRAM backpressure delay acceptance;
+they do not extend the latency of an accepted write.
+
+The wrapper derives each write-completion event by delaying its accepted-write
+event one cycle and retaining its command association. A stalled request creates
+no completion event; back-to-back accepted writes complete on consecutive edges.
+The Matrix interface requires no separate write-acknowledgment input, and
+`matrix_rsp_valid_i` carries only read results. Write-data storage can be reused
+at acceptance, but dependent readers and command completion wait until the
+corresponding writes commit.
 
 Software owns source readiness, read/write dependencies, and timing guarantees
 for streamed producers. The unit issues SRAM reads when its own buffers have
@@ -284,12 +292,15 @@ space; it does not wait for an additional producer-ready milestone.
 
 All local ports use `clk_i`. `rst_ni` can assert asynchronously and deasserts
 synchronously. Reset cancels the active command and retained context, clears
-request and pipeline validity, and returns command acceptance to idle.
+request and pipeline validity, including delayed accepted-write events and their
+command associations, and returns command acceptance to idle.
 Cancellation suppresses `done_o`. Committed C writes remain in SRAM; the
 interrupted tile can contain partial output.
 
-The reset boundary must discard outstanding pre-reset responses before command
-acceptance resumes. Agreement on that shared boundary is part of integration.
+Coordinate reset with the arbiter and SRAM endpoint as defined by the
+[SRAM reset contract](../memory/sram_arbiter_spec.md#reset). Reset cancels writes
+that have not reached their commit edge and discards outstanding pre-reset
+responses and local completion events before command acceptance resumes.
 
 ## Verification requirements
 
@@ -308,8 +319,10 @@ numeric profile and cover:
   output formats, direct FP16 rounding, and INT8 multiplier/shift saturation.
 - Overlapping retained chains, full command-record queues, ordered milestone
   publication, and compatible acceptance before preceding completion.
-- Reset during accepted work and a delayed final
-  write completion that holds dependent work until C is visible.
+- Stalled and back-to-back writes, with one local completion per accepted write
+  on the following edge and final command completion held until C is visible.
+- Reset between write acceptance and commitment, with no stale completion after
+  reset; committed C bytes remain stored.
 
 The [existing array test guide](../../tb/compute/Matrix_Unit/README.md) documents
 the baseline INT8 array and PE tests. It does not establish verification of this

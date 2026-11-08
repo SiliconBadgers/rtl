@@ -80,10 +80,13 @@ acceptance. Byte zero occupies `matrix_rsp_rdata_i[7:0]`. The four operand strea
 reserve response-buffer space before issuing reads. Responses cannot stall; the
 last request of each stream asks for exactly its remaining bytes.
 
-With `WriteAcks = 0`, connect `matrix_wr_done_i` to the arbiter's write-completion
-pulse qualified by Matrix tag. With `WriteAcks = 1`, write completions instead
-share `matrix_rsp_valid_i`. Every write requires exactly one completion. Final
-completion waits for SRAM visibility.
+An accepted write commits on the next rising edge. The wrapper derives write
+completion locally from a one-cycle delay of the accepted-write event; `ready`
+stalls acceptance, not completion. There is no separate write-acknowledgment
+input, and `matrix_rsp_valid_i` carries only read results. The
+[completion contract](matrix_unit_spec.md#sram-access-and-completion) defines
+command tracking; the
+[reset contract](matrix_unit_spec.md#reset) clears pending local events.
 
 Output encodings are 0: legacy INT32/FP32, 1: INT32 fixed point, 2: FP32,
 3: FP16, and 4: symmetric INT8. INT32 fraction and INT8 multiplier/shift fields
