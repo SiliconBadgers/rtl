@@ -4,8 +4,15 @@ The Matrix Unit computes one tile of `C = A · B` per command on an output-stati
 systolic array:
 - A holds INT8 activations;
 - B holds INT8 or packed INT4 weights;
-- C is either exact INT32 or, with block scaling, binary32 (FP32) converted from a fixed-point
-  sum kept in each PE.
+- C comes from an exact integer sum or, with block scaling, a fixed-point sum kept in each PE,
+  written in the command's output encoding: legacy (INT32, or FP32 when block-scaled), INT32
+  fixed point, FP32, FP16 or INT8.
+
+It implements the proposed Matrix specification (`docs/compute/matrix_unit_spec.md`,
+[rtl PR #32](https://github.com/SiliconBadgers/rtl/pull/32)) with `CmdDepth = 1`:
+logical M/N masks, a short final scale block, the output encodings, the 2-bit milestone
+increment and the version-1 record decoder (`bpu_sa_command_decoder`, which the parent
+instantiates). Early command overlap is not built yet.
 
 The top level is `bpu_sa_sram_wrapper`. It takes one command at a time and works through the
 [SRAM arbiter](../memory/sram_arbiter_io_scheme.md)'s matrix port:
@@ -32,23 +39,30 @@ All ports are in the single `clk_i` domain. Widths are at the default parameters
 | `cmd_valid_i` | in | 1 | A command is offered. |
 | `cmd_ready_o` | out | 1 | Equal to `!busy_o`, and registered, so one command runs at a time. |
 | `cmd_k_i` | in | 16 (`KW`) | K, the reduction length: 1 to 2^KW − 1. |
+| `cmd_m_i`, `cmd_n_i` | in | 16 each | Logical M (1 to `Rows`) and N (1 to `Cols`): the command uses the top-left M × N of the tile. Lanes outside read as zero and write zero C. |
 | `cmd_int4_i` | in | 1 | B is packed INT4: two signed 4-bit weights per byte. |
 | `cmd_scaled_i` | in | 1 | Block-scaled: binary32 C, using the scale tables at `cmd_sa_addr_i` and `cmd_sb_addr_i`. |
 | `cmd_clear_acc_i` | in | 1 | 1: start this command's sums from zero. 0: add them to the sums the previous command kept. |
 | `cmd_write_output_i` | in | 1 | 1: write the finished C tile to `cmd_c_addr_i`. 0: keep the sums in the unit for the next command; nothing is written. |
 | `cmd_a_addr_i`, `cmd_b_addr_i`, `cmd_c_addr_i` | in | 32 each | Byte addresses of A, B and C. They must be row aligned; C is ignored when `cmd_write_output_i` = 0. |
 | `cmd_sa_addr_i`, `cmd_sb_addr_i` | in | 32 each | Byte addresses of the activation and weight scale tables. They are ignored when `cmd_scaled_i` = 0. |
+| `cmd_out_format_i` | in | 3 | Output encoding of a writing command: 0 legacy, 1 INT32 fixed point, 2 FP32, 3 FP16, 4 INT8. Ignored when keeping the sums. |
+| `cmd_out_frac_i` | in | 6 | INT32 fractional bits, 0 to 31. |
+| `cmd_requant_mul_i`, `cmd_requant_shift_i` | in | 32, 7 | INT8 requantization: `clamp(RNE(a · mul / 2^shift), −127, 127)`. |
+| `cmd_decode_error_i` | in | 1 | The record was malformed (`bpu_sa_command_decoder`): reject the command. |
 | `busy_o` | out | 1 | High from the cycle after a command is accepted until it completes. |
 | `done_o` | out | 1 | One-cycle pulse when the command completes, in the first cycle `busy_o` is low again. |
-| `err_o` | out | 1 | One-cycle pulse with `done_o` for an illegal command. It is never high without `done_o`. |
+| `err_o` | out | 1 | One-cycle pulse with `done_o` for an illegal command. It is never high without `done_o`. Connect it to the controller's engine fault: correct software never issues an illegal command. |
+| `milestone_inc_o` | out | 2 | Milestones this cycle for the Matrix progress counter: `00`, `01` or `10` (never `11`). Three per legal command: inputs released, then next contribution ready and complete together with `done_o`. None for an illegal command. |
 | `matrix_req_valid_o` | out | 1 | A request to the arbiter. |
 | `matrix_req_ready_i` | in | 1 | The arbiter accepts the request. |
 | `matrix_req_is_write_o` | out | 1 | 1: write, 0: read. |
 | `matrix_req_size_bytes_o` | out | 10 | Bytes in the request, 1 to 512. |
 | `matrix_req_addr_o` | out | 32 | Row-aligned byte address. |
 | `matrix_req_wdata_o` | out | 4096 | Write data: byte n goes to address + n. |
-| `matrix_rsp_valid_i` | in | 1 | One-cycle pulse per completed read. |
+| `matrix_rsp_valid_i` | in | 1 | One-cycle pulse per completed read; also per completed write when `WriteAcks = 1`. |
 | `matrix_rsp_rdata_i` | in | 4096 | Read data: byte n is the byte at the request address + n. |
+| `matrix_wr_done_i` | in | 1 | With `WriteAcks = 0`, one pulse per completed Matrix write. Connect arbiter `sb_wr_done_o` qualified by `sb_wr_tag_o == TagMatrix`. Tie low with `WriteAcks = 1`. |
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
@@ -59,7 +73,7 @@ All ports are in the single `clk_i` domain. Widths are at the default parameters
 | `BlockK` | 16 | k-steps per scale block: a power of two, 16 to 1024. |
 | `BufRows` | 2 | SRAM rows buffered per read stream. |
 | `OutDepth` | 9 | Finished C rows queued for write-back. |
-| `WriteAcks` | 0 | 0: writes get no response, as the arbiter specifies. 1: for an arbiter that also acknowledges writes. |
+| `WriteAcks` | 0 | Write-completion channel: 0 selects `matrix_wr_done_i`; 1 selects write pulses on `matrix_rsp_valid_i`. Both modes wait for every write to complete. |
 | `AddrW`, `DataW`, `SizeW` | 32, 4096, 10 | The arbiter port widths: `sram_arbiter_pkg` `ADDR_WIDTH`, `DATA_WIDTH`, `SIZE_WIDTH`. |
 | `KW` | 16 | Width of `cmd_k_i`. |
 
@@ -72,19 +86,22 @@ stable until then.
 
 **Illegal commands** are accepted, touch no memory, and get `done_o` and `err_o` together one cycle
 later. A command is illegal when any of these holds:
-- K = 0;
+- `cmd_decode_error_i` = 1 (a malformed record);
+- K = 0, or M or N zero or above `Rows` or `Cols`;
 - a base address in use is not row aligned;
 - `cmd_int4_i` = 1 in a build without `Int4`;
-- `cmd_scaled_i` = 1 in a build without `Scale`, or with K not a multiple of `BlockK`;
-- `cmd_clear_acc_i` = 0 when no sums are kept, or when the kept sums are of the other kind
-  (unscaled vs block-scaled).
+- `cmd_scaled_i` = 1 in a build without `Scale`;
+- a writing command with `cmd_out_format_i` above 4, or INT32 with `cmd_out_frac_i` above 31;
+- `cmd_clear_acc_i` = 0 when no sums are kept, when the kept sums are of the other kind
+  (unscaled vs block-scaled), or when M or N differs from the kept sums'.
 
 An illegal command leaves any kept sums as they were.
 
 **Reset** cancels the command in progress and discards kept sums. No `done_o` is sent for the
-cancelled command, and C in SRAM may be partly written. The arbiter must be reset with the unit and must drop responses still in flight (its
-proposed reset contract). Reset clears control state only; buffers and accumulators are data storage
-and are not cleared.
+cancelled command, and C in SRAM may be partly written. The arbiter must share the reset boundary
+and discard outstanding read responses and write-completion pulses before command acceptance
+resumes. Writes already committed remain in SRAM. Reset clears control state only; buffers and
+accumulators are data storage and are not cleared.
 
 ### Chaining commands along K
 
@@ -109,7 +126,8 @@ controlling whether to write the output or to keep it in the accumulators".
 - **Mixing kinds:** a chain is all unscaled or all block-scaled. INT8 and INT4 commands may mix.
 - **Completion:** a command that keeps its sums has `done_o` once its last contribution has
   settled: `Rows + Cols` cycles after its last array step, plus 4 when block-scaled. The next
-  command can then start at once, in either mode.
+  command can then start at once, in either mode. A command that writes C keeps `busy_o` high
+  and `cmd_ready_o` low until every accepted C write has completed.
 
 ### Memory layout
 
@@ -123,11 +141,27 @@ must be row aligned.
 | B, `K × Cols` INT4 | row-major nibbles, low nibble first (the W4 format) | `B[k][j]` is nibble `n = k·Cols + j` in byte `b_addr + n/2`; the low nibble when n is even |
 | sA, `Rows × G` bf16 | block-major, little-endian | `sA[i][g]` at `sa_addr + 2·(g·Rows + i)` |
 | sB, `G × Cols` bf16 | block-major, little-endian | `sB[g][j]` at `sb_addr + 2·(g·Cols + j)` |
-| C, `Rows × Cols` | row-major, 4 bytes little-endian each | `C[r][j]` at `c_addr + 4·(r·Cols + j)` |
+| C, `Rows × Cols` | row-major, `eb` bytes little-endian each, packed | `C[r][j]` at `c_addr + eb·(r·Cols + j)` |
 
-Here G = K / `BlockK`. When unscaled, C is int32, sign-extended from `AccW`; when block-scaled, it
-is IEEE binary32 (see Arithmetic). The unit writes exactly the `4·Rows·Cols` bytes of C and nothing
-else.
+Here G = ⌈K / `BlockK`⌉; a short final block counts only its actual K values. `eb` is 4 for
+encodings 0 to 2, 2 for FP16 and 1 for INT8. In the legacy encoding C is int32, sign-extended from
+`AccW`, when unscaled and IEEE binary32 when block-scaled (see Arithmetic). The unit writes exactly
+the `eb·Rows·Cols` bytes of C and nothing else. A command smaller than the tile keeps these
+physical strides; elements outside M × N are written as zero.
+
+**Output encodings** (`bpu_sa_output_convert`; a is the native code, the integer sum or the
+Q23.24 code, and v its value):
+
+| Encoding | Bytes | Value |
+| --- | --- | --- |
+| 0 legacy | 4 | int32 (unscaled) or FP32 (block-scaled) |
+| 1 INT32 | 4 | `saturate32(RNE(v · 2^frac))`, range −2^31 to 2^31 − 1 |
+| 2 FP32 | 4 | IEEE binary32, nearest even |
+| 3 FP16 | 2 | IEEE binary16, nearest even, subnormals kept, rounded directly from a |
+| 4 INT8 | 1 | `clamp(RNE(a · mul / 2^shift), −127, 127)`, from the full 80-bit product |
+
+A NaN flag gives the canonical NaN (FP32 `0x7FC00000`, FP16 `0x7E00`) or integer 0; an overflow
+flag gives signed infinity or the integer endpoint; a zero sum gives +0.
 
 ### Arithmetic
 
@@ -194,16 +228,24 @@ The unit is the requester on the arbiter's matrix port and follows its
 - **Choosing a stream:** the four read streams (A, B, sA, sB) share the port. The stream with the
   fewest rows reserved goes first, in the order A, B, sA, sB on a tie.
 - **Writes** carry up to one SRAM row of C. `size_bytes` covers exactly the C bytes in that write.
-- **Responses** are one `matrix_rsp_valid_i` pulse per read, in request order. **Writes get no
-  response.** `done_o` follows the acceptance of the last write; write completion is reported to
-  the scoreboard by the arbiter.
+- **Read responses** are one `matrix_rsp_valid_i` pulse per read, in request order.
+- **Write completion:** every accepted write requires exactly one completion pulse. With the
+  default `WriteAcks = 0`, reads use `matrix_rsp_valid_i` and writes complete on
+  `matrix_wr_done_i`. The integration must qualify the arbiter's `sb_wr_done_o` with
+  `sb_wr_tag_o == TagMatrix`; another requester's write must not complete Matrix work.
+  With `WriteAcks = 1`, write completion instead arrives on `matrix_rsp_valid_i`, and
+  `matrix_wr_done_i` is tied low. Do not report a write on both channels.
+- **Visibility:** request acceptance lets the wrapper reuse its write-data storage. It does not
+  make C available to a dependent reader. `done_o` waits for all C write completions, and only
+  then may the next command be accepted. The arbiter must capture the payload on acceptance
+  and make the requested C bytes visible before publishing completion.
 - **Reads and writes never overlap:** writes start only after every read has returned
   (`NoReadWriteOverlap_A`).
 
 **Bytes per command:**
 - Reads: `K·Rows` (A), plus `K·Cols` (INT8 B) or `⌈K·Cols/2⌉` (INT4 B), plus `2·(Rows + Cols)·G`
   for the scale tables when block-scaled.
-- Writes: `4·Rows·Cols` when `cmd_write_output_i` = 1, otherwise none.
+- Writes: `eb·Rows·Cols` when `cmd_write_output_i` = 1, otherwise none.
 
 ### Timing
 
@@ -214,6 +256,8 @@ L below is the arbiter's round trip, from request to response.
 - **C rows:** they leave the array `Rows + Cols − 1` cycles after the last array step, plus 4
   when block-scaled. They reach the write-back queue one cycle later, after the wrapper's
   conversion register, and are written one SRAM row at a time.
+- **Writing command completion:** `done_o` follows completion of every C write, including a
+  delayed final completion. Write-completion latency is separate from read round-trip L.
 - **Block-scaled commands:** block ends never stall the array, at any `BlockK`: each PE scales a
   finished block while the next one accumulates.
 
@@ -327,7 +371,8 @@ The command is `cmd_k_i` = 3, `cmd_int4_i` = 0, `cmd_scaled_i` = 0, with `cmd_cl
 1. a 6-byte read of A;
 2. a 6-byte read of B;
 3. the two read responses;
-4. one 16-byte write of C, after which `done_o` pulses.
+4. one 16-byte write request for C;
+5. its write-completion pulse, after which `done_o` pulses.
 
 ## 5. Sources and tests
 
@@ -368,7 +413,8 @@ yet.
   per-tensor scales are folded into `sB`.
 - **Requantization to INT8**, which the compute-team decisions ask for, needs a specification of
   the scale, rounding and saturation.
-- **Arbiter reset contract:** dropping in-flight responses on reset is the arbiter's proposed
-  contract and still needs confirmation.
+- **Arbiter integration:** the actual arbiter and Matrix wrapper must share a reset boundary
+  that discards pre-reset read responses and write completions. Matrix-tag qualification and
+  dependent-reader visibility still need verification against the real arbiter RTL.
 - **Command source:** a sequencer or RISC-V command issuer will drive the command port. Its
   encoding of these fields is defined outside this unit.

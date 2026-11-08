@@ -5,15 +5,20 @@
 // with INT8 activations A and INT8 or packed INT4 weights B. It reads the
 // operands from the on-chip SRAM through the sram_arbiter matrix port, feeds the
 // output-stationary array, and writes the finished C tile back through the same
-// port.
+// port in the command's output encoding (INT32 fixed point, FP32, FP16 or INT8
+// besides the legacy INT32 / FP32). It implements the proposed specification
+// (docs/compute/matrix_unit_spec.md) with CmdDepth = 1: no early overlap.
 //
 // Sources (one module per file; rtl/compute/Matrix_Unit/bpu_sa_array.f lists them):
-//   bpu_sa_sram_wrapper.sv   this module: command, read arbitration, feed, drain,
-//                            C write-back
-//   bpu_sa_read_stream.sv    one read stream (A, B, and the two scale tables)
-//   bpu_sa_fifo.sv           buffers and queues
-//   bpu_sa_array.sv          the systolic array (with bpu_sa_pe.sv, bpu_sa_delay.sv)
-//   bpu_sa_pkg.sv            the block-scaled numerics constants
+//   bpu_sa_sram_wrapper.sv     this module: command, read arbitration, feed, drain,
+//                              C write-back, milestones
+//   bpu_sa_read_stream.sv      one read stream (A, B, and the two scale tables)
+//   bpu_sa_fifo.sv             buffers and queues
+//   bpu_sa_array.sv            the systolic array (with bpu_sa_pe.sv, bpu_sa_delay.sv)
+//   bpu_sa_output_convert.sv   the output encodings
+//   bpu_sa_command_decoder.sv  the version-1 command record (the parent's)
+//   bpu_sa_pkg.sv              numerics constants, encodings, the record type and
+//                              the conversion functions
 //
 // ---------------------------------------------------------------------------------
 // Memory layout (byte addresses; one SRAM row = DataW/8 bytes, 512 by default)
@@ -28,19 +33,25 @@
 //       sA[i][g] at sa_addr + 2*(g*Rows + i), little-endian.
 //   SB  weight scales (block-scaled only), bf16, block-major:
 //       sB[g][j] at sb_addr + 2*(g*Cols + j), little-endian.
-//   C   Rows x Cols, row-major, 4 bytes little-endian each: C[r][j] at
-//       c_addr + 4*(r*Cols + j). Unscaled: int32, sign-extended from AccW.
-//       Block-scaled: IEEE binary32 (see Arithmetic).
+//   C   Rows x Cols, row-major, eb bytes little-endian each, packed: C[r][j] at
+//       c_addr + eb*(r*Cols + j). eb = 4 for encodings 0 to 2, 2 for FP16 (3), 1
+//       for INT8 (4); see bpu_sa_output_convert. Legacy (0): unscaled int32,
+//       sign-extended from AccW; block-scaled IEEE binary32 (see Arithmetic).
 //   Every base address must be row aligned. The wrapper writes exactly the
-//   Rows*Cols*4 bytes of C and nothing else.
+//   Rows*Cols*eb bytes of C and nothing else.
+//   Logical shape: a command uses the top-left cmd_m_i x cmd_n_i of the physical
+//   Rows x Cols tile. The layouts above keep their physical strides; lanes outside
+//   M or N read as zero (operands and scales, whatever the SRAM holds there), and
+//   their C elements are written as zero.
 //
 // ---------------------------------------------------------------------------------
 // Arithmetic
 //
 //   Unscaled: as bpu_sa_array; exact while K < 2^(AccW-15) for INT8 B.
-//   Block-scaled: K splits into G = K / BlockK blocks, and
+//   Block-scaled: K splits into G = ceil(K / BlockK) blocks, and
 //     acc[i][j] = sum over g of round(isum[i][j][g] * sA[i][g] * sB[g][j] * 2^24)
-//   where isum is the exact integer sum over block g, each term is rounded to
+//   where isum is the exact integer sum over block g (a short final block counts
+//   only its actual K values, as if zero-padded), each term is rounded to
 //   nearest even, and acc is a 48-bit signed fixed-point value with 24 fractional
 //   bits (Q23.24), saturating (bpu_sa_pe has the details: zero and subnormal scales
 //   count as zero, inf and NaN scales make the element NaN). Each PE scales its
@@ -73,7 +84,8 @@
 //
 //   Command  cmd_valid_i / cmd_ready_o: ready/valid. cmd_ready_o = !busy_o, so one
 //            command runs at a time; it depends only on registers.
-//            cmd_k_i is K, 1 .. 2^KW - 1. cmd_int4_i: B is packed INT4.
+//            cmd_k_i is K, 1 .. 2^KW - 1. cmd_m_i and cmd_n_i are the logical
+//            M (1 .. Rows) and N (1 .. Cols). cmd_int4_i: B is packed INT4.
 //            cmd_scaled_i: block-scaled, FP32 C; cmd_sa_addr_i and cmd_sb_addr_i
 //            are then the scale tables (ignored otherwise).
 //            cmd_clear_acc_i and cmd_write_output_i (clear_acc and write_output
@@ -95,12 +107,25 @@
 //            block-scaled), so the next command may change mode at once.
 //            An illegal command is accepted, touches no memory, and gets done_o
 //            and err_o together one cycle later. err_o is never high without
-//            done_o. Illegal: K = 0; a base address in use that is not row
-//            aligned; cmd_int4_i in a build without Int4; cmd_scaled_i in a build
-//            without Scale, or with K not a multiple of BlockK; cmd_clear_acc_i = 0
-//            with no kept sums, or with kept sums of the other kind (unscaled vs
-//            block-scaled). An illegal command leaves kept sums as they were;
-//            reset discards them.
+//            done_o. Illegal: cmd_decode_error_i (a malformed record, from
+//            bpu_sa_command_decoder); K = 0; M or N zero or above Rows or Cols; a
+//            base address in use that is not row aligned; cmd_int4_i in a build
+//            without Int4; cmd_scaled_i in a build without Scale; a writing
+//            command with cmd_out_format_i above 4, or INT32 (1) with
+//            cmd_out_frac_i above 31; cmd_clear_acc_i = 0 with no kept sums, with
+//            kept sums of the other kind (unscaled vs block-scaled), or with
+//            another M or N than the kept sums'. An illegal command leaves kept
+//            sums as they were; reset discards them. The parent connects err_o to
+//            the controller's engine fault: correct software never issues one.
+//            Output encoding (writing commands): cmd_out_format_i, with
+//            cmd_out_frac_i (INT32), cmd_requant_mul_i and cmd_requant_shift_i
+//            (INT8); see bpu_sa_output_convert.
+//   Progress milestone_inc_o: the command queues' milestone increment, 00 / 01 / 10
+//            for zero, one or two milestones this cycle (never 11). Each legal
+//            command publishes three, in order: inputs released (its last array
+//            step fed, so every operand read is back), then next contribution
+//            ready and complete, both at completion (with done_o). Illegal
+//            commands publish none. Registered; reset drops any held.
 //   SRAM     matrix_req_* drive the sram_arbiter matrix request port
 //            (ready/valid). A request and its payload stay unchanged from the
 //            cycle valid rises until the cycle ready is 1. All of them depend
@@ -116,11 +141,16 @@
 //            matrix_rsp_valid_i: a one-cycle pulse per read, in request order,
 //            carrying matrix_rsp_rdata_i, with no backpressure. The wrapper only
 //            issues a read when its buffer has room for the response.
-//            WriteAcks = 0 (default): writes get no response, as the arbiter's
-//            I/O scheme (docs/memory/sram_arbiter_io_scheme.md) specifies, and
-//            done_o follows the last write's acceptance. WriteAcks = 1: for an
-//            arbiter that also pulses matrix_rsp_valid_i once per write; done_o
-//            then waits for the last one.
+//            WriteAcks = 0 (default): matrix_rsp_valid_i carries reads only.
+//            matrix_wr_done_i pulses once per completed write, qualified by the
+//            parent from sb_wr_done_o && (sb_wr_tag_o == TagMatrix).
+//            WriteAcks = 1: an adapter instead pulses matrix_rsp_valid_i once
+//            per completed write; matrix_wr_done_i is unused and tied low.
+//            In both modes, every accepted write needs exactly one completion,
+//            at least one rising edge after acceptance. done_o waits for all of
+//            them, when C is visible to dependent reads. The parent discards
+//            pre-reset completions with the rest of the SRAM response pipeline.
+//            Write data may be reused immediately after request acceptance.
 //            The wrapper never has reads and writes outstanding at once
 //            (NoReadWriteOverlap_A), so the two kinds of response are never
 //            confused.
@@ -137,7 +167,7 @@
 //   scaling in every PE), each removable to save area; BlockK; DataW, SizeW, AddrW (the
 //   arbiter port: sram_arbiter_pkg DATA_WIDTH, SIZE_WIDTH, ADDR_WIDTH); BufRows
 //   (read-ahead per stream); OutDepth (finished rows queued for write-back);
-//   WriteAcks (the arbiter's write-response behaviour).
+//   WriteAcks (selects dedicated or shared write-completion pulses).
 // ---------------------------------------------------------------------------------
 module bpu_sa_sram_wrapper
   import bpu_sa_pkg::*;
@@ -150,7 +180,7 @@ module bpu_sa_sram_wrapper
   parameter int unsigned SizeW     = 10,    // size_bytes width (SIZE_WIDTH)
   parameter int unsigned KW        = 16,    // width of cmd_k_i
   parameter int unsigned BufRows   = 2,     // SRAM rows buffered per stream, >= 1
-  parameter bit          WriteAcks = 1'b0,  // 1: every write also gets a response pulse
+  parameter bit          WriteAcks = 1'b0,  // 0: dedicated write done; 1: shared response
   parameter bit          Int4      = 1'b1,  // 1: support packed INT4 weights
   parameter bit          Scale     = 1'b1,  // 1: support block scaling
   parameter int unsigned BlockK    = 16,    // k-steps per scale block, power of two 16..1024
@@ -167,14 +197,22 @@ module bpu_sa_sram_wrapper
   input  logic [AddrW-1:0] cmd_c_addr_i,
   input  logic [AddrW-1:0] cmd_sa_addr_i,
   input  logic [AddrW-1:0] cmd_sb_addr_i,
+  input  logic [     15:0] cmd_m_i,
+  input  logic [     15:0] cmd_n_i,
   input  logic [   KW-1:0] cmd_k_i,
   input  logic             cmd_int4_i,
   input  logic             cmd_scaled_i,
   input  logic             cmd_clear_acc_i,
   input  logic             cmd_write_output_i,
+  input  logic [      2:0] cmd_out_format_i,
+  input  logic [      5:0] cmd_out_frac_i,
+  input  logic [     31:0] cmd_requant_mul_i,
+  input  logic [      6:0] cmd_requant_shift_i,
+  input  logic             cmd_decode_error_i,
   output logic             busy_o,
   output logic             done_o,
   output logic             err_o,
+  output logic [      1:0] milestone_inc_o,
 
   // sram_arbiter matrix port
   output logic             matrix_req_valid_o,
@@ -184,7 +222,8 @@ module bpu_sa_sram_wrapper
   output logic [AddrW-1:0] matrix_req_addr_o,
   output logic [DataW-1:0] matrix_req_wdata_o,
   input  logic             matrix_rsp_valid_i,
-  input  logic [DataW-1:0] matrix_rsp_rdata_i
+  input  logic [DataW-1:0] matrix_rsp_rdata_i,
+  input  logic             matrix_wr_done_i
 );
 
   localparam int unsigned ROW_BYTES = DataW / 8;
@@ -196,26 +235,27 @@ module bpu_sa_sram_wrapper
   localparam int unsigned S_SA = 2;
   localparam int unsigned S_SB = 3;
   // Array steps per SRAM row: A in INT8 and INT4 mode, B (Cols bytes per step in
-  // both modes); scale blocks per SRAM row; C rows per write.
+  // both modes); scale blocks per SRAM row; C staging slots of Cols bytes (a C row
+  // takes 4, 2 or 1 of them by element size).
   localparam int unsigned A_STEPS8 = ROW_BYTES / Rows;
   localparam int unsigned A_STEPS4 = (Rows * 2 <= ROW_BYTES) ? ROW_BYTES / (2 * Rows) : 1;
   localparam int unsigned B_STEPS = ROW_BYTES / Cols;
   localparam int unsigned SA_BLOCKS = (Rows * 2 <= ROW_BYTES) ? ROW_BYTES / (2 * Rows) : 1;
   localparam int unsigned SB_BLOCKS = ROW_BYTES / (2 * Cols);
-  localparam int unsigned C_ROW_BYTES = 4 * Cols;
-  localparam int unsigned C_ROWS_PER_WRITE = ROW_BYTES / C_ROW_BYTES;
+  localparam int unsigned C_ROW_BYTES = 4 * Cols;  // the widest C row
+  localparam int unsigned C_SLOTS = ROW_BYTES / Cols;
   localparam int unsigned A_SLOT_WIDTH = $clog2((A_STEPS8 > 1) ? A_STEPS8 : 2);
   localparam int unsigned B_SLOT_WIDTH = $clog2((B_STEPS > 1) ? B_STEPS : 2);
   localparam int unsigned SA_SLOT_WIDTH = $clog2((SA_BLOCKS > 1) ? SA_BLOCKS : 2);
   localparam int unsigned SB_SLOT_WIDTH = $clog2((SB_BLOCKS > 1) ? SB_BLOCKS : 2);
-  localparam int unsigned C_SLOT_WIDTH = $clog2((C_ROWS_PER_WRITE > 1) ? C_ROWS_PER_WRITE : 2);
+  localparam int unsigned C_SLOT_WIDTH = $clog2(C_SLOTS + 1);
   localparam int unsigned BSTEP_WIDTH = $clog2(BlockK);
   localparam int unsigned BLOCK_SHIFT = $clog2(BlockK);
   localparam int unsigned CREDIT_WIDTH = $clog2(BufRows + 1);
   localparam int unsigned OUT_CREDIT_WIDTH = $clog2(OutDepth + 1);
   // Bytes of one stream: at most K * Rows or K * Cols <= (2^KW - 1) * ROW_BYTES.
   localparam int unsigned BYTES_WIDTH = KW + ROW_OFFSET_WIDTH;
-  // Writes waiting for a response: at most one per C row.
+  // Accepted writes waiting for completion: at most one per C row.
   localparam int unsigned ACK_WIDTH = $clog2(Rows + 1);
   localparam int unsigned ROW_IDX_WIDTH = $clog2((Rows > 1) ? Rows : 2);
   // A lanes into the array, and the A bytes one array step can take.
@@ -226,7 +266,6 @@ module bpu_sa_sram_wrapper
   // PE's scaling takes SCALE_PIPE more.
   localparam int unsigned KEEP_WAIT = Rows + Cols + SCALE_PIPE;
   localparam int unsigned KEEP_WAIT_WIDTH = $clog2(KEEP_WAIT + 1);
-  localparam int unsigned FX_IDX_W = $clog2(FX_W);  // a bit index into a Q23.24 value
 
   // Command.
   logic cmd_fire;
@@ -242,6 +281,10 @@ module bpu_sa_sram_wrapper
   logic write_q;  // write C (else keep the sums)
   logic kept_q;  // sums kept for the next command
   logic kept_scaled_q;  // they are block-scaled
+  logic [Rows-1:0] cmd_row_on;  // rows inside the offered M
+  logic [Cols-1:0] cmd_col_on;  // columns inside the offered N
+  logic [Rows-1:0] row_on_q;  // rows inside M, for the running or kept context
+  logic [Cols-1:0] col_on_q;  // columns inside N, likewise
   logic keep_armed_q;  // last contribution is in
   logic [KEEP_WAIT_WIDTH-1:0] keep_wait_q;  // cycles until it settles
   logic keep_event;
@@ -301,8 +344,10 @@ module bpu_sa_sram_wrapper
   logic [KW-1:0] gf_q;  // block being fed
   logic [SA_SLOT_WIDTH-1:0] sa_slot_q;  // block within the SA head row
   logic [SB_SLOT_WIDTH-1:0] sb_slot_q;  // block within the SB head row
-  logic [Rows*16-1:0] sa_lanes;  // the block's sA, one per row
-  logic [Cols*16-1:0] sb_lanes;  // the block's sB, one per column
+  logic [Rows*16-1:0] sa_raw;  // the block's sA, one per row, as read
+  logic [Cols*16-1:0] sb_raw;  // the block's sB, one per column, as read
+  logic [Rows*16-1:0] sa_lanes;  // ... zero outside M
+  logic [Cols*16-1:0] sb_lanes;  // ... zero outside N
   logic [DataW+A_WIN_BITS-1:0] a_head_ext;
   logic [A_WIN_BITS-1:0] a_win;
   logic [Cols*8-1:0] b_win;
@@ -320,21 +365,28 @@ module bpu_sa_sram_wrapper
   logic sa_err_mode;
   logic sa_out_fire;
 
-  // Drain: room for finished rows, and each row as 32-bit values.
+  // Drain: room for finished rows, their conversion and packing.
   logic [OUT_CREDIT_WIDTH-1:0] out_credit_q;  // free queue entries
-  logic [Cols*32-1:0] c_row32;  // unscaled row, int32
-  logic [Cols*32-1:0] f_row32;  // block-scaled row, binary32 (from the conversion register)
-  logic [Cols*32-1:0] i_row32;  // unscaled row, int32 (from the conversion register)
-  // The conversion register, one entry per column: the magnitude (or, unscaled, the
-  // int32 value) and the flags and leading-one position of a block-scaled value.
-  logic cv_valid_q;
-  logic cv_last_q;
-  logic [Cols*FX_W-1:0] cv_mag_q;
-  logic [Cols*FX_IDX_W-1:0] cv_msb_q;
-  logic [Cols-1:0] cv_nan_q;
-  logic [Cols-1:0] cv_ovf_q;
-  logic [Cols-1:0] cv_neg_q;
-  logic [Cols-1:0] cv_zero_q;
+  logic cv_valid;  // a converted row (bpu_sa_output_convert)
+  logic [Cols*32-1:0] cv_row;  // ... each element in the low bytes of its lane
+  logic cv_last_q;  // it is the tile's last row
+  logic cv_row_on_q;  // the row is inside M
+  logic [Cols*32-1:0] c_out_row;  // the row to write, zero outside M and N
+  logic [Cols*16-1:0] c_pack16;  // ... packed, 2-byte elements
+  logic [Cols*8-1:0] c_pack8;  // ... packed, 1-byte elements
+  logic [Cols*32-1:0] c_packed;  // the packed row, in the low eb * Cols bytes
+
+  // Output encoding of the running command, and milestone publication.
+  logic [2:0] fmt_q;
+  logic [5:0] frac_q;
+  logic [31:0] mul_q;
+  logic [6:0] shift_q;
+  logic [2:0] eb_q;  // bytes per C element: 4, 2 or 1
+  logic [2:0] cmd_eb;
+  logic ms_inputs;  // this cycle: the command's inputs are released
+  logic [2:0] ms_total;  // milestones due: held plus new
+  logic [1:0] ms_held_q;  // due but not yet published (at most two per cycle)
+  logic [1:0] ms_inc_q;
 
   // Finished rows queued for write-back, and the C staging row.
   logic out_push;
@@ -385,65 +437,24 @@ module bpu_sa_sram_wrapper
     end
   end
 
-  // Every response must belong to a read in flight or, with WriteAcks, to a write.
-  // matrix_rsp_valid_i is 0 during reset.
+  // Completion inputs must be clear during reset. Every selected completion
+  // belongs to an earlier accepted request; reset cancels pending requests.
   always @(posedge clk_i) begin
     ExpectedResponse_A :
     assert (matrix_rsp_valid_i !== 1'b1 || !order_empty || (WriteAcks && acks_left_q != '0))
     else $error("bpu_sa_sram_wrapper: response with no read or write outstanding");
+    ExpectedWriteCompletion_A :
+    assert (rsp_ack !== 1'b1 || acks_left_q != '0)
+    else $error("bpu_sa_sram_wrapper: write completion with no write outstanding");
+    WriteCompletionCapacity_A :
+    assert (!(req_fire && req_is_write_q && !rsp_ack) || acks_left_q < ACK_WIDTH'(Rows))
+    else $error("bpu_sa_sram_wrapper: too many writes outstanding");
     NoReadWriteOverlap_A :
     assert (!(c_write === 1'b1 && !order_empty))
     else $error("bpu_sa_sram_wrapper: C write while reads are in flight");
   end
 `endif
 
-  // fx_to_f32: a packed block-scaled result {nan, overflow, value} (value: Q23.24,
-  // FX_W bits) as IEEE binary32. NaN -> 0x7FC00000; overflow -> +-infinity (the
-  // value's sign); otherwise value / 2^FX_FRAC rounded to nearest even, which is
-  // always a normal number or +0. It takes two cycles, split after the leading-one
-  // search: fx_to_f32_lead, then fx_to_f32_round.
-
-  // The position of the highest 1 in x (0 when x is 0), in log depth: smear the
-  // leading 1 into every lower bit, keep the top of the smear, encode its index.
-  function automatic logic [FX_IDX_W-1:0] fx_to_f32_lead(input logic [FX_W-1:0] x);
-    logic [    FX_W-1:0] smear;
-    logic [    FX_W-1:0] onehot;
-    logic [FX_IDX_W-1:0] idx;
-    smear = x;
-    for (int d = 1; d < FX_W; d = 2 * d) begin
-      smear = smear | (smear >> d);
-    end
-    onehot = smear & ~(smear >> 1);
-    idx    = '0;
-    for (int b = 0; b < FX_W; b++) begin
-      if (onehot[b]) begin
-        idx = idx | FX_IDX_W'(b);
-      end
-    end
-    return idx;
-  endfunction
-
-  // Normalize, round to nearest even and pack; mag != 0 has its highest 1 at msb.
-  function automatic logic [31:0] fx_to_f32_round(input logic nan, input logic ovf, input logic neg,
-                                                  input logic zero, input logic [FX_IDX_W-1:0] msb,
-                                                  input logic [FX_W-1:0] mag);
-    logic [FX_W-1:0] norm;  // mag with its leading 1 at bit FX_W - 1
-    logic [    24:0] mant;  // the 24 kept bits, rounded (bit 24: carry out)
-    logic            round_up;
-    logic [     7:0] expo;
-    norm     = mag << (FX_W - 1 - int'(msb));
-    round_up = norm[FX_W-25] && ((norm[FX_W-26:0] != '0) || norm[FX_W-24]);
-    mant     = {1'b0, norm[FX_W-1:FX_W-24]} + 25'(round_up);
-    expo     = 8'(int'(msb) - FX_FRAC + 127) + 8'(mant[24]);
-    if (nan) begin
-      return 32'h7fc0_0000;
-    end else if (ovf) begin
-      return {neg, 8'hff, 23'h0};
-    end else if (zero) begin
-      return 32'h0000_0000;
-    end
-    return {neg, expo, mant[24] ? mant[23:1] : mant[22:0]};
-  endfunction
 
   // Arbitration: the wanting stream with the fewest rows reserved; lowest index on
   // a tie.
@@ -473,20 +484,38 @@ module bpu_sa_sram_wrapper
   assign done_o = done_q;
   assign err_o = err_q;
   assign cmd_fire = cmd_valid_i && cmd_ready_o;
-  assign cmd_bad = (cmd_k_i == '0)
+  // The logical shape as lane masks: row i is inside M when i < M. For M and N in
+  // range, equal masks mean equal M and N.
+  for (genvar i = 0; i < Rows; i++) begin : g_row_on
+    assign cmd_row_on[i] = (cmd_m_i > 16'(i));
+  end
+  for (genvar j = 0; j < Cols; j++) begin : g_col_on
+    assign cmd_col_on[j] = (cmd_n_i > 16'(j));
+  end
+  // A writing command needs a supported output encoding (0 .. 4; INT32 with at most
+  // 31 fractional bits); the encoding fields of a command that keeps its sums are
+  // ignored, like its C address.
+  assign cmd_bad = cmd_decode_error_i || (cmd_k_i == '0)
+      || (cmd_write_output_i && ((cmd_out_format_i > OUT_INT8)
+                                 || (cmd_out_format_i == OUT_INT32 && cmd_out_frac_i > 6'd31)))
+      || (cmd_m_i == '0) || (cmd_m_i > 16'(Rows))
+      || (cmd_n_i == '0) || (cmd_n_i > 16'(Cols))
       || (cmd_a_addr_i[ROW_OFFSET_WIDTH-1:0] != '0)
       || (cmd_b_addr_i[ROW_OFFSET_WIDTH-1:0] != '0)
       || (cmd_write_output_i && (cmd_c_addr_i[ROW_OFFSET_WIDTH-1:0] != '0))
-      || (!cmd_clear_acc_i && (!kept_q || (kept_scaled_q != cmd_scaled_i)))
+      || (!cmd_clear_acc_i && (!kept_q || (kept_scaled_q != cmd_scaled_i)
+                               || (cmd_row_on != row_on_q) || (cmd_col_on != col_on_q)))
       || (cmd_int4_i && !Int4)
-      || (cmd_scaled_i && (!Scale || (cmd_k_i[BLOCK_SHIFT-1:0] != '0)
+      || (cmd_scaled_i && (!Scale
                            || (cmd_sa_addr_i[ROW_OFFSET_WIDTH-1:0] != '0)
                            || (cmd_sb_addr_i[ROW_OFFSET_WIDTH-1:0] != '0)));
-  // Array steps: K, or ceil(K / 2) pairs in INT4 mode. Scale blocks: K / BlockK.
+  // Array steps: K, or ceil(K / 2) pairs in INT4 mode. Scale blocks: ceil(K / BlockK).
   assign cmd_steps = cmd_int4_i ? (cmd_k_i >> 1) + KW'(cmd_k_i[0]) : cmd_k_i;
-  assign cmd_blocks = cmd_k_i >> BLOCK_SHIFT;
-  // Done: the whole tile is staged, its last write accepted and, with WriteAcks,
-  // answered; or, keeping the sums, the last contribution has settled.
+  assign cmd_blocks = (cmd_k_i >> BLOCK_SHIFT) + KW'(cmd_k_i[BLOCK_SHIFT-1:0] != '0);
+  assign cmd_eb = (cmd_out_format_i == OUT_FP16) ? 3'd2 : (cmd_out_format_i == OUT_INT8) ? 3'd1
+                                                                                         : 3'd4;
+  // Done: the whole tile is staged, its last write accepted and every accepted
+  // write completed; or, keeping the sums, the last contribution has settled.
   assign finish = busy_q && (write_q ? (c_done_q && !req_valid_q && (acks_left_q == '0))
                                      : (keep_armed_q && (keep_wait_q == '0)));
 
@@ -502,6 +531,13 @@ module bpu_sa_sram_wrapper
       write_q       <= 1'b0;
       kept_q        <= 1'b0;
       kept_scaled_q <= 1'b0;
+      row_on_q      <= '0;
+      col_on_q      <= '0;
+      fmt_q         <= OUT_LEGACY;
+      frac_q        <= '0;
+      mul_q         <= '0;
+      shift_q       <= '0;
+      eb_q          <= 3'd4;
       k_last_q      <= '0;
       bstep_last_q  <= '0;
       a_slot_last_q <= '0;
@@ -519,6 +555,13 @@ module bpu_sa_sram_wrapper
           odd_q         <= cmd_int4_i && cmd_k_i[0];
           clear_q       <= cmd_clear_acc_i;
           write_q       <= cmd_write_output_i;
+          row_on_q      <= cmd_row_on;
+          col_on_q      <= cmd_col_on;
+          fmt_q         <= cmd_out_format_i;
+          frac_q        <= cmd_out_frac_i;
+          mul_q         <= cmd_requant_mul_i;
+          shift_q       <= cmd_requant_shift_i;
+          eb_q          <= cmd_eb;
           k_last_q      <= cmd_steps - 1'b1;
           bstep_last_q  <= cmd_int4_i ? BSTEP_WIDTH'(BlockK / 2 - 1) : BSTEP_WIDTH'(BlockK - 1);
           a_slot_last_q <= cmd_int4_i ? A_SLOT_WIDTH'(A_STEPS4 - 1) : A_SLOT_WIDTH'(A_STEPS8 - 1);
@@ -529,6 +572,27 @@ module bpu_sa_sram_wrapper
         kept_q        <= !write_q;
         kept_scaled_q <= scaled_q;
       end
+    end
+  end
+
+  // Milestones, three per accepted legal command, in order: inputs released when its
+  // last array step is fed (every operand read is back by then: the step needs the
+  // last row of each stream); next contribution ready and complete together at the
+  // finish (one command at a time, so a continuation can only follow completion).
+  // Published on milestone_inc_o as the command queues' increment, at most two per
+  // cycle, with any excess held for the next cycle; complete appears with done_o.
+  // An illegal command publishes none: its err_o faults the job.
+  assign ms_inputs = feed_fire && feed_final;
+  assign ms_total = 3'(ms_held_q) + (finish ? 3'd2 : 3'd0) + 3'(ms_inputs);
+  assign milestone_inc_o = ms_inc_q;
+
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if (!rst_ni) begin
+      ms_held_q <= '0;
+      ms_inc_q  <= '0;
+    end else begin
+      ms_inc_q  <= (ms_total > 3'd2) ? 2'd2 : ms_total[1:0];
+      ms_held_q <= (ms_total > 3'd2) ? 2'(ms_total - 3'd2) : 2'd0;
     end
   end
 
@@ -622,7 +686,7 @@ module bpu_sa_sram_wrapper
       req_is_write_q <= 1'b1;
       req_stream_q   <= '0;
       req_addr_q     <= c_addr_q;
-      req_size_q     <= SizeW'((32'(c_slot_q) + 1) * C_ROW_BYTES);
+      req_size_q     <= SizeW'((32'(c_slot_q) + 32'(eb_q)) * Cols);
     end else if (load_read) begin
       req_is_write_q <= 1'b0;
       req_stream_q   <= pick;
@@ -635,7 +699,7 @@ module bpu_sa_sram_wrapper
   // Responses: reads in request order into their stream; write acks counted
   // ---------------------------------------------------------------------------
   assign rsp_read = matrix_rsp_valid_i && !order_empty;
-  assign rsp_ack  = matrix_rsp_valid_i && order_empty;
+  assign rsp_ack  = WriteAcks ? (matrix_rsp_valid_i && order_empty) : matrix_wr_done_i;
 
   bpu_sa_fifo #(
     .Width(2),
@@ -655,9 +719,9 @@ module bpu_sa_sram_wrapper
     if (!rst_ni) begin
       acks_left_q <= '0;
     end else begin
-      if (WriteAcks && req_fire && req_is_write_q && !rsp_ack) begin
+      if (req_fire && req_is_write_q && !rsp_ack) begin
         acks_left_q <= acks_left_q + 1'b1;
-      end else if (WriteAcks && rsp_ack && !(req_fire && req_is_write_q)) begin
+      end else if (rsp_ack && !(req_fire && req_is_write_q)) begin
         acks_left_q <= acks_left_q - 1'b1;
       end
     end
@@ -672,10 +736,10 @@ module bpu_sa_sram_wrapper
   assign feed_final = (k_q == k_last_q);
   // Unscaled: one tile for the whole command, without first when continuing kept
   // sums and without last when keeping them. Block-scaled: first and last mark
-  // every block; the command is one tile, restarted (sfirst) with clear and drained
-  // (slast) with write.
+  // every block, and the command's last step ends a short final block; the command
+  // is one tile, restarted (sfirst) with clear and drained (slast) with write.
   assign feed_first = scaled_q ? (bstep_q == '0) : (clear_q && (k_q == '0));
-  assign feed_last = scaled_q ? (bstep_q == bstep_last_q) : (write_q && feed_final);
+  assign feed_last = scaled_q ? ((bstep_q == bstep_last_q) || feed_final) : (write_q && feed_final);
   assign feed_sfirst = clear_q && (gf_q == '0);
   assign feed_slast = write_q && feed_final;
   assign feed_fire = feed_valid && sa_in_ready;
@@ -687,8 +751,15 @@ module bpu_sa_sram_wrapper
       && (feed_final || sa_slot_q == SA_SLOT_WIDTH'(SA_BLOCKS - 1));
   assign st_pop[S_SB] = scaled_q && feed_fire && feed_last
       && (feed_final || sb_slot_q == SB_SLOT_WIDTH'(SB_BLOCKS - 1));
-  assign sa_lanes = st_head[S_SA][32'(sa_slot_q)*(16*Rows)+:16*Rows];
-  assign sb_lanes = st_head[S_SB][32'(sb_slot_q)*(16*Cols)+:16*Cols];
+  assign sa_raw = st_head[S_SA][32'(sa_slot_q)*(16*Rows)+:16*Rows];
+  assign sb_raw = st_head[S_SB][32'(sb_slot_q)*(16*Cols)+:16*Cols];
+  // Lanes outside M or N get zero scales: their sums stay +0, never NaN.
+  for (genvar i = 0; i < Rows; i++) begin : g_sa_lane
+    assign sa_lanes[16*i+:16] = row_on_q[i] ? sa_raw[16*i+:16] : 16'h0000;
+  end
+  for (genvar j = 0; j < Cols; j++) begin : g_sb_lane
+    assign sb_lanes[16*j+:16] = col_on_q[j] ? sb_raw[16*j+:16] : 16'h0000;
+  end
 
   // The A bytes of this step: Rows (INT8) or 2 * Rows (INT4) from the head row,
   // zero-padded so the window never runs past the row.
@@ -696,23 +767,25 @@ module bpu_sa_sram_wrapper
   assign a_win = a_head_ext[32'(a_slot_q)*(int4_q?16*Rows : 8*Rows)+:A_WIN_BITS];
   assign b_win = st_head[S_B][32'(b_slot_q)*(8*Cols)+:8*Cols];
 
+  // Lanes outside M (A) or N (B) feed zero.
   for (genvar i = 0; i < Rows; i++) begin : g_a_lane
     if (Int4) begin : g_int4
       // INT4 pair: A[i][k] low, A[i][k+1] high (zero past an odd K).
-      assign sa_in_a[A_LANE*i+:A_LANE] = int4_q
+      assign sa_in_a[A_LANE*i+:A_LANE] = !row_on_q[i] ? '0 : int4_q
           ? {(feed_final && odd_q) ? 8'h00 : a_win[8*(Rows+i)+:8], a_win[8*i+:8]}
           : {8'h00, a_win[8*i+:8]};
     end else begin : g_int8
-      assign sa_in_a[A_LANE*i+:A_LANE] = a_win[8*i+:8];
+      assign sa_in_a[A_LANE*i+:A_LANE] = row_on_q[i] ? a_win[8*i+:8] : 8'h00;
     end
   end
 
   for (genvar j = 0; j < Cols; j++) begin : g_b_lane
     if (Int4) begin : g_int4
       // INT4 pair: nibble j of row k (first Cols/2 bytes) low, of row k+1 high.
-      assign sa_in_b[8*j+:8] = int4_q ? {b_win[4*Cols+4*j+:4], b_win[4*j+:4]} : b_win[8*j+:8];
+      assign sa_in_b[8*j+:8] = !col_on_q[j] ? 8'h00
+          : int4_q ? {b_win[4*Cols+4*j+:4], b_win[4*j+:4]} : b_win[8*j+:8];
     end else begin : g_int8
-      assign sa_in_b[8*j+:8] = b_win[8*j+:8];
+      assign sa_in_b[8*j+:8] = col_on_q[j] ? b_win[8*j+:8] : 8'h00;
     end
   end
 
@@ -819,48 +892,30 @@ module bpu_sa_sram_wrapper
   assign sa_out_ready = busy_q && (out_credit_q != '0);
   assign sa_out_fire  = sa_out_valid && sa_out_ready;
 
-  // Conversion stage 1, per column: the magnitude and its leading 1 (block-scaled), or
-  // the int32 value (unscaled), into the conversion register. Stage 2 below.
-  for (genvar j = 0; j < Cols; j++) begin : g_c_row
-    logic [FX_PACK_W-1:0] fx;
-    logic [     FX_W-1:0] mag;
-    assign fx = sa_out_fx[FX_PACK_W*j+:FX_PACK_W];
-    assign mag = fx[FX_W-1] ? FX_W'(-fx[FX_W-1:0]) : fx[FX_W-1:0];
-    assign c_row32[32*j+:32] = 32'($signed(sa_out_row[AccW*j+:AccW]));
-
-    always_ff @(posedge clk_i) begin
-      if (sa_out_fire) begin
-        cv_mag_q[FX_W*j+:FX_W]         <= scaled_q ? mag : FX_W'(c_row32[32*j+:32]);
-        cv_msb_q[FX_IDX_W*j+:FX_IDX_W] <= fx_to_f32_lead(mag);
-        cv_nan_q[j]                    <= fx[FX_W+1];
-        cv_ovf_q[j]                    <= fx[FX_W];
-        cv_neg_q[j]                    <= fx[FX_W-1];
-        cv_zero_q[j]                   <= (mag == '0);
-      end
-    end
-
-    assign i_row32[32*j+:32] = cv_mag_q[FX_W*j+:32];
-    assign f_row32[32*j+:32] = fx_to_f32_round(
-      cv_nan_q[j],
-      cv_ovf_q[j],
-      cv_neg_q[j],
-      cv_zero_q[j],
-      cv_msb_q[FX_IDX_W*j+:FX_IDX_W],
-      cv_mag_q[FX_W*j+:FX_W]
-    );
-  end
-
-  always_ff @(posedge clk_i or negedge rst_ni) begin
-    if (!rst_ni) begin
-      cv_valid_q <= 1'b0;
-    end else begin
-      cv_valid_q <= sa_out_fire;
-    end
-  end
+  // Conversion into the command's output encoding: stage 1 registers the row as the
+  // array hands it over, stage 2 rounds it on its way into the write-back queue.
+  bpu_sa_output_convert #(
+    .Lanes(Cols),
+    .AccW (AccW)
+  ) u_convert (
+    .clk_i,
+    .rst_ni,
+    .in_valid_i (sa_out_fire),
+    .in_scaled_i(scaled_q),
+    .in_int_i   (sa_out_row),
+    .in_fx_i    (sa_out_fx),
+    .fmt_i      (fmt_q),
+    .frac_i     (frac_q),
+    .mul_i      (mul_q),
+    .shift_i    (shift_q),
+    .out_valid_o(cv_valid),
+    .out_o      (cv_row)
+  );
 
   always_ff @(posedge clk_i) begin
     if (sa_out_fire) begin
-      cv_last_q <= sa_out_last;
+      cv_last_q   <= sa_out_last;
+      cv_row_on_q <= |(row_on_q & (Rows'(1) << sa_out_row_idx));
     end
   end
 
@@ -885,10 +940,20 @@ module bpu_sa_sram_wrapper
   end
 
   // Finished rows go to the write-back queue one cycle after the array hands them over
-  // (conversion stage 2). Only one command runs at a time, so the two kinds never mix,
-  // and scaled_q still describes the row in the conversion register.
-  assign out_push = cv_valid_q;
-  assign out_data = {cv_last_q, scaled_q ? f_row32 : i_row32};
+  // (conversion stage 2). Only one command runs at a time, so its kind and format
+  // still describe the row in the conversion register. Elements outside M or N are
+  // written as zero. Their inputs were zero too, so they already hold +0; forcing it
+  // keeps the rule independent of the arithmetic. The row is then packed: element j
+  // at byte eb * j (eb = 4, 2 or 1 bytes), the rest of the entry unused.
+  for (genvar j = 0; j < Cols; j++) begin : g_c_out
+    assign c_out_row[32*j+:32] = (cv_row_on_q && col_on_q[j]) ? cv_row[32*j+:32] : 32'h0;
+    assign c_pack16[16*j+:16] = c_out_row[32*j+:16];
+    assign c_pack8[8*j+:8] = c_out_row[32*j+:8];
+  end
+  assign c_packed = (eb_q == 3'd2) ? {{(16 * Cols) {1'b0}}, c_pack16}
+      : (eb_q == 3'd1) ? {{(24 * Cols) {1'b0}}, c_pack8} : c_out_row;
+  assign out_push = cv_valid;
+  assign out_data = {cv_last_q, c_packed};
 
   bpu_sa_fifo #(
     .Width(Cols * 32 + 1),
@@ -921,13 +986,18 @@ module bpu_sa_sram_wrapper
   // C write-back: stage rows into one SRAM row, write it when full or at the end
   // ---------------------------------------------------------------------------
   // The staging row is the write data, so it takes no row while a request is
-  // pending.
+  // pending. It holds C_SLOTS slots of Cols bytes; a packed C row fills eb of them,
+  // starting at a multiple of eb, so rows never straddle SRAM rows.
   assign c_pop   = busy_q && !req_valid_q && !out_empty;
-  assign c_write = c_pop && (out_head[Cols*32] || c_slot_q == C_SLOT_WIDTH'(C_ROWS_PER_WRITE - 1));
+  assign c_write = c_pop && (out_head[Cols*32] || (32'(c_slot_q) + 32'(eb_q) == C_SLOTS));
 
   always_ff @(posedge clk_i) begin
     if (c_pop) begin
-      c_stage_q[32'(c_slot_q)*(8*C_ROW_BYTES)+:8*C_ROW_BYTES] <= out_head[Cols*32-1:0];
+      for (int s = 0; s < 4; s++) begin
+        if (s < int'(eb_q) && 32'(c_slot_q) + s < C_SLOTS) begin
+          c_stage_q[(32'(c_slot_q)+s)*(8*Cols)+:8*Cols] <= out_head[s*(8*Cols)+:8*Cols];
+        end
+      end
     end
   end
 
@@ -946,7 +1016,7 @@ module bpu_sa_sram_wrapper
           c_addr_q <= c_addr_q + AddrW'(ROW_BYTES);
           c_slot_q <= '0;
         end else if (c_pop) begin
-          c_slot_q <= c_slot_q + 1'b1;
+          c_slot_q <= c_slot_q + C_SLOT_WIDTH'(eb_q);
         end
         if (c_pop && out_head[Cols*32]) begin
           c_done_q <= 1'b1;
@@ -959,8 +1029,7 @@ module bpu_sa_sram_wrapper
 
   // The queues' full flags are covered by credits (and checked inside
   // bpu_sa_fifo); a build without Int4 never selects the INT4 mode, so it uses
-  // neither the mode error nor odd_q; rows come out in order, so their index is
-  // not needed.
-  assign unused_signals = ^{order_full, out_full, sa_err_mode, odd_q, sa_out_row_idx};
+  // neither the mode error nor odd_q.
+  assign unused_signals = ^{order_full, out_full, sa_err_mode, odd_q, matrix_wr_done_i};
 
 endmodule
