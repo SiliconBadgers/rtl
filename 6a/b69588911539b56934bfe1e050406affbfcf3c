@@ -1,0 +1,27 @@
+docs/control/command-queues.md
+  s_25734fe2812e2e::t_e51e7cea620b61 52-57
+docs/control/top_level_control_spec.md
+  s_25734fe2812e2e::t_4fc03ed88146b3 162-166,173-175
+  s_25734fe2812e2e::t_dd2fe6f4a0695d 1-143,146-151,153-161,167-172,176-307,312-340,345-363
+  s_25734fe2812e2e::t_9c42ef7800ae74 144-145,341-344
+  s_25734fe2812e2e::t_e51e7cea620b61 152,308-309
+  s_25734fe2812e2e::t_1432b1bd45bc59 310-311
+docs/control/README.md
+  s_25734fe2812e2e::t_dd2fe6f4a0695d 6-8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6ab69588911539b56934bfe1e050406affbfcf3c",
+  "prompts": {},
+  "sessions": {
+    "s_25734fe2812e2e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1bbf2-1b43-7e23-ae07-bd9098fb24c5",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zeb Taylor <zceboys@gmail.com>"
+    }
+  }
+}
