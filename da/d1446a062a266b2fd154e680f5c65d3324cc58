@@ -1,0 +1,25 @@
+docs/compute/matrix_unit_spec.md
+  s_91f745292fc34d::t_aefc96bf3ee399 273-285,295-296,300-303,322-325
+docs/compute/matrix_unit_io_scheme.md
+  s_91f745292fc34d::t_aefc96bf3ee399 83-87,89
+  s_91f745292fc34d::t_4087004a858a6d 88
+docs/memory/sram_arbiter_spec.md
+  s_91f745292fc34d::t_4087004a858a6d 237
+  s_91f745292fc34d::t_aefc96bf3ee399 234-236,238
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "dad1446a062a266b2fd154e680f5c65d3324cc58",
+  "prompts": {},
+  "sessions": {
+    "s_91f745292fc34d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1bc23-2e05-7cd2-938c-cbcf4608c1b8",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zeb Taylor <zceboys@gmail.com>"
+    }
+  }
+}
