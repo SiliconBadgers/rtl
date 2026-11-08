@@ -16,7 +16,7 @@ These are the tests for the matrix unit in `rtl/compute/Matrix_Unit`; the source
 | `bpu_sa_command_decoder_tb.sv` | The version-1 record decoder: 2,000 random legal records round-trip every field; every reserved bit on its own, each wrong kind and version, formats 5 to 7, fractional bits above 31 and each transpose bit must be flagged; random bit flips against a reference built from the spec's table; ready and valid pass straight through. |
 | `bpu_sa_sram_wrapper_golden_tb.sv` | Real tensors. It runs the commands of `bpu_sa_golden_vectors_pkg` against the model below and checks every C element bit for bit, under arbiter stalls. The commands are 8 × 8 tiles with K = 2048 from Qwen3.5-2B: an INT4 tile (from a Q4_K weight), an INT8 tile (from Q5_K), the INT4 tile split across two chained commands, and an unscaled INT8 tile. A command that keeps its sums must write nothing. The run fails unless every command completed and every C element was checked. |
 | `bpu_sa_golden_vectors_pkg.sv` | Generated; do not edit. It holds the memory image, the command list and the expected C for `bpu_sa_sram_wrapper_golden_tb`. The golden model's `tools/export_rtl_vectors.py` writes it, from the pinned Qwen3.5-2B Q4_K_M model file (the header records its hash). The expected values come from its model of this unit's arithmetic contract. |
-| `sram_arbiter_matrix_model.sv` | A testbench model of the `sram_arbiter` matrix port with an SRAM behind it. It gives random ready, separate read-response and write-completion latencies, and random garbage above `size_bytes` in read data. It captures a write's payload on request acceptance and commits those bytes to SRAM at completion. Each accepted write completes on the dedicated write-done channel with `WriteAcks = 0`, or on the shared response channel with `WriteAcks = 1`. It checks stable stalled requests, alignment, sizes, reads only inside the command's four read windows, and writes only inside C. |
+| `sram_arbiter_matrix_model.sv` | A testbench model of the `sram_arbiter` matrix port with an SRAM behind it. It gives random ready, a read-response latency, and random garbage above `size_bytes` in read data. It captures a write's payload on its accepting edge and commits those bytes to SRAM on the next edge, the arbiter's fixed completion; there is no write acknowledgment, and reset cancels an uncommitted write. It checks stable stalled requests, alignment, sizes, reads only inside the command's four read windows, and writes only inside C. |
 
 ## Run
 
@@ -39,17 +39,15 @@ The runner builds and runs every configuration in its `CONFIGS` table:
 
 - **PE:** three builds, at two widths, with and without `Int4` and `Scale`.
 - **Array:** eleven shapes and modes, three of them block-scaled (INT8, INT4, and the narrowest `AccW` = 25 with block size 32).
-- **Wrapper:** eleven configurations cover shapes, separate read and write latencies, ready rates,
-  dedicated and shared write-completion channels, buffer depths, block size 32, a 256-bit SRAM
-  row, and builds without `Int4` and without `Scale`. The two `wrap_8x8_write_overlap*`
-  configurations require a cycle that both accepts a new write and completes an earlier one,
-  in each completion-channel mode.
+- **Wrapper:** ten configurations cover shapes, read latencies from 1 to 40, ready rates,
+  buffer depths, block size 32, a 256-bit SRAM row (several writes per tile, stalled and
+  always ready), and builds without `Int4` and without `Scale`.
 - **Real tensors:** `wrap_8x8_golden`, `bpu_sa_sram_wrapper_golden_tb` on the generated vectors.
 - **Output conversion:** `convert_4lanes`, `bpu_sa_output_convert_tb` with four lanes.
 - **Record decoder:** `decoder`, `bpu_sa_command_decoder_tb`.
 
 The array, wrapper, real-tensor, conversion and decoder configurations run three seeds each. The
-default runner plans 28 configurations and 78 runs; the summary records which actually ran and
+default runner plans 27 configurations and 75 runs; the summary records which actually ran and
 passed.
 
 The runner enforces compile and simulation timeouts. It exits nonzero on a compile error, a failed or missing result, or a timeout. Each run must end with one `RESULT ... status=PASS` line and a zero exit status; the testbenches call `$fatal(1, ...)` on any failure.
@@ -70,9 +68,9 @@ The array test's reset needs a finished tile still draining while the next tile 
 3. Every array result must report `active_resets=1`.
 
 The wrapper test likewise fails if its reset never catches a running command.
-It also requires a reset after a write request is accepted but before that write completes.
-Reset cancels that pending model write and its completion pulse; the wrapper must not publish
-`done_o` for the cancelled command.
+It also requires a reset between a write's accepting edge and its commit edge. Reset cancels
+that uncommitted model write; the wrapper must not publish `done_o` for the cancelled
+command, and C must keep its old bytes.
 
 Exercise the missing-condition failure separately:
 
@@ -94,33 +92,28 @@ timeout or different fatal message does not validate this guard.
 
 ### Write completion and visibility
 
-Every accepted output write must complete before `done_o`. Both write-completion conventions
-are checked: the default `WriteAcks = 0` uses `matrix_wr_done_i`; `WriteAcks = 1` uses
-`matrix_rsp_valid_i` for write completions and ties the dedicated input low.
+Writes commit on the edge after acceptance, fixed, as the proposed arbiter contract states;
+the model captures a write's payload on its accepting edge and commits it on the next. There
+is no write acknowledgment. At every falling edge with a write accepted but not committed,
+`done_o` must be low and `busy_o` high (checked in every cycle of every run).
 
-The directed delay holds all producer write completions, including the final output request.
-During that interval, C must retain its sentinel bytes, `busy_o` must stay high, and an offered
-dependent command that reads C as A must remain stalled. Releasing completions commits C in
-the model, allows the producer to finish and releases that dependent command. Both output
-tiles are checked. This checks write-data capture at acceptance and visibility at completion.
-Multiwrite configurations also check accepted and completed write counts independently.
+The directed dependency test offers a command that reads C as A while the producer is still
+running; it must stay stalled while any producer write is uncommitted, and must then read
+the committed C. Both output tiles are checked, and accepted and committed write counts are
+compared independently.
 
 Each wrapper run adds two completed directed commands (`dependent_commands = 2`) and one
 command cancelled by a pending-write reset outside the existing `commands` count. The total
 successful command count is `commands + dependent_commands`. `RESULT` also reports
-`delayed_write_checks`, `dependent_checks` (both directed tiles, `2*Rows*Cols` elements),
-`pending_write_resets`, `cancelled_writes`, `completed_writes` and `simultaneous_writes`.
-The required reset count is one, the cancelled-write count must be positive, and the two
-overlap configurations require at least one simultaneous acceptance/completion.
-
-In the model, `WriteLatency` counts edges from acceptance to SRAM commit and assertion of the
-registered completion pulse. The wrapper samples that pulse on the following edge. It is
-separate from the model's existing read-response `Latency` convention.
+`uncommitted_write_checks` (falling edges that saw a producer write in flight; must be
+positive), `dependent_checks` (both directed tiles, `2*Rows*Cols` elements),
+`pending_write_resets`, `cancelled_writes` and `completed_writes`. The required reset count
+is one and the cancelled-write count must be positive.
 
 ### Notes
 
 **Assertions:**
-- Assertions stay enabled through `-assert svaext`. The labelled ones are `CaptureShiftExclusive_A`, `NoOverflow_A`, `NoUnderflow_A`, `GrantWanted_A`, `StartIdle_A`, `ExpectedResponse_A`, `ExpectedWriteCompletion_A`, `WriteCompletionCapacity_A`, `NoReadWriteOverlap_A` and the testbench monitors.
+- Assertions stay enabled through `-assert svaext`. The labelled ones are `CaptureShiftExclusive_A`, `NoOverflow_A`, `NoUnderflow_A`, `GrantWanted_A`, `StartIdle_A`, `ExpectedResponse_A`, `NoReadWriteOverlap_A` and the testbench monitors.
 - Every simulator invocation uses `-exitstatus`, so assertion and testbench fatal failures reach the shell.
 
 **Runner:**

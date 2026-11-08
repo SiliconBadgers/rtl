@@ -11,15 +11,13 @@
 //            accepted the read (Latency = 1: the very next cycle). Byte n of rsp_rdata_o is mem[addr + n] for n < size_bytes and
 //            random garbage above, so a client that uses bytes it did not ask for
 //            fails.
-//   Write    address, size and data are captured on acceptance. Bytes become
-//            visible only at completion, at least WriteLatency edges later.
-//            WriteLatency counts edges from acceptance to memory commit and
-//            registered pulse assertion; the DUT samples that pulse one edge
-//            later. It is independent of the read pipeline's Latency setting.
-//            WriteAcks = 0 uses wr_done_o; WriteAcks = 1 uses rsp_valid_o.
-//            hold_write_completion_i delays visibility and completion together.
-//   Reset    drops queued writes and every response still in flight. Committed
-//            bytes and the cumulative counters retain their values.
+//   Write    address, size and data are captured on the accepting edge n and
+//            committed to memory on edge n + 1 exactly, the arbiter's fixed
+//            completion (docs/memory/sram_arbiter_spec.md, "Completion and
+//            visibility"). There is no write acknowledgment; rsp_valid_o carries
+//            reads only.
+//   Reset    cancels writes not yet committed and drops every response still in
+//            flight. Committed bytes and the cumulative counters keep their values.
 //
 // Checks (each one prints a message and adds to errors_o)
 //   - a request stalled at a rising edge is still offered, unchanged, at the next
@@ -34,21 +32,18 @@
 // references) and reads the counters through the *_o ports. in_flight_o counts the
 // reads and writes accepted but not yet completed; output pulses are excluded.
 //
-// Parameters: AddrW, DataW, SizeW (the port), MemBytes, Latency (>= 1), ReadyPct
-// (1 .. 100), WriteAcks. Plusarg +seed=<n> seeds the ready and garbage generator.
+// Parameters: AddrW, DataW, SizeW (the port), MemBytes, Latency (>= 1, reads),
+// ReadyPct (1 .. 100). Plusarg +seed=<n> seeds the ready and garbage generator.
 module sram_arbiter_matrix_model #(
-  parameter int AddrW        = 32,
-  parameter int DataW        = 4096,
-  parameter int SizeW        = 10,
-  parameter int MemBytes     = 65536,
-  parameter int Latency      = 4,
-  parameter int WriteLatency = Latency + 8,
-  parameter int ReadyPct     = 70,
-  parameter bit WriteAcks    = 1'b0
+  parameter int AddrW    = 32,
+  parameter int DataW    = 4096,
+  parameter int SizeW    = 10,
+  parameter int MemBytes = 65536,
+  parameter int Latency  = 4,
+  parameter int ReadyPct = 70
 ) (
   input logic clk_i,
   input logic rst_ni,
-  input logic hold_write_completion_i,
 
   // Matrix port, as the arbiter sees it
   input  logic             req_valid_i,
@@ -59,7 +54,6 @@ module sram_arbiter_matrix_model #(
   input  logic [DataW-1:0] req_wdata_i,
   output logic             rsp_valid_o,
   output logic [DataW-1:0] rsp_rdata_o,
-  output logic             wr_done_o,
 
   // Allowed address ranges, half-open: reads in one of four windows, writes in C
   input logic [3:0][AddrW-1:0] rd_lo_i,
@@ -125,8 +119,8 @@ module sram_arbiter_matrix_model #(
   endtask
 
   initial begin
-    if (Latency < 1 || WriteLatency < 1 || ReadyPct < 1 || ReadyPct > 100) begin
-      $fatal(1, "sram_arbiter_matrix_model: latencies must be >= 1 and ReadyPct 1 .. 100");
+    if (Latency < 1 || ReadyPct < 1 || ReadyPct > 100) begin
+      $fatal(1, "sram_arbiter_matrix_model: Latency must be >= 1 and ReadyPct 1 .. 100");
     end
     if (!$value$plusargs("seed=%d", seed)) begin
       seed = 1;
@@ -147,7 +141,6 @@ module sram_arbiter_matrix_model #(
     model_cycle        = 0;
     req_ready_o        = 1'b0;
     rsp_valid_o        = 1'b0;
-    wr_done_o          = 1'b0;
     rsp_rdata_o        = '0;
     prev_stall         = 1'b0;
     for (int s = 0; s < Latency; s++) begin
@@ -161,7 +154,6 @@ module sram_arbiter_matrix_model #(
     longint                     size;
     bit                         accept;
     bit                         in_window;
-    bit                         write_complete;
     pending_write_t             write_item;
 
     if (!rst_ni) begin
@@ -175,18 +167,16 @@ module sram_arbiter_matrix_model #(
       model_cycle = 0;
       req_ready_o <= 1'b0;
       rsp_valid_o <= 1'b0;
-      wr_done_o   <= 1'b0;
     end else begin
       model_cycle++;
-      write_complete = 1'b0;
-      // Retire before accepting: a write cannot complete on its acceptance edge.
-      if (pending_writes.size() != 0 && !hold_write_completion_i) begin
+      // Commit before accepting: a write accepted on the previous edge commits now,
+      // never on its own accepting edge.
+      if (pending_writes.size() != 0) begin
         if (pending_writes[0].due_cycle <= model_cycle) begin
           write_item = pending_writes.pop_front();
           for (int n = 0; n < int'(write_item.size_bytes); n++) begin
             mem[int'(write_item.addr)+n] = write_item.data[8*n+:8];
           end
-          write_complete = 1'b1;
           completed_writes_o++;
         end
       end
@@ -238,7 +228,7 @@ module sram_arbiter_matrix_model #(
           write_item.addr = req_addr_i;
           write_item.size_bytes = req_size_bytes_i;
           write_item.data = req_wdata_i;
-          write_item.due_cycle = model_cycle + longint'(WriteLatency);
+          write_item.due_cycle = model_cycle + 1;
           pending_writes.push_back(write_item);
         end else begin
           in_window = 1'b0;
@@ -263,12 +253,8 @@ module sram_arbiter_matrix_model #(
         end
       end
       // A request accepted at this edge comes out Latency - 1 edges later.
-      if (WriteAcks && write_complete && pipe_valid[Latency-1]) begin
-        fail("read and shared write completion collided");
-      end
-      rsp_valid_o <= pipe_valid[Latency-1] || (WriteAcks && write_complete);
+      rsp_valid_o <= pipe_valid[Latency-1];
       rsp_rdata_o <= pipe_data[Latency-1];
-      wr_done_o   <= !WriteAcks && write_complete;
       write_in_flight_o = pending_writes.size();
       in_flight_o = write_in_flight_o;
       for (int s = 0; s < Latency - 1; s++) begin

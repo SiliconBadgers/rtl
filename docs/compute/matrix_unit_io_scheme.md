@@ -60,9 +60,8 @@ All ports are in the single `clk_i` domain. Widths are at the default parameters
 | `matrix_req_size_bytes_o` | out | 10 | Bytes in the request, 1 to 512. |
 | `matrix_req_addr_o` | out | 32 | Row-aligned byte address. |
 | `matrix_req_wdata_o` | out | 4096 | Write data: byte n goes to address + n. |
-| `matrix_rsp_valid_i` | in | 1 | One-cycle pulse per completed read; also per completed write when `WriteAcks = 1`. |
+| `matrix_rsp_valid_i` | in | 1 | One-cycle pulse per completed read. Writes have no response: they commit on the edge after acceptance. |
 | `matrix_rsp_rdata_i` | in | 4096 | Read data: byte n is the byte at the request address + n. |
-| `matrix_wr_done_i` | in | 1 | With `WriteAcks = 0`, one pulse per completed Matrix write. Connect arbiter `sb_wr_done_o` qualified by `sb_wr_tag_o == TagMatrix`. Tie low with `WriteAcks = 1`. |
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
@@ -73,7 +72,6 @@ All ports are in the single `clk_i` domain. Widths are at the default parameters
 | `BlockK` | 16 | k-steps per scale block: a power of two, 16 to 1024. |
 | `BufRows` | 2 | SRAM rows buffered per read stream. |
 | `OutDepth` | 9 | Finished C rows queued for write-back. |
-| `WriteAcks` | 0 | Write-completion channel: 0 selects `matrix_wr_done_i`; 1 selects write pulses on `matrix_rsp_valid_i`. Both modes wait for every write to complete. |
 | `AddrW`, `DataW`, `SizeW` | 32, 4096, 10 | The arbiter port widths: `sram_arbiter_pkg` `ADDR_WIDTH`, `DATA_WIDTH`, `SIZE_WIDTH`. |
 | `KW` | 16 | Width of `cmd_k_i`. |
 
@@ -99,8 +97,8 @@ An illegal command leaves any kept sums as they were.
 
 **Reset** cancels the command in progress and discards kept sums. No `done_o` is sent for the
 cancelled command, and C in SRAM may be partly written. The arbiter must share the reset boundary
-and discard outstanding read responses and write-completion pulses before command acceptance
-resumes. Writes already committed remain in SRAM. Reset clears control state only; buffers and
+and discard outstanding read responses, and cancel writes that have not reached their commit
+edge, before command acceptance resumes. Writes already committed remain in SRAM. Reset clears control state only; buffers and
 accumulators are data storage and are not cleared.
 
 ### Chaining commands along K
@@ -229,16 +227,13 @@ The unit is the requester on the arbiter's matrix port and follows its
   fewest rows reserved goes first, in the order A, B, sA, sB on a tie.
 - **Writes** carry up to one SRAM row of C. `size_bytes` covers exactly the C bytes in that write.
 - **Read responses** are one `matrix_rsp_valid_i` pulse per read, in request order.
-- **Write completion:** every accepted write requires exactly one completion pulse. With the
-  default `WriteAcks = 0`, reads use `matrix_rsp_valid_i` and writes complete on
-  `matrix_wr_done_i`. The integration must qualify the arbiter's `sb_wr_done_o` with
-  `sb_wr_tag_o == TagMatrix`; another requester's write must not complete Matrix work.
-  With `WriteAcks = 1`, write completion instead arrives on `matrix_rsp_valid_i`, and
-  `matrix_wr_done_i` is tied low. Do not report a write on both channels.
-- **Visibility:** request acceptance lets the wrapper reuse its write-data storage. It does not
-  make C available to a dependent reader. `done_o` waits for all C write completions, and only
-  then may the next command be accepted. The arbiter must capture the payload on acceptance
-  and make the requested C bytes visible before publishing completion.
+- **Write completion is fixed** (the arbiter specification's "Completion and visibility"): a
+  write accepted on rising edge n has committed, and is visible to later reads, by edge n + 1.
+  There is no write-acknowledgment input; arbitration and stalls delay acceptance only.
+- **Visibility:** request acceptance lets the wrapper reuse its write-data storage. The last
+  write of a command is accepted no later than the edge before the command can finish, so
+  `done_o` (and the complete milestone) rise no earlier than that write's commit edge, and
+  the next command is accepted after it.
 - **Reads and writes never overlap:** writes start only after every read has returned
   (`NoReadWriteOverlap_A`).
 
@@ -372,7 +367,7 @@ The command is `cmd_k_i` = 3, `cmd_int4_i` = 0, `cmd_scaled_i` = 0, with `cmd_cl
 2. a 6-byte read of B;
 3. the two read responses;
 4. one 16-byte write request for C;
-5. its write-completion pulse, after which `done_o` pulses.
+5. its commit on the edge after acceptance, with `done_o` from that edge.
 
 ## 5. Sources and tests
 
@@ -414,7 +409,8 @@ yet.
 - **Requantization to INT8**, which the compute-team decisions ask for, needs a specification of
   the scale, rounding and saturation.
 - **Arbiter integration:** the actual arbiter and Matrix wrapper must share a reset boundary
-  that discards pre-reset read responses and write completions. Matrix-tag qualification and
-  dependent-reader visibility still need verification against the real arbiter RTL.
+  that discards pre-reset read responses and cancels uncommitted writes. The fixed next-edge
+  write commit is the proposed arbiter contract; the arbiter RTL in rtl PR #35 still drives a
+  separate `sb_wr_done_o`, so the two need reconciling before integration.
 - **Command source:** a sequencer or RISC-V command issuer will drive the command port. Its
   encoding of these fields is defined outside this unit.

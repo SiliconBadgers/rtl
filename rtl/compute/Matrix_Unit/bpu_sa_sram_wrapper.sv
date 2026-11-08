@@ -139,21 +139,18 @@
 //            matrix_req_wdata_o is written to the request address + n, and
 //            size_bytes covers exactly the C bytes in the request.
 //            matrix_rsp_valid_i: a one-cycle pulse per read, in request order,
-//            carrying matrix_rsp_rdata_i, with no backpressure. The wrapper only
-//            issues a read when its buffer has room for the response.
-//            WriteAcks = 0 (default): matrix_rsp_valid_i carries reads only.
-//            matrix_wr_done_i pulses once per completed write, qualified by the
-//            parent from sb_wr_done_o && (sb_wr_tag_o == TagMatrix).
-//            WriteAcks = 1: an adapter instead pulses matrix_rsp_valid_i once
-//            per completed write; matrix_wr_done_i is unused and tied low.
-//            In both modes, every accepted write needs exactly one completion,
-//            at least one rising edge after acceptance. done_o waits for all of
-//            them, when C is visible to dependent reads. The parent discards
-//            pre-reset completions with the rest of the SRAM response pipeline.
-//            Write data may be reused immediately after request acceptance.
-//            The wrapper never has reads and writes outstanding at once
-//            (NoReadWriteOverlap_A), so the two kinds of response are never
-//            confused.
+//            carrying matrix_rsp_rdata_i, with no backpressure; it carries reads
+//            only. The wrapper only issues a read when its buffer has room for
+//            the response.
+//            Write completion is fixed (docs/memory/sram_arbiter_spec.md,
+//            "Completion and visibility"): a write accepted on rising edge n has
+//            committed, and is visible to later reads, by edge n + 1. There is no
+//            write-acknowledgment input. Stalls delay acceptance only. The last
+//            write is accepted no later than the edge before the command can
+//            finish, so done_o (registered) rises no earlier than that write's
+//            commit edge. Write data may be reused immediately after acceptance.
+//            Reset cancels writes that have not reached their commit edge (the
+//            arbiter's side of the shared reset boundary).
 //
 // Timing, from accepting the command (L = SRAM round trip, request to response):
 //   the first k-step enters the array about L + 2 cycles later, once the first A
@@ -166,25 +163,23 @@
 // Knobs: Rows, Cols, AccW (the array); Int4 (INT4-pair PEs) and Scale (block
 //   scaling in every PE), each removable to save area; BlockK; DataW, SizeW, AddrW (the
 //   arbiter port: sram_arbiter_pkg DATA_WIDTH, SIZE_WIDTH, ADDR_WIDTH); BufRows
-//   (read-ahead per stream); OutDepth (finished rows queued for write-back);
-//   WriteAcks (selects dedicated or shared write-completion pulses).
+//   (read-ahead per stream); OutDepth (finished rows queued for write-back).
 // ---------------------------------------------------------------------------------
 module bpu_sa_sram_wrapper
   import bpu_sa_pkg::*;
 #(
-  parameter int unsigned Rows      = 8,     // power of two, 1 .. DataW/16
-  parameter int unsigned Cols      = 8,     // power of two, 1 .. DataW/32 (2+ with Int4)
-  parameter int unsigned AccW      = 32,    // accumulator width, 16 .. 32 (25+ with Scale)
-  parameter int unsigned AddrW     = 32,    // address width (ADDR_WIDTH)
-  parameter int unsigned DataW     = 4096,  // SRAM row in bits (DATA_WIDTH), 8 * 2^n
-  parameter int unsigned SizeW     = 10,    // size_bytes width (SIZE_WIDTH)
-  parameter int unsigned KW        = 16,    // width of cmd_k_i
-  parameter int unsigned BufRows   = 2,     // SRAM rows buffered per stream, >= 1
-  parameter bit          WriteAcks = 1'b0,  // 0: dedicated write done; 1: shared response
-  parameter bit          Int4      = 1'b1,  // 1: support packed INT4 weights
-  parameter bit          Scale     = 1'b1,  // 1: support block scaling
-  parameter int unsigned BlockK    = 16,    // k-steps per scale block, power of two 16..1024
-  parameter int unsigned OutDepth  = 9      // finished C rows queued for write-back, >= 1
+  parameter int unsigned Rows     = 8,     // power of two, 1 .. DataW/16
+  parameter int unsigned Cols     = 8,     // power of two, 1 .. DataW/32 (2+ with Int4)
+  parameter int unsigned AccW     = 32,    // accumulator width, 16 .. 32 (25+ with Scale)
+  parameter int unsigned AddrW    = 32,    // address width (ADDR_WIDTH)
+  parameter int unsigned DataW    = 4096,  // SRAM row in bits (DATA_WIDTH), 8 * 2^n
+  parameter int unsigned SizeW    = 10,    // size_bytes width (SIZE_WIDTH)
+  parameter int unsigned KW       = 16,    // width of cmd_k_i
+  parameter int unsigned BufRows  = 2,     // SRAM rows buffered per stream, >= 1
+  parameter bit          Int4     = 1'b1,  // 1: support packed INT4 weights
+  parameter bit          Scale    = 1'b1,  // 1: support block scaling
+  parameter int unsigned BlockK   = 16,    // k-steps per scale block, power of two 16..1024
+  parameter int unsigned OutDepth = 9      // finished C rows queued for write-back, >= 1
 ) (
   input logic clk_i,
   input logic rst_ni,
@@ -222,8 +217,7 @@ module bpu_sa_sram_wrapper
   output logic [AddrW-1:0] matrix_req_addr_o,
   output logic [DataW-1:0] matrix_req_wdata_o,
   input  logic             matrix_rsp_valid_i,
-  input  logic [DataW-1:0] matrix_rsp_rdata_i,
-  input  logic             matrix_wr_done_i
+  input  logic [DataW-1:0] matrix_rsp_rdata_i
 );
 
   localparam int unsigned ROW_BYTES = DataW / 8;
@@ -255,8 +249,6 @@ module bpu_sa_sram_wrapper
   localparam int unsigned OUT_CREDIT_WIDTH = $clog2(OutDepth + 1);
   // Bytes of one stream: at most K * Rows or K * Cols <= (2^KW - 1) * ROW_BYTES.
   localparam int unsigned BYTES_WIDTH = KW + ROW_OFFSET_WIDTH;
-  // Accepted writes waiting for completion: at most one per C row.
-  localparam int unsigned ACK_WIDTH = $clog2(Rows + 1);
   localparam int unsigned ROW_IDX_WIDTH = $clog2((Rows > 1) ? Rows : 2);
   // A lanes into the array, and the A bytes one array step can take.
   localparam int unsigned A_LANE = Int4 ? 16 : 8;
@@ -325,8 +317,6 @@ module bpu_sa_sram_wrapper
   logic order_empty;
   logic order_full;
   logic rsp_read;
-  logic rsp_ack;
-  logic [ACK_WIDTH-1:0] acks_left_q;
 
   // Feed: one array step per cycle from the A and B head rows.
   logic [A_SLOT_WIDTH-1:0] a_slot_q;  // step within the A head row
@@ -437,18 +427,12 @@ module bpu_sa_sram_wrapper
     end
   end
 
-  // Completion inputs must be clear during reset. Every selected completion
-  // belongs to an earlier accepted request; reset cancels pending requests.
+  // Every response belongs to an earlier accepted read; reset cancels pending
+  // requests, and the arbiter drops their responses.
   always @(posedge clk_i) begin
     ExpectedResponse_A :
-    assert (matrix_rsp_valid_i !== 1'b1 || !order_empty || (WriteAcks && acks_left_q != '0))
-    else $error("bpu_sa_sram_wrapper: response with no read or write outstanding");
-    ExpectedWriteCompletion_A :
-    assert (rsp_ack !== 1'b1 || acks_left_q != '0)
-    else $error("bpu_sa_sram_wrapper: write completion with no write outstanding");
-    WriteCompletionCapacity_A :
-    assert (!(req_fire && req_is_write_q && !rsp_ack) || acks_left_q < ACK_WIDTH'(Rows))
-    else $error("bpu_sa_sram_wrapper: too many writes outstanding");
+    assert (matrix_rsp_valid_i !== 1'b1 || !order_empty)
+    else $error("bpu_sa_sram_wrapper: response with no read outstanding");
     NoReadWriteOverlap_A :
     assert (!(c_write === 1'b1 && !order_empty))
     else $error("bpu_sa_sram_wrapper: C write while reads are in flight");
@@ -514,9 +498,10 @@ module bpu_sa_sram_wrapper
   assign cmd_blocks = (cmd_k_i >> BLOCK_SHIFT) + KW'(cmd_k_i[BLOCK_SHIFT-1:0] != '0);
   assign cmd_eb = (cmd_out_format_i == OUT_FP16) ? 3'd2 : (cmd_out_format_i == OUT_INT8) ? 3'd1
                                                                                          : 3'd4;
-  // Done: the whole tile is staged, its last write accepted and every accepted
-  // write completed; or, keeping the sums, the last contribution has settled.
-  assign finish = busy_q && (write_q ? (c_done_q && !req_valid_q && (acks_left_q == '0))
+  // Done: the whole tile is staged and its last write accepted, so done_o rises on
+  // that write's commit edge or later (fixed completion: accepted on edge n,
+  // committed by n + 1); or, keeping the sums, the last contribution has settled.
+  assign finish = busy_q && (write_q ? (c_done_q && !req_valid_q)
                                      : (keep_armed_q && (keep_wait_q == '0)));
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
@@ -696,10 +681,9 @@ module bpu_sa_sram_wrapper
   end
 
   // ---------------------------------------------------------------------------
-  // Responses: reads in request order into their stream; write acks counted
+  // Responses: reads in request order into their stream (writes have none)
   // ---------------------------------------------------------------------------
   assign rsp_read = matrix_rsp_valid_i && !order_empty;
-  assign rsp_ack  = WriteAcks ? (matrix_rsp_valid_i && order_empty) : matrix_wr_done_i;
 
   bpu_sa_fifo #(
     .Width(2),
@@ -714,18 +698,6 @@ module bpu_sa_sram_wrapper
     .empty_o(order_empty),
     .full_o (order_full)
   );
-
-  always_ff @(posedge clk_i or negedge rst_ni) begin
-    if (!rst_ni) begin
-      acks_left_q <= '0;
-    end else begin
-      if (req_fire && req_is_write_q && !rsp_ack) begin
-        acks_left_q <= acks_left_q + 1'b1;
-      end else if (rsp_ack && !(req_fire && req_is_write_q)) begin
-        acks_left_q <= acks_left_q - 1'b1;
-      end
-    end
-  end
 
   // ---------------------------------------------------------------------------
   // Feed: one array step per cycle from the head rows of A and B
@@ -1030,6 +1002,6 @@ module bpu_sa_sram_wrapper
   // The queues' full flags are covered by credits (and checked inside
   // bpu_sa_fifo); a build without Int4 never selects the INT4 mode, so it uses
   // neither the mode error nor odd_q.
-  assign unused_signals = ^{order_full, out_full, sa_err_mode, odd_q, matrix_wr_done_i};
+  assign unused_signals = ^{order_full, out_full, sa_err_mode, odd_q};
 
 endmodule

@@ -8,7 +8,7 @@
 // list (block-scaled INT4 and INT8 tiles with K = 2048, the INT4 tile split in two chained
 // commands, an unscaled INT8 tile) and the expected C of each command.
 //
-// Parameters: Latency, WriteLatency, ReadyPct (the model), Seed. The wrapper is 8 x 8, AccW 32,
+// Parameters: Latency, ReadyPct (the model), Seed. The wrapper is 8 x 8, AccW 32,
 // DataW 4096, BlockK 16, INT4 and block scaling on, matching the package.
 // Plusargs:
 //   +seed=<n>       seed for the model's ready and garbage generator (default: Seed)
@@ -24,7 +24,6 @@ module bpu_sa_sram_wrapper_golden_tb;
   import bpu_sa_golden_vectors_pkg::*;
 
   parameter int Latency = 4;
-  parameter int WriteLatency = Latency + 8;
   parameter int ReadyPct = 70;
   parameter int Seed = 1;
 
@@ -35,7 +34,7 @@ module bpu_sa_sram_wrapper_golden_tb;
   localparam int K_WIDTH = 16;
   localparam int SIZE_W = $clog2(GV_ROW_BYTES) + 1;
   localparam int MEM_BYTES = GV_MEM_ROWS * GV_ROW_BYTES;
-  localparam int CMD_TIMEOUT = (2048 * (Latency + 4) + 400) * 100 / ReadyPct + WriteLatency;
+  localparam int CMD_TIMEOUT = (2048 * (Latency + 4) + 400) * 100 / ReadyPct + 1;
   localparam int TIMEOUT_CYCLES = (GV_COMMANDS + 2) * CMD_TIMEOUT;
 
   logic clk;
@@ -66,7 +65,6 @@ module bpu_sa_sram_wrapper_golden_tb;
   logic [DATA_W-1:0] req_wdata;
   logic rsp_valid;
   logic [DATA_W-1:0] rsp_rdata;
-  logic wr_done;
 
   logic [3:0][ADDR_WIDTH-1:0] rd_lo;
   logic [3:0][ADDR_WIDTH-1:0] rd_hi;
@@ -95,18 +93,17 @@ module bpu_sa_sram_wrapper_golden_tb;
   string status;
 
   bpu_sa_sram_wrapper #(
-    .Rows     (ROWS),
-    .Cols     (COLS),
-    .AccW     (32),
-    .AddrW    (ADDR_WIDTH),
-    .DataW    (DATA_W),
-    .SizeW    (SIZE_W),
-    .KW       (K_WIDTH),
-    .BufRows  (2),
-    .WriteAcks(1'b0),
-    .Int4     (1'b1),
-    .Scale    (1'b1),
-    .BlockK   (GV_BLOCK_K)
+    .Rows   (ROWS),
+    .Cols   (COLS),
+    .AccW   (32),
+    .AddrW  (ADDR_WIDTH),
+    .DataW  (DATA_W),
+    .SizeW  (SIZE_W),
+    .KW     (K_WIDTH),
+    .BufRows(2),
+    .Int4   (1'b1),
+    .Scale  (1'b1),
+    .BlockK (GV_BLOCK_K)
   ) u_dut (
     .clk_i                  (clk),
     .rst_ni                 (rst_n),
@@ -140,45 +137,40 @@ module bpu_sa_sram_wrapper_golden_tb;
     .matrix_req_addr_o      (req_addr),
     .matrix_req_wdata_o     (req_wdata),
     .matrix_rsp_valid_i     (rsp_valid),
-    .matrix_rsp_rdata_i     (rsp_rdata),
-    .matrix_wr_done_i       (wr_done)
+    .matrix_rsp_rdata_i     (rsp_rdata)
   );
 
   sram_arbiter_matrix_model #(
-    .AddrW       (ADDR_WIDTH),
-    .DataW       (DATA_W),
-    .SizeW       (SIZE_W),
-    .MemBytes    (MEM_BYTES),
-    .Latency     (Latency),
-    .WriteLatency(WriteLatency),
-    .ReadyPct    (ReadyPct),
-    .WriteAcks   (1'b0)
+    .AddrW   (ADDR_WIDTH),
+    .DataW   (DATA_W),
+    .SizeW   (SIZE_W),
+    .MemBytes(MEM_BYTES),
+    .Latency (Latency),
+    .ReadyPct(ReadyPct)
   ) u_sram (
-    .clk_i                  (clk),
-    .rst_ni                 (rst_n),
-    .hold_write_completion_i(1'b0),
-    .req_valid_i            (req_valid),
-    .req_ready_o            (req_ready),
-    .req_is_write_i         (req_is_write),
-    .req_size_bytes_i       (req_size),
-    .req_addr_i             (req_addr),
-    .req_wdata_i            (req_wdata),
-    .rsp_valid_o            (rsp_valid),
-    .rsp_rdata_o            (rsp_rdata),
-    .wr_done_o              (wr_done),
-    .rd_lo_i                (rd_lo),
-    .rd_hi_i                (rd_hi),
-    .c_lo_i                 (c_lo),
-    .c_hi_i                 (c_hi),
-    .reads_o                (reads),
-    .writes_o               (writes),
-    .read_bytes_o           (read_bytes),
-    .write_bytes_o          (write_bytes),
-    .errors_o               (model_errors),
-    .stalls_o               (req_stalls),
-    .in_flight_o            (in_flight),
-    .write_in_flight_o      (write_in_flight),
-    .completed_writes_o     (completed_writes)
+    .clk_i             (clk),
+    .rst_ni            (rst_n),
+    .req_valid_i       (req_valid),
+    .req_ready_o       (req_ready),
+    .req_is_write_i    (req_is_write),
+    .req_size_bytes_i  (req_size),
+    .req_addr_i        (req_addr),
+    .req_wdata_i       (req_wdata),
+    .rsp_valid_o       (rsp_valid),
+    .rsp_rdata_o       (rsp_rdata),
+    .rd_lo_i           (rd_lo),
+    .rd_hi_i           (rd_hi),
+    .c_lo_i            (c_lo),
+    .c_hi_i            (c_hi),
+    .reads_o           (reads),
+    .writes_o          (writes),
+    .read_bytes_o      (read_bytes),
+    .write_bytes_o     (write_bytes),
+    .errors_o          (model_errors),
+    .stalls_o          (req_stalls),
+    .in_flight_o       (in_flight),
+    .write_in_flight_o (write_in_flight),
+    .completed_writes_o(completed_writes)
   );
 
   initial begin : clock
@@ -260,7 +252,7 @@ module bpu_sa_sram_wrapper_golden_tb;
       errors++;
       $display("bpu_sa_sram_wrapper_golden_tb: command %0d done with err_o", n);
     end
-    if (in_flight != 0 || rsp_valid !== 1'b0 || wr_done !== 1'b0) begin
+    if (in_flight != 0 || rsp_valid !== 1'b0) begin
       errors++;
       $display("bpu_sa_sram_wrapper_golden_tb: command %0d done with transactions in flight", n);
     end
@@ -365,7 +357,7 @@ module bpu_sa_sram_wrapper_golden_tb;
            kept_checked, busy_cycles);
     $write(" reads=%0d writes=%0d read_bytes=%0d write_bytes=%0d", reads, writes, read_bytes,
            write_bytes);
-    $write(" write_latency=%0d completed_writes=%0d", WriteLatency, completed_writes);
+    $write(" completed_writes=%0d", completed_writes);
     $display(" req_stalls=%0d model_errors=%0d errors=%0d status=%s", req_stalls, model_errors,
              errors, status);
     if (status != "PASS") begin

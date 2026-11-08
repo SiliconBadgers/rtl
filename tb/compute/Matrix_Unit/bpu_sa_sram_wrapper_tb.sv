@@ -7,23 +7,25 @@
 // (tb/compute/Matrix_Unit/run_tests.sh) runs several shapes, port widths, latencies,
 // feature sets and seeds.
 //
-// Parameters: Rows, Cols, AccW, DataW, SizeW, BufRows, WriteAcks, Int4, Scale,
-// BlockK (the wrapper); Latency, WriteLatency, ReadyPct (the model's read and
-// write latencies and request-ready rate); RequireWriteOverlap (require a write
-// acceptance and completion together); WriteResetWaitCycles (bounded attempt to
-// reach reset with an uncommitted write; zero exercises the prerequisite guard);
-// Commands (random commands per random phase), MaxK
-// (cap on unscaled K), MaxBlocks (cap on random block counts) and Seed.
+// Parameters: Rows, Cols, AccW, DataW, SizeW, BufRows, Int4, Scale, BlockK (the
+// wrapper); Latency, ReadyPct (the model's read latency and request-ready rate;
+// writes commit on the edge after acceptance, fixed); WriteResetWaitCycles (bounded
+// attempt to reach reset between a write's acceptance and its commit; zero
+// exercises the prerequisite guard); Commands (random commands per random phase),
+// MaxK (cap on unscaled K), MaxBlocks (cap on random block counts) and Seed.
 // Plusargs:
 //   +seed=<n>       random seed (default: Seed)
 //   +inject_error=1 corrupt one expected value on purpose; the run must FAIL
 //
 // Phases
-//   0. writes    Hold captured writes before visibility, offer a dependent C-as-A
-//                command while stalled, then check both output tiles. Reset with
-//                captured writes pending and check no stale write or completion.
-//                These two completed commands and one cancellation are counted
-//                separately from the original legal command sequence below.
+//   0. writes    A producer writes C while a dependent C-as-A command is already
+//                offered: whenever a producer write is accepted but not yet
+//                committed, done_o must be low and the dependent command not
+//                accepted; then both output tiles are checked. Then a reset
+//                between a write's acceptance and its commit: the write must be
+//                cancelled, with no done_o, and C unchanged. These two completed
+//                commands and one cancellation are counted separately from the
+//                original legal command sequence below.
 //   1. directed  Unscaled K at the SRAM-row boundaries: 1, 2, 3, one below, at and
 //                above the k-steps per SRAM row of A and of B, 2 * B + 1, and
 //                K_LIMIT; then block-scaled K of 1 and 2 blocks and one block more
@@ -117,13 +119,10 @@ module bpu_sa_sram_wrapper_tb;
   parameter int DataW = 4096;
   parameter int SizeW = 10;
   parameter int BufRows = 2;
-  parameter bit WriteAcks = 1'b0;
   parameter bit Int4 = 1'b1;
   parameter bit Scale = 1'b1;
   parameter int BlockK = 16;
   parameter int Latency = 4;
-  parameter int WriteLatency = Latency + 8;
-  parameter bit RequireWriteOverlap = 1'b0;
   parameter int WriteResetWaitCycles = 100000;
   parameter int ReadyPct = 70;
   parameter int Commands = 16;
@@ -183,7 +182,7 @@ module bpu_sa_sram_wrapper_tb;
       + (CAN_RESHAPE ? 1 : 0) + 1;
   // Generous: every k-step waiting a full round trip, every request stalled.
   localparam int CMD_TIMEOUT = (K_MAX * (Latency + 4) + 40 * (Latency + 4) + 4 * (Rows + Cols)
-      + 400) * 100 / ReadyPct + WriteLatency * ((C_BYTES + ROW_BYTES - 1) / ROW_BYTES);
+      + 400) * 100 / ReadyPct + ((C_BYTES + ROW_BYTES - 1) / ROW_BYTES);
   localparam int TIMEOUT_CYCLES = (TOTAL_COMMANDS + ILLEGAL + 10) * CMD_TIMEOUT;
 
   logic clk;
@@ -228,8 +227,6 @@ module bpu_sa_sram_wrapper_tb;
   logic [DataW-1:0] req_wdata;
   logic rsp_valid;
   logic [DataW-1:0] rsp_rdata;
-  logic wr_done;
-  logic hold_write_completion;
 
   logic [3:0][ADDR_WIDTH-1:0] rd_lo;  // A, B, SA, SB windows
   logic [3:0][ADDR_WIDTH-1:0] rd_hi;
@@ -292,24 +289,22 @@ module bpu_sa_sram_wrapper_tb;
   int dependent_checks;
   int pending_write_resets;
   int cancelled_writes;
-  int simultaneous_writes;
   int k_limit_cycles8;  // directed K_LIMIT, INT8
   int k_limit_cycles4;  // directed K_LIMIT, INT4
   string status;
 
   bpu_sa_sram_wrapper #(
-    .Rows     (Rows),
-    .Cols     (Cols),
-    .AccW     (AccW),
-    .AddrW    (ADDR_WIDTH),
-    .DataW    (DataW),
-    .SizeW    (SizeW),
-    .KW       (K_WIDTH),
-    .BufRows  (BufRows),
-    .WriteAcks(WriteAcks),
-    .Int4     (Int4),
-    .Scale    (Scale),
-    .BlockK   (BlockK)
+    .Rows   (Rows),
+    .Cols   (Cols),
+    .AccW   (AccW),
+    .AddrW  (ADDR_WIDTH),
+    .DataW  (DataW),
+    .SizeW  (SizeW),
+    .KW     (K_WIDTH),
+    .BufRows(BufRows),
+    .Int4   (Int4),
+    .Scale  (Scale),
+    .BlockK (BlockK)
   ) u_dut (
     .clk_i                  (clk),
     .rst_ni                 (rst_n),
@@ -343,53 +338,41 @@ module bpu_sa_sram_wrapper_tb;
     .matrix_req_addr_o      (req_addr),
     .matrix_req_wdata_o     (req_wdata),
     .matrix_rsp_valid_i     (rsp_valid),
-    .matrix_rsp_rdata_i     (rsp_rdata),
-    .matrix_wr_done_i       (wr_done)
+    .matrix_rsp_rdata_i     (rsp_rdata)
   );
 
   sram_arbiter_matrix_model #(
-    .AddrW       (ADDR_WIDTH),
-    .DataW       (DataW),
-    .SizeW       (SizeW),
-    .MemBytes    (MEM_BYTES),
-    .Latency     (Latency),
-    .WriteLatency(WriteLatency),
-    .ReadyPct    (ReadyPct),
-    .WriteAcks   (WriteAcks)
+    .AddrW   (ADDR_WIDTH),
+    .DataW   (DataW),
+    .SizeW   (SizeW),
+    .MemBytes(MEM_BYTES),
+    .Latency (Latency),
+    .ReadyPct(ReadyPct)
   ) u_sram (
-    .clk_i                  (clk),
-    .rst_ni                 (rst_n),
-    .hold_write_completion_i(hold_write_completion),
-    .req_valid_i            (req_valid),
-    .req_ready_o            (req_ready),
-    .req_is_write_i         (req_is_write),
-    .req_size_bytes_i       (req_size),
-    .req_addr_i             (req_addr),
-    .req_wdata_i            (req_wdata),
-    .rsp_valid_o            (rsp_valid),
-    .rsp_rdata_o            (rsp_rdata),
-    .wr_done_o              (wr_done),
-    .rd_lo_i                (rd_lo),
-    .rd_hi_i                (rd_hi),
-    .c_lo_i                 (c_lo),
-    .c_hi_i                 (c_hi),
-    .reads_o                (reads),
-    .writes_o               (writes),
-    .read_bytes_o           (read_bytes),
-    .write_bytes_o          (write_bytes),
-    .errors_o               (model_errors),
-    .stalls_o               (req_stalls),
-    .in_flight_o            (in_flight),
-    .write_in_flight_o      (write_in_flight),
-    .completed_writes_o     (completed_writes)
+    .clk_i             (clk),
+    .rst_ni            (rst_n),
+    .req_valid_i       (req_valid),
+    .req_ready_o       (req_ready),
+    .req_is_write_i    (req_is_write),
+    .req_size_bytes_i  (req_size),
+    .req_addr_i        (req_addr),
+    .req_wdata_i       (req_wdata),
+    .rsp_valid_o       (rsp_valid),
+    .rsp_rdata_o       (rsp_rdata),
+    .rd_lo_i           (rd_lo),
+    .rd_hi_i           (rd_hi),
+    .c_lo_i            (c_lo),
+    .c_hi_i            (c_hi),
+    .reads_o           (reads),
+    .writes_o          (writes),
+    .read_bytes_o      (read_bytes),
+    .write_bytes_o     (write_bytes),
+    .errors_o          (model_errors),
+    .stalls_o          (req_stalls),
+    .in_flight_o       (in_flight),
+    .write_in_flight_o (write_in_flight),
+    .completed_writes_o(completed_writes)
   );
-
-  // Count the simultaneous events as the DUT sees them at its sampling edge.
-  always @(posedge clk) begin
-    if (req_valid && req_ready && req_is_write && (WriteAcks ? rsp_valid : wr_done)) begin
-      simultaneous_writes++;
-    end
-  end
 
   // The Matrix progress counter, as the command queues keep it: reset with the unit.
   always @(posedge clk or negedge rst_n) begin
@@ -941,7 +924,7 @@ module bpu_sa_sram_wrapper_tb;
                cmd_index, progress - progress0, milestone_inc);
     end
     // Every response of the command, including write acknowledgements, has arrived.
-    if (in_flight != 0 || rsp_valid !== 1'b0 || wr_done !== 1'b0) begin
+    if (in_flight != 0 || rsp_valid !== 1'b0) begin
       errors++;
       $display("bpu_sa_sram_wrapper_tb: command %0d done with %0d responses still in flight",
                cmd_index, in_flight + int'(rsp_valid === 1'b1));
@@ -1126,8 +1109,11 @@ module bpu_sa_sram_wrapper_tb;
     tb_kept = 1'b0;  // reset discards kept sums
   endtask
 
-  // Hold every producer write after capture. A dependent command is offered
-  // before visibility and must remain stalled until the producer completes.
+  // A producer writes C while a dependent command that reads C as A is already
+  // offered. Writes commit on the edge after acceptance, so at every falling edge
+  // with a producer write accepted but not yet committed, done_o must be low and
+  // the dependent command must not have been taken. Then both output tiles are
+  // checked: the dependent command must read the committed C.
   task automatic delayed_write_dependency();
     int writes0;
     int completed0;
@@ -1151,50 +1137,35 @@ module bpu_sa_sram_wrapper_tb;
     rd_hi[0] = ADDR_WIDTH'(A_BASE + Rows);
     rd_lo[1] = ADDR_WIDTH'(B_BASE);
     rd_hi[1] = ADDR_WIDTH'(B_BASE + Cols);
+    // The dependent command's A is C: a spare read window, since the producer may
+    // still be reading its own A.
+    rd_lo[2] = ADDR_WIDTH'(C_BASE);
+    rd_hi[2] = ADDR_WIDTH'(C_BASE + Rows);
     c_lo = ADDR_WIDTH'(C_BASE);
     c_hi = ADDR_WIDTH'(C_BASE + C_BYTES);
     writes0 = writes;
     completed0 = completed_writes;
-    hold_write_completion = 1'b1;
     issue(1, 1'b0, 1'b0, 1'b1, 1'b1, A_BASE, B_BASE, 0, 0, C_BASE);
-    waited = 0;
-    while (writes - writes0 != ceil_rows(
-      C_BYTES
-    ) && waited < CMD_TIMEOUT) begin
-      tick();
-      waited++;
-    end
-    if (writes - writes0 != ceil_rows(C_BYTES) || write_in_flight == 0) begin
-      $fatal(1, "bpu_sa_sram_wrapper_tb: delayed-write precondition not reached");
-    end
 
-    // The second command reads the first Rows bytes of C as signed INT8 A.
-    // Its output may reuse C because all operand reads precede writeback.
-    cmd_valid  = 1'b1;
+    // The second command reads the first Rows bytes of C as signed INT8 A. Its
+    // output may reuse C because all operand reads precede writeback.
+    cmd_valid = 1'b1;
     cmd_a_addr = ADDR_WIDTH'(C_BASE);
-    rd_lo[0]   = ADDR_WIDTH'(C_BASE);
-    rd_hi[0]   = ADDR_WIDTH'(C_BASE + Rows);
-    repeat (WriteLatency + 3) begin
-      tick();
-      if (busy !== 1'b1 || cmd_ready !== 1'b0 || done !== 1'b0 ||
-          completed_writes != completed0) begin
-        $fatal(1, "bpu_sa_sram_wrapper_tb: dependent work escaped delayed completion");
-      end
-      for (int n = 0; n < C_BYTES; n++) begin
-        if (u_sram.mem[C_BASE+n] !== 8'ha5) begin
-          $fatal(1, "bpu_sa_sram_wrapper_tb: C changed before write completion");
-        end
-      end
-      delayed_write_checks++;
-    end
-    hold_write_completion = 1'b0;
     waited = 0;
     while (done !== 1'b1 && waited < CMD_TIMEOUT) begin
       tick();
       waited++;
+      if (write_in_flight != 0) begin
+        if (done !== 1'b0 || busy !== 1'b1 || cmd_ready !== 1'b0) begin
+          $fatal(1, "bpu_sa_sram_wrapper_tb: dependent work escaped an uncommitted write");
+        end
+        delayed_write_checks++;
+      end
     end
-    if (done !== 1'b1 || err !== 1'b0 || write_in_flight != 0 ||
-        completed_writes - completed0 != ceil_rows(
+    if (done !== 1'b1 || err !== 1'b0 || write_in_flight != 0 || delayed_write_checks == 0 ||
+        writes - writes0 != ceil_rows(
+        C_BYTES
+      ) || completed_writes - completed0 != ceil_rows(
         C_BYTES
       )) begin
       $fatal(1, "bpu_sa_sram_wrapper_tb: producer completed before C was visible");
@@ -1207,7 +1178,7 @@ module bpu_sa_sram_wrapper_tb;
         end
         want = 32'(i % 7 + 1);
         if (got !== want) begin
-          $fatal(1, "bpu_sa_sram_wrapper_tb: captured producer write data changed");
+          $fatal(1, "bpu_sa_sram_wrapper_tb: producer C wrong after commit");
         end
         dependent_checks++;
       end
@@ -1220,7 +1191,7 @@ module bpu_sa_sram_wrapper_tb;
       tick();
       waited++;
     end
-    if (done !== 1'b1 || err !== 1'b0 || in_flight != 0 || wr_done || rsp_valid) begin
+    if (done !== 1'b1 || err !== 1'b0 || in_flight != 0 || rsp_valid) begin
       $fatal(1, "bpu_sa_sram_wrapper_tb: dependent command did not complete");
     end
     dependent_commands++;
@@ -1242,12 +1213,12 @@ module bpu_sa_sram_wrapper_tb;
       ) || completed_writes - completed0 != 2 * ceil_rows(
         C_BYTES
       )) begin
-      $fatal(1, "bpu_sa_sram_wrapper_tb: dependent write completion count mismatch");
+      $fatal(1, "bpu_sa_sram_wrapper_tb: dependent write commit count mismatch");
     end
   endtask
 
-  // Reset cancels captured, uncommitted writes as well as the active command.
-  // Waiting past their due dates must not produce stale completion or data.
+  // Reset between a write's acceptance and its commit edge: the uncommitted write
+  // is cancelled, no done_o or stale write follows, and C keeps its old bytes.
   task automatic reset_pending_write();
     int a_addr;
     int b_addr;
@@ -1262,7 +1233,6 @@ module bpu_sa_sram_wrapper_tb;
     for (int n = 0; n < C_BYTES; n++) begin
       before_c[n] = u_sram.mem[c_addr+n];
     end
-    hold_write_completion = 1'b1;
     completed0 = completed_writes;
     issue(1, 1'b0, 1'b0, 1'b1, 1'b1, a_addr, b_addr, sa_addr, sb_addr, c_addr);
     waited = 0;
@@ -1275,25 +1245,23 @@ module bpu_sa_sram_wrapper_tb;
     end
     cancelled_writes += write_in_flight;
     pending_write_resets++;
-    #2;
+    #2;  // after the accepting edge, 3 ns before the commit edge
     rst_n = 1'b0;
     #1;
-    if (busy !== 1'b0 || done !== 1'b0 || req_valid !== 1'b0 ||
-        wr_done !== 1'b0 || rsp_valid !== 1'b0 || write_in_flight != 0) begin
-      $fatal(1, "bpu_sa_sram_wrapper_tb: reset did not cancel pending writes");
+    if (busy !== 1'b0 || done !== 1'b0 || req_valid !== 1'b0 || rsp_valid !== 1'b0 ||
+        write_in_flight != 0) begin
+      $fatal(1, "bpu_sa_sram_wrapper_tb: reset did not cancel the uncommitted write");
     end
     repeat (3) begin
       @(negedge clk);
       cycle++;
     end
-    hold_write_completion = 1'b0;
-    rst_n = 1'b1;
+    rst_n   = 1'b1;
     tb_kept = 1'b0;
-    repeat (WriteLatency + Latency + 4) begin
+    repeat (Latency + 5) begin
       tick();
-      if (done !== 1'b0 || busy !== 1'b0 || wr_done || rsp_valid ||
-          completed_writes != completed0) begin
-        $fatal(1, "bpu_sa_sram_wrapper_tb: stale write completion after reset");
+      if (done !== 1'b0 || busy !== 1'b0 || rsp_valid || completed_writes != completed0) begin
+        $fatal(1, "bpu_sa_sram_wrapper_tb: stale write or completion after reset");
       end
     end
     for (int n = 0; n < C_BYTES; n++) begin
@@ -1354,7 +1322,6 @@ module bpu_sa_sram_wrapper_tb;
     dependent_checks     = 0;
     pending_write_resets = 0;
     cancelled_writes     = 0;
-    simultaneous_writes  = 0;
     k_limit_cycles8      = 0;
     k_limit_cycles4      = 0;
     cycle                = 0;
@@ -1363,30 +1330,29 @@ module bpu_sa_sram_wrapper_tb;
       rng_state = 1;
     end
 
-    rst_n                 = 1'b0;
-    hold_write_completion = 1'b0;
-    cmd_valid             = 1'b0;
-    cmd_k                 = '0;
-    cmd_m                 = 16'(Rows);
-    cmd_n                 = 16'(Cols);
-    cmd_out_format        = '0;
-    cmd_out_frac          = '0;
-    cmd_requant_mul       = '0;
-    cmd_requant_shift     = '0;
-    cmd_decode_error      = 1'b0;
-    cmd_int4              = 1'b0;
-    cmd_scaled            = 1'b0;
-    cmd_clear_acc         = 1'b1;
-    cmd_write_output      = 1'b1;
-    cmd_a_addr            = '0;
-    cmd_b_addr            = '0;
-    cmd_c_addr            = '0;
-    cmd_sa_addr           = '0;
-    cmd_sb_addr           = '0;
-    rd_lo                 = '0;
-    rd_hi                 = '0;
-    c_lo                  = '0;
-    c_hi                  = '0;
+    rst_n             = 1'b0;
+    cmd_valid         = 1'b0;
+    cmd_k             = '0;
+    cmd_m             = 16'(Rows);
+    cmd_n             = 16'(Cols);
+    cmd_out_format    = '0;
+    cmd_out_frac      = '0;
+    cmd_requant_mul   = '0;
+    cmd_requant_shift = '0;
+    cmd_decode_error  = 1'b0;
+    cmd_int4          = 1'b0;
+    cmd_scaled        = 1'b0;
+    cmd_clear_acc     = 1'b1;
+    cmd_write_output  = 1'b1;
+    cmd_a_addr        = '0;
+    cmd_b_addr        = '0;
+    cmd_c_addr        = '0;
+    cmd_sa_addr       = '0;
+    cmd_sb_addr       = '0;
+    rd_lo             = '0;
+    rd_hi             = '0;
+    c_lo              = '0;
+    c_hi              = '0;
     // Random contents everywhere, so stale data is never zero by accident.
     for (int n = 0; n < MEM_BYTES; n++) begin
       u_sram.mem[n] = 8'(rand32());
@@ -1612,7 +1578,7 @@ module bpu_sa_sram_wrapper_tb;
       cmd_index++;
       idle_gap();
     end
-    repeat (Latency + WriteLatency + 4) begin
+    repeat (Latency + 5) begin
       tick();
     end
 
@@ -1628,7 +1594,6 @@ module bpu_sa_sram_wrapper_tb;
         || dependent_checks != 2 * Rows * Cols
         || pending_write_resets != 1 || cancelled_writes == 0
         || completed_writes + cancelled_writes != writes
-        || (RequireWriteOverlap && simultaneous_writes == 0)
         || (ReadyPct < 100 && req_stalls == 0)) begin
       status = "FAIL";
     end else begin
@@ -1636,8 +1601,8 @@ module bpu_sa_sram_wrapper_tb;
     end
     $write("RESULT bpu_sa_sram_wrapper_tb rows=%0d cols=%0d accw=%0d dataw=%0d buf=%0d", Rows,
            Cols, AccW, DataW, BufRows);
-    $write(" int4=%0d scale=%0d acks=%0d latency=%0d ready_pct=%0d seed=%0d", Int4, Scale,
-           WriteAcks, Latency, ReadyPct, seed);
+    $write(" int4=%0d scale=%0d latency=%0d ready_pct=%0d seed=%0d", Int4, Scale, Latency,
+           ReadyPct, seed);
     $write(" commands=%0d scaled=%0d int4_cmds=%0d illegal=%0d resets=%0d", legal_done,
            scaled_done, int4_done, illegal_done, resets);
     $write(" ksteps=%0d busy_cycles=%0d k_limit=%0d cycles_int8=%0d cycles_int4=%0d", ksteps,
@@ -1650,12 +1615,10 @@ module bpu_sa_sram_wrapper_tb;
     $write(" int32_out=%0d fp32_out=%0d fp16_out=%0d int8_out=%0d progress=%0d", fmt_written[1],
            fmt_written[2], fmt_written[3], fmt_written[4], progress);
     $write(" c_nans=%0d c_infs=%0d c_neg_infs=%0d", c_nans, c_infs, c_neg_infs);
-    $write(
-      " write_latency=%0d delayed_write_checks=%0d dependent_commands=%0d dependent_checks=%0d",
-      WriteLatency, delayed_write_checks, dependent_commands, dependent_checks);
-    $write(
-      " pending_write_resets=%0d cancelled_writes=%0d completed_writes=%0d simultaneous_writes=%0d",
-      pending_write_resets, cancelled_writes, completed_writes, simultaneous_writes);
+    $write(" uncommitted_write_checks=%0d dependent_commands=%0d dependent_checks=%0d",
+           delayed_write_checks, dependent_commands, dependent_checks);
+    $write(" pending_write_resets=%0d cancelled_writes=%0d completed_writes=%0d",
+           pending_write_resets, cancelled_writes, completed_writes);
     $display(" model_errors=%0d errors=%0d status=%s", model_errors, errors, status);
     if (status != "PASS") begin
       $fatal(1, "bpu_sa_sram_wrapper_tb: FAIL (%0d errors, %0d model errors)", errors,
