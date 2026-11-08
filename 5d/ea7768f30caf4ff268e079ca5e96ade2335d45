@@ -1,0 +1,25 @@
+docs/START-HERE.md
+  s_9aa456628cd420::t_f3d396cba98805 12-14
+docs/command-format.md
+  s_9aa456628cd420::t_f3d396cba98805 3-4,15-21
+  s_9aa456628cd420::t_c2a3e70d3b8476 81-125,189,205-206,209-212,235-237
+  s_9aa456628cd420::t_e4371010c61762 238
+docs/command-format-decisions.md
+  s_9aa456628cd420::t_7179196cb740e1 1-89
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5dea7768f30caf4ff268e079ca5e96ade2335d45",
+  "prompts": {},
+  "sessions": {
+    "s_9aa456628cd420": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1bbd8-cf28-7030-91d5-27eabbe55a1c",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zeb Taylor <zceboys@gmail.com>"
+    }
+  }
+}
