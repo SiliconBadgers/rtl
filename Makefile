@@ -8,7 +8,7 @@ setup:
 RTL_ROOT ?= .
 doctor: setup
 	$(RUN_PYTHON) scripts/vcs.py check
-test: test-matrix-unit
+test: test-matrix-unit test-vector-unit
 
 .PHONY: style format
 style:
@@ -23,6 +23,13 @@ format:
 MATRIX_UNIT_ARGS ?=
 test-matrix-unit:
 	bash tb/compute/Matrix_Unit/run_tests.sh $(MATRIX_UNIT_ARGS)
+
+# SIMD vector-unit regression (tb/compute/Vector_Unit/run_tests.sh).
+# Pass runner options through VECTOR_UNIT_ARGS, e.g. VECTOR_UNIT_ARGS="--sim modelsim".
+.PHONY: test-vector-unit
+VECTOR_UNIT_ARGS ?=
+test-vector-unit:
+	bash tb/compute/Vector_Unit/run_tests.sh $(VECTOR_UNIT_ARGS)
 
 .PHONY: test-tooling
 test-tooling:
