@@ -3,16 +3,20 @@
 These are the tests for the matrix unit in `rtl/compute/Matrix_Unit`; the source list is `bpu_sa_array.f`.
 
 - **The array:** `bpu_sa_array`, `bpu_sa_pe`, `bpu_sa_delay` and the package `bpu_sa_pkg`. It's output-stationary and computes INT8 × INT8, or INT8 × INT4 at two k-steps per cycle, unscaled or block-scaled (each PE scales its block sums into a 48-bit fixed-point accumulator).
-- **The SRAM wrapper:** `bpu_sa_sram_wrapper`, `bpu_sa_read_stream` and `bpu_sa_fifo`.
+- **The SRAM wrapper:** `bpu_sa_sram_wrapper`, `bpu_sa_read_stream`, `bpu_sa_fifo` and `bpu_sa_output_convert` (the output encodings).
+- **The record decoder:** `bpu_sa_command_decoder`, which the parent places in front of the wrapper.
 
 | Testbench | What it checks |
 | --- | --- |
 | `bpu_sa_pe_tb.sv` | One PE. Every signed INT8 pair (65,536) and, with `Int4`, every (INT8, INT4) pair in each half of the INT4-pair mode goes through a restart, one carry-save accumulation and a capture. Then random modes, tile flags, data and drain shifts run against a model. With `Scale`, 3,000 block-scaled tiles (1–4 blocks of 1–16 k-steps, random bf16 scales including huge, giant, tiny, zero, subnormal, inf and NaN, extreme operands, continued sums) run against an independent double-precision reference of the fixed-point contract; the run fails unless saturation, NaN, rounding to zero, a continued tile and a subnormal scale that only the flush keeps out of the sum (paired with a giant one) all occurred. Then the flag reset. |
 | `bpu_sa_array_tb.sv` | One array shape and mode per run, unscaled or block-scaled (`Scaled`). Random tiles of random K run against a reference model, checking the data, index, order and latency of every C row. Block-scaled tiles are split into random blocks with random row and column scales, checked bit for bit against the fixed-point reference, with a fifth of the tiles continuing the previous sums. It also checks stalled k-steps under a legal producer, `in_ready_o` every cycle, a streaming phase that must never stall, an active reset, and the mode error. In INT8 mode it puts junk in the unused high A byte; outside a block's last k-step it puts junk in the scale inputs. |
-| `bpu_sa_sram_wrapper_tb.sv` | One wrapper configuration per run, against the model below. It runs unscaled and block-scaled commands, in INT8 and INT4. The K values are directed at SRAM-row and scale-table-row boundaries, plus random K. Commands are also chained along K with `cmd_clear_acc_i` / `cmd_write_output_i`, in directed chains (including an INT8/INT4 switch right after a command that keeps its sums) and at random. Every C element written is checked against an independent reference that carries kept sums across commands, and a command that keeps its sums must write nothing. Illegal continuations (nothing kept, the wrong kind, after a reset) must be rejected. It also checks exact read and write counts per stream, illegal commands, a reset while a command is certainly running, and the `busy_o` / `done_o` / `err_o` / `cmd_ready_o` rules. When the arbiter isn't always ready, a run fails unless request stalls occurred. |
+| `bpu_sa_sram_wrapper_tb.sv` | One wrapper configuration per run, against the model below. It runs unscaled and block-scaled commands, in INT8 and INT4. The K values are directed at SRAM-row and scale-table-row boundaries, plus random K. Commands are also chained along K with `cmd_clear_acc_i` / `cmd_write_output_i`, in directed chains (including an INT8/INT4 switch right after a command that keeps its sums) and at random. Every C element written is checked against an independent reference that carries kept sums across commands, and a command that keeps its sums must write nothing. Illegal continuations (nothing kept, the wrong kind, after a reset) must be rejected. It also checks exact read and write counts per stream, illegal commands, a reset while a command is certainly running, and the `busy_o` / `done_o` / `err_o` / `cmd_ready_o` rules. When the arbiter isn't always ready, a run fails unless request stalls occurred. Logical shapes smaller than the tile run with junk (including NaN and infinite scales) outside M × N and must write zero there; block-scaled K that is not a multiple of `BlockK` must pad its final block. Output encodings 1 to 4 run directed and at random, checked at their packed size with exactly those bytes written. Milestones are counted as the command queue would: one before `done_o` and two with it per legal command, none for an illegal one. |
+| `bpu_sa_output_convert_tb.sv` | The output converter against the golden model's vectors (`bpu_sa_convert_vectors_pkg`): every element bit for bit across all five encodings, including FP16 subnormals, ties and overflow, INT32 and INT8 saturation and ties, the full 80-bit INT8 product, and the NaN and overflow flags. Rows go back to back, so a stage-1 register that mixed rows would show. |
+| `bpu_sa_convert_vectors_pkg.sv` | Generated; do not edit. The verification repository's `models/golden_kquant/tools/export_convert_vectors.py` writes it from `golden/matrix_v1.py`. |
+| `bpu_sa_command_decoder_tb.sv` | The version-1 record decoder: 2,000 random legal records round-trip every field; every reserved bit on its own, each wrong kind and version, formats 5 to 7, fractional bits above 31 and each transpose bit must be flagged; random bit flips against a reference built from the spec's table; ready and valid pass straight through. |
 | `bpu_sa_sram_wrapper_golden_tb.sv` | Real tensors. It runs the commands of `bpu_sa_golden_vectors_pkg` against the model below and checks every C element bit for bit, under arbiter stalls. The commands are 8 × 8 tiles with K = 2048 from Qwen3.5-2B: an INT4 tile (from a Q4_K weight), an INT8 tile (from Q5_K), the INT4 tile split across two chained commands, and an unscaled INT8 tile. A command that keeps its sums must write nothing. The run fails unless every command completed and every C element was checked. |
 | `bpu_sa_golden_vectors_pkg.sv` | Generated; do not edit. It holds the memory image, the command list and the expected C for `bpu_sa_sram_wrapper_golden_tb`. The golden model's `tools/export_rtl_vectors.py` writes it, from the pinned Qwen3.5-2B Q4_K_M model file (the header records its hash). The expected values come from its model of this unit's arithmetic contract. |
-| `sram_arbiter_matrix_model.sv` | A testbench model of the `sram_arbiter` matrix port with an SRAM behind it. It gives random ready, a fixed response latency and, as the arbiter specifies, no response for writes (`WriteAcks = 1` adds them for one configuration), and puts random garbage above `size_bytes` in read data. It checks the port protocol: stable stalled requests, alignment, sizes, reads only inside the command's four read windows, and writes only inside C. |
+| `sram_arbiter_matrix_model.sv` | A testbench model of the `sram_arbiter` matrix port with an SRAM behind it. It gives random ready, a read-response latency, and random garbage above `size_bytes` in read data. It captures a write's payload on its accepting edge and commits those bytes to SRAM on the next edge, the arbiter's fixed completion; there is no write acknowledgment, and reset cancels an uncommitted write. It checks stable stalled requests, alignment, sizes, reads only inside the command's four read windows, and writes only inside C. |
 
 ## Run
 
@@ -35,10 +39,18 @@ The runner builds and runs every configuration in its `CONFIGS` table:
 
 - **PE:** three builds, at two widths, with and without `Int4` and `Scale`.
 - **Array:** eleven shapes and modes, three of them block-scaled (INT8, INT4, and the narrowest `AccW` = 25 with block size 32).
-- **Wrapper:** nine configurations. They cover shapes, latencies, ready rates, writes with and without responses, buffer depths, block size 32, a 256-bit SRAM row, and builds without `Int4` and without `Scale`.
+- **Wrapper:** twelve configurations cover shapes, read latencies from 1 to 40, ready rates,
+  buffer depths, block size 32, a 256-bit SRAM row (several writes per tile, stalled and
+  always ready), builds without `Int4` and without `Scale`, and a write-back queue of one
+  and of two rows behind a slow write port (`OutDepth`; with `RequireOutStall` each run must
+  see the array hold a finished row because the queue is full).
 - **Real tensors:** `wrap_8x8_golden`, `bpu_sa_sram_wrapper_golden_tb` on the generated vectors.
+- **Output conversion:** `convert_4lanes`, `bpu_sa_output_convert_tb` with four lanes.
+- **Record decoder:** `decoder`, `bpu_sa_command_decoder_tb`.
 
-The array, wrapper and real-tensor configurations run three seeds each. That's 24 configurations and 66 runs.
+The array, wrapper, real-tensor, conversion and decoder configurations run three seeds each. The
+default runner plans 29 configurations and 81 runs; the summary records which actually ran and
+passed.
 
 The runner enforces compile and simulation timeouts. It exits nonzero on a compile error, a failed or missing result, or a timeout. Each run must end with one `RESULT ... status=PASS` line and a zero exit status; the testbenches call `$fatal(1, ...)` on any failure.
 
@@ -58,6 +70,9 @@ The array test's reset needs a finished tile still draining while the next tile 
 3. Every array result must report `active_resets=1`.
 
 The wrapper test likewise fails if its reset never catches a running command.
+It also requires a reset between a write's accepting edge and its commit edge. Reset cancels
+that uncommitted model write; the wrapper must not publish `done_o` for the cancelled
+command, and C must keep its old bytes.
 
 Exercise the missing-condition failure separately:
 
@@ -66,6 +81,36 @@ bash tb/compute/Matrix_Unit/run_tests.sh --check-reset-guard --out build/reset_g
 ```
 
 This disables the traffic phase and the wait for active work. Expect exit status 1 and `active-reset precondition not reached` in the simulation log. A compile error or any other failure reason does not validate this check.
+
+Exercise the wrapper's pending-write reset prerequisite separately:
+
+```sh
+bash tb/compute/Matrix_Unit/run_tests.sh --check-write-reset-guard --out build/write_reset_guard
+```
+
+This sets `WriteResetWaitCycles = 0`. Expect exit status 1 and
+`pending-write reset precondition not reached` in the simulation log. A compilation failure,
+timeout or different fatal message does not validate this guard.
+
+### Write completion and visibility
+
+Writes commit on the edge after acceptance, fixed, as the proposed arbiter contract states;
+the model captures a write's payload on its accepting edge and commits it on the next. There
+is no write acknowledgment. At every falling edge with a write accepted but not committed,
+`done_o` must be low and `busy_o` high (checked in every cycle of every run).
+
+The directed dependency test offers a command that reads C as A while the producer is still
+running; it must stay stalled while any producer write is uncommitted, and must then read
+the committed C. Both output tiles are checked, and accepted and committed write counts are
+compared independently.
+
+Each wrapper run adds two completed directed commands (`dependent_commands = 2`) and one
+command cancelled by a pending-write reset outside the existing `commands` count. The total
+successful command count is `commands + dependent_commands`. `RESULT` also reports
+`uncommitted_write_checks` (falling edges that saw a producer write in flight; must be
+positive), `dependent_checks` (both directed tiles, `2*Rows*Cols` elements),
+`pending_write_resets`, `cancelled_writes` and `completed_writes`. The required reset count
+is one and the cancelled-write count must be positive.
 
 ### Notes
 

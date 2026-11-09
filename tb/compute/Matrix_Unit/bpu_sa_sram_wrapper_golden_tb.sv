@@ -20,6 +20,7 @@
 // the arbiter isn't always ready) request stalls occurred. It prints one RESULT line for
 // the regression runner (tb/compute/Matrix_Unit/run_tests.sh).
 module bpu_sa_sram_wrapper_golden_tb;
+  timeunit 1ns; timeprecision 1ps;
   import bpu_sa_golden_vectors_pkg::*;
 
   parameter int Latency = 4;
@@ -33,7 +34,7 @@ module bpu_sa_sram_wrapper_golden_tb;
   localparam int K_WIDTH = 16;
   localparam int SIZE_W = $clog2(GV_ROW_BYTES) + 1;
   localparam int MEM_BYTES = GV_MEM_ROWS * GV_ROW_BYTES;
-  localparam int CMD_TIMEOUT = (2048 * (Latency + 4) + 400) * 100 / ReadyPct;
+  localparam int CMD_TIMEOUT = (2048 * (Latency + 4) + 400) * 100 / ReadyPct + 1;
   localparam int TIMEOUT_CYCLES = (GV_COMMANDS + 2) * CMD_TIMEOUT;
 
   logic clk;
@@ -54,6 +55,7 @@ module bpu_sa_sram_wrapper_golden_tb;
   logic busy;
   logic done;
   logic err;
+  logic [1:0] milestone_inc;  // not checked here: bpu_sa_sram_wrapper_tb does
 
   logic req_valid;
   logic req_ready;
@@ -75,6 +77,8 @@ module bpu_sa_sram_wrapper_golden_tb;
   int model_errors;
   int req_stalls;
   int in_flight;
+  int write_in_flight;
+  int completed_writes;
 
   int cycle;
   int seed;
@@ -89,18 +93,17 @@ module bpu_sa_sram_wrapper_golden_tb;
   string status;
 
   bpu_sa_sram_wrapper #(
-    .Rows     (ROWS),
-    .Cols     (COLS),
-    .AccW     (32),
-    .AddrW    (ADDR_WIDTH),
-    .DataW    (DATA_W),
-    .SizeW    (SIZE_W),
-    .KW       (K_WIDTH),
-    .BufRows  (2),
-    .WriteAcks(1'b0),
-    .Int4     (1'b1),
-    .Scale    (1'b1),
-    .BlockK   (GV_BLOCK_K)
+    .Rows   (ROWS),
+    .Cols   (COLS),
+    .AccW   (32),
+    .AddrW  (ADDR_WIDTH),
+    .DataW  (DATA_W),
+    .SizeW  (SIZE_W),
+    .KW     (K_WIDTH),
+    .BufRows(2),
+    .Int4   (1'b1),
+    .Scale  (1'b1),
+    .BlockK (GV_BLOCK_K)
   ) u_dut (
     .clk_i                  (clk),
     .rst_ni                 (rst_n),
@@ -111,14 +114,22 @@ module bpu_sa_sram_wrapper_golden_tb;
     .cmd_c_addr_i           (cmd_c_addr),
     .cmd_sa_addr_i          (cmd_sa_addr),
     .cmd_sb_addr_i          (cmd_sb_addr),
+    .cmd_m_i                (16'(ROWS)),
+    .cmd_n_i                (16'(COLS)),
     .cmd_k_i                (cmd_k),
     .cmd_int4_i             (cmd_int4),
     .cmd_scaled_i           (cmd_scaled),
     .cmd_clear_acc_i        (cmd_clear_acc),
     .cmd_write_output_i     (cmd_write_output),
+    .cmd_out_format_i       (3'd0),
+    .cmd_out_frac_i         (6'd0),
+    .cmd_requant_mul_i      (32'd0),
+    .cmd_requant_shift_i    (7'd0),
+    .cmd_decode_error_i     (1'b0),
     .busy_o                 (busy),
     .done_o                 (done),
     .err_o                  (err),
+    .milestone_inc_o        (milestone_inc),
     .matrix_req_valid_o     (req_valid),
     .matrix_req_ready_i     (req_ready),
     .matrix_req_is_write_o  (req_is_write),
@@ -130,35 +141,36 @@ module bpu_sa_sram_wrapper_golden_tb;
   );
 
   sram_arbiter_matrix_model #(
-    .AddrW    (ADDR_WIDTH),
-    .DataW    (DATA_W),
-    .SizeW    (SIZE_W),
-    .MemBytes (MEM_BYTES),
-    .Latency  (Latency),
-    .ReadyPct (ReadyPct),
-    .WriteAcks(1'b0)
+    .AddrW   (ADDR_WIDTH),
+    .DataW   (DATA_W),
+    .SizeW   (SIZE_W),
+    .MemBytes(MEM_BYTES),
+    .Latency (Latency),
+    .ReadyPct(ReadyPct)
   ) u_sram (
-    .clk_i           (clk),
-    .rst_ni          (rst_n),
-    .req_valid_i     (req_valid),
-    .req_ready_o     (req_ready),
-    .req_is_write_i  (req_is_write),
-    .req_size_bytes_i(req_size),
-    .req_addr_i      (req_addr),
-    .req_wdata_i     (req_wdata),
-    .rsp_valid_o     (rsp_valid),
-    .rsp_rdata_o     (rsp_rdata),
-    .rd_lo_i         (rd_lo),
-    .rd_hi_i         (rd_hi),
-    .c_lo_i          (c_lo),
-    .c_hi_i          (c_hi),
-    .reads_o         (reads),
-    .writes_o        (writes),
-    .read_bytes_o    (read_bytes),
-    .write_bytes_o   (write_bytes),
-    .errors_o        (model_errors),
-    .stalls_o        (req_stalls),
-    .in_flight_o     (in_flight)
+    .clk_i             (clk),
+    .rst_ni            (rst_n),
+    .req_valid_i       (req_valid),
+    .req_ready_o       (req_ready),
+    .req_is_write_i    (req_is_write),
+    .req_size_bytes_i  (req_size),
+    .req_addr_i        (req_addr),
+    .req_wdata_i       (req_wdata),
+    .rsp_valid_o       (rsp_valid),
+    .rsp_rdata_o       (rsp_rdata),
+    .rd_lo_i           (rd_lo),
+    .rd_hi_i           (rd_hi),
+    .c_lo_i            (c_lo),
+    .c_hi_i            (c_hi),
+    .reads_o           (reads),
+    .writes_o          (writes),
+    .read_bytes_o      (read_bytes),
+    .write_bytes_o     (write_bytes),
+    .errors_o          (model_errors),
+    .stalls_o          (req_stalls),
+    .in_flight_o       (in_flight),
+    .write_in_flight_o (write_in_flight),
+    .completed_writes_o(completed_writes)
   );
 
   initial begin : clock
@@ -181,6 +193,10 @@ module bpu_sa_sram_wrapper_golden_tb;
     if (err === 1'b1 && done !== 1'b1) begin
       errors++;
       $display("bpu_sa_sram_wrapper_golden_tb: err_o without done_o at cycle %0d", cycle);
+    end
+    if (rst_n && write_in_flight != 0 &&
+        (done !== 1'b0 || busy !== 1'b1 || cmd_ready !== 1'b0)) begin
+      $fatal(1, "bpu_sa_sram_wrapper_golden_tb: released work with writes pending");
     end
   endtask
 
@@ -238,7 +254,7 @@ module bpu_sa_sram_wrapper_golden_tb;
     end
     if (in_flight != 0 || rsp_valid !== 1'b0) begin
       errors++;
-      $display("bpu_sa_sram_wrapper_golden_tb: command %0d done with reads in flight", n);
+      $display("bpu_sa_sram_wrapper_golden_tb: command %0d done with transactions in flight", n);
     end
     $display("CMD %0d k=%0d int4=%0d scaled=%0d clear=%0d write=%0d cycles=%0d", n, GV_CMD[n][0],
              GV_CMD[n][1], GV_CMD[n][2], GV_CMD[n][3], GV_CMD[n][4], waited);
@@ -330,7 +346,7 @@ module bpu_sa_sram_wrapper_golden_tb;
 
     if (errors != 0 || model_errors != 0 || commands_done != GV_COMMANDS
         || c_checked != c_expected || kept_checked == 0
-        || (ReadyPct < 100 && req_stalls == 0)) begin
+        || completed_writes != writes || (ReadyPct < 100 && req_stalls == 0)) begin
       status = "FAIL";
     end else begin
       status = "PASS";
@@ -341,6 +357,7 @@ module bpu_sa_sram_wrapper_golden_tb;
            kept_checked, busy_cycles);
     $write(" reads=%0d writes=%0d read_bytes=%0d write_bytes=%0d", reads, writes, read_bytes,
            write_bytes);
+    $write(" completed_writes=%0d", completed_writes);
     $display(" req_stalls=%0d model_errors=%0d errors=%0d status=%s", req_stalls, model_errors,
              errors, status);
     if (status != "PASS") begin

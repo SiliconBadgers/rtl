@@ -11,12 +11,13 @@
 //            accepted the read (Latency = 1: the very next cycle). Byte n of rsp_rdata_o is mem[addr + n] for n < size_bytes and
 //            random garbage above, so a client that uses bytes it did not ask for
 //            fails.
-//   Write    bytes 0 .. size_bytes - 1 of req_wdata_i go to mem[addr ..]; nothing
-//            else changes. With WriteAcks = 0 (the arbiter's specified behaviour)
-//            it gets no response; with 1 it also gets a response pulse, timed like
-//            a read's (random rsp_rdata_o).
-//   Reset    every response still in flight is dropped (the arbiter's proposed
-//            reset contract) and the counters keep their values.
+//   Write    address, size and data are captured on the accepting edge n and
+//            committed to memory on edge n + 1 exactly, the arbiter's fixed
+//            completion (docs/memory/sram_arbiter_spec.md, "Completion and
+//            visibility"). There is no write acknowledgment; rsp_valid_o carries
+//            reads only.
+//   Reset    cancels writes not yet committed and drops every response still in
+//            flight. Committed bytes and the cumulative counters keep their values.
 //
 // Checks (each one prints a message and adds to errors_o)
 //   - a request stalled at a rising edge is still offered, unchanged, at the next
@@ -29,18 +30,17 @@
 //
 // The testbench reads and writes the memory directly through mem (hierarchical
 // references) and reads the counters through the *_o ports. in_flight_o counts the
-// responses accepted but not yet driven onto rsp_valid_o.
+// reads and writes accepted but not yet completed; output pulses are excluded.
 //
-// Parameters: AddrW, DataW, SizeW (the port), MemBytes, Latency (>= 1), ReadyPct
-// (1 .. 100), WriteAcks. Plusarg +seed=<n> seeds the ready and garbage generator.
+// Parameters: AddrW, DataW, SizeW (the port), MemBytes, Latency (>= 1, reads),
+// ReadyPct (1 .. 100). Plusarg +seed=<n> seeds the ready and garbage generator.
 module sram_arbiter_matrix_model #(
-  parameter int AddrW     = 32,
-  parameter int DataW     = 4096,
-  parameter int SizeW     = 10,
-  parameter int MemBytes  = 65536,
-  parameter int Latency   = 4,
-  parameter int ReadyPct  = 70,
-  parameter bit WriteAcks = 1'b0
+  parameter int AddrW    = 32,
+  parameter int DataW    = 4096,
+  parameter int SizeW    = 10,
+  parameter int MemBytes = 65536,
+  parameter int Latency  = 4,
+  parameter int ReadyPct = 70
 ) (
   input logic clk_i,
   input logic rst_ni,
@@ -68,25 +68,36 @@ module sram_arbiter_matrix_model #(
   output int write_bytes_o,
   output int errors_o,
   output int stalls_o,
-  output int in_flight_o
+  output int in_flight_o,
+  output int write_in_flight_o,
+  output int completed_writes_o
 );
 
   localparam int ROW_BYTES = DataW / 8;
 
-  logic        [      7:0] mem           [MemBytes];
+  logic [      7:0] mem       [MemBytes];
 
   // Responses in flight: a request accepted at an edge enters stage 0, moves one
   // stage per edge, and is driven out from stage Latency - 1.
-  bit                      pipe_valid    [ Latency];
-  logic        [DataW-1:0] pipe_data     [ Latency];
+  bit               pipe_valid[ Latency];
+  logic [DataW-1:0] pipe_data [ Latency];
 
-  int unsigned             rng_state;
-  int                      seed;
-  bit                      prev_stall;
-  logic        [      0:0] prev_is_write;
-  logic        [SizeW-1:0] prev_size;
-  logic        [AddrW-1:0] prev_addr;
-  logic        [DataW-1:0] prev_wdata;
+  typedef struct packed {
+    logic [AddrW-1:0] addr;
+    logic [SizeW-1:0] size_bytes;
+    logic [DataW-1:0] data;
+    longint unsigned  due_cycle;
+  } pending_write_t;
+  pending_write_t              pending_writes[$];
+  longint unsigned             model_cycle;
+
+  int unsigned                 rng_state;
+  int                          seed;
+  bit                          prev_stall;
+  logic            [      0:0] prev_is_write;
+  logic            [SizeW-1:0] prev_size;
+  logic            [AddrW-1:0] prev_addr;
+  logic            [DataW-1:0] prev_wdata;
 
   function automatic int unsigned rand32();
     rng_state = rng_state ^ (rng_state << 13);
@@ -118,28 +129,32 @@ module sram_arbiter_matrix_model #(
     if (rng_state == 0) begin
       rng_state = 1;
     end
-    reads_o       = 0;
-    writes_o      = 0;
-    read_bytes_o  = 0;
-    write_bytes_o = 0;
-    errors_o      = 0;
-    stalls_o      = 0;
-    in_flight_o   = 0;
-    req_ready_o   = 1'b0;
-    rsp_valid_o   = 1'b0;
-    rsp_rdata_o   = '0;
-    prev_stall    = 1'b0;
+    reads_o            = 0;
+    writes_o           = 0;
+    read_bytes_o       = 0;
+    write_bytes_o      = 0;
+    errors_o           = 0;
+    stalls_o           = 0;
+    in_flight_o        = 0;
+    write_in_flight_o  = 0;
+    completed_writes_o = 0;
+    model_cycle        = 0;
+    req_ready_o        = 1'b0;
+    rsp_valid_o        = 1'b0;
+    rsp_rdata_o        = '0;
+    prev_stall         = 1'b0;
     for (int s = 0; s < Latency; s++) begin
       pipe_valid[s] = 1'b0;
     end
   end
 
   always @(posedge clk_i or negedge rst_ni) begin : model
-    logic   [DataW-1:0] data;
-    longint             addr;
-    longint             size;
-    bit                 accept;
-    bit                 in_window;
+    logic           [DataW-1:0] data;
+    longint                     addr;
+    longint                     size;
+    bit                         accept;
+    bit                         in_window;
+    pending_write_t             write_item;
 
     if (!rst_ni) begin
       for (int s = 0; s < Latency; s++) begin
@@ -147,9 +162,24 @@ module sram_arbiter_matrix_model #(
       end
       prev_stall  = 1'b0;
       in_flight_o = 0;
+      pending_writes.delete();
+      write_in_flight_o = 0;
+      model_cycle = 0;
       req_ready_o <= 1'b0;
       rsp_valid_o <= 1'b0;
     end else begin
+      model_cycle++;
+      // Commit before accepting: a write accepted on the previous edge commits now,
+      // never on its own accepting edge.
+      if (pending_writes.size() != 0) begin
+        if (pending_writes[0].due_cycle <= model_cycle) begin
+          write_item = pending_writes.pop_front();
+          for (int n = 0; n < int'(write_item.size_bytes); n++) begin
+            mem[int'(write_item.addr)+n] = write_item.data[8*n+:8];
+          end
+          completed_writes_o++;
+        end
+      end
       // Protocol checks on what the client offered during the cycle that just ended.
       if (req_valid_i !== 1'b0 && req_valid_i !== 1'b1) begin
         fail("req_valid_i is X or Z");
@@ -192,17 +222,14 @@ module sram_arbiter_matrix_model #(
             if ($isunknown(req_wdata_i[8*n+:8])) begin
               fail($sformatf("write byte %0d is X or Z", n));
             end
-            mem[addr+n] = req_wdata_i[8*n+:8];
           end
           writes_o++;
           write_bytes_o += int'(size);
-          if (WriteAcks) begin
-            for (int w = 0; w < DataW / 32; w++) begin
-              data[32*w+:32] = rand32();
-            end
-            pipe_valid[0] = 1'b1;
-            pipe_data[0]  = data;
-          end
+          write_item.addr = req_addr_i;
+          write_item.size_bytes = req_size_bytes_i;
+          write_item.data = req_wdata_i;
+          write_item.due_cycle = model_cycle + 1;
+          pending_writes.push_back(write_item);
         end else begin
           in_window = 1'b0;
           for (int w = 0; w < 4; w++) begin
@@ -228,7 +255,8 @@ module sram_arbiter_matrix_model #(
       // A request accepted at this edge comes out Latency - 1 edges later.
       rsp_valid_o <= pipe_valid[Latency-1];
       rsp_rdata_o <= pipe_data[Latency-1];
-      in_flight_o = 0;
+      write_in_flight_o = pending_writes.size();
+      in_flight_o = write_in_flight_o;
       for (int s = 0; s < Latency - 1; s++) begin
         in_flight_o += int'(pipe_valid[s]);
       end

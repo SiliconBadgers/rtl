@@ -20,6 +20,8 @@
 #   --inject-failure        every testbench corrupts one expected value on purpose,
 #                           so every run must fail and this script must exit 1
 #   --check-reset-guard     array-only negative test; must fail before resetting idle hardware
+#   --check-write-reset-guard
+#                           wrapper-only negative test; must fail without a pending write
 #   --out DIR               output directory (default: build/matrix_unit)
 #
 # Outputs: DIR/<sim>/logs/<config>_seed<N>.log and DIR/<sim>/summary.md.
@@ -52,15 +54,20 @@ CONFIGS=(
   "array_16x16_acc20|bpu_sa_array_tb|Rows=16 Cols=16 AccW=20 Scale=0|all|"
   "array_8x8_int8only|bpu_sa_array_tb|Rows=8 Cols=8 AccW=32 Int4=0|all|"
   "wrap_8x8_lat4|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 Latency=4 ReadyPct=70|all|$M"
-  "wrap_8x8_lat40_wrack|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 Latency=40 ReadyPct=100 WriteAcks=1|all|$M"
+  "wrap_8x8_lat40|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 Latency=40 ReadyPct=100|all|$M"
   "wrap_4x16_acc26_lat1|bpu_sa_sram_wrapper_tb|Rows=4 Cols=16 AccW=26 Latency=1 ReadyPct=50|all|$M"
   "wrap_16x4_buf1|bpu_sa_sram_wrapper_tb|Rows=16 Cols=4 BufRows=1 Latency=7 ReadyPct=80|all|$M"
   "wrap_8x8_block32|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 BlockK=32 MaxBlocks=6 Latency=5 ReadyPct=75|all|$M"
   "wrap_8x8_int8only|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 Int4=0 Latency=4 ReadyPct=70|all|$M"
   "wrap_8x8_data256|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 DataW=256 SizeW=6 Latency=3 ReadyPct=60|all|$M"
+  "wrap_8x8_data256_ready100|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 DataW=256 SizeW=6 Latency=1 ReadyPct=100|all|$M"
+  "wrap_8x8_data256_out1|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 DataW=256 SizeW=6 OutDepth=1 RequireOutStall=1 Latency=2 ReadyPct=40|all|$M"
+  "wrap_8x8_data256_out2|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 DataW=256 SizeW=6 OutDepth=2 RequireOutStall=1 Latency=6 ReadyPct=25|all|$M"
   "wrap_2x128_noscale_acc20|bpu_sa_sram_wrapper_tb|Rows=2 Cols=128 AccW=20 Scale=0 BufRows=3 Latency=3 ReadyPct=90 Commands=4 MaxK=300|all|$M"
   "wrap_1x1_minimal|bpu_sa_sram_wrapper_tb|Rows=1 Cols=1 AccW=16 Int4=0 Scale=0 Latency=2 ReadyPct=60|all|$M"
   "wrap_8x8_golden|bpu_sa_sram_wrapper_golden_tb|Latency=5 ReadyPct=75|all|bpu_sa_golden_vectors_pkg.sv $M"
+  "decoder|bpu_sa_command_decoder_tb||all|"
+  "convert_4lanes|bpu_sa_output_convert_tb|Lanes=4|all|bpu_sa_convert_vectors_pkg.sv"
 )
 
 sim="vcs"
@@ -69,6 +76,7 @@ only=""
 run_timeout=900
 inject=0
 check_reset_guard=0
+check_write_reset_guard=0
 out="build/matrix_unit"
 
 while [[ $# -gt 0 ]]; do
@@ -79,8 +87,9 @@ while [[ $# -gt 0 ]]; do
     --timeout) run_timeout="$2"; shift 2 ;;
     --inject-failure) inject=1; shift ;;
     --check-reset-guard) check_reset_guard=1; shift ;;
+    --check-write-reset-guard) check_write_reset_guard=1; shift ;;
     --out) out="$2"; shift 2 ;;
-    -h | --help) sed -n '2,26p' "$0"; exit 0 ;;
+    -h | --help) sed -n '2,28p' "$0"; exit 0 ;;
     *) echo "run_tests.sh: unknown option $1" >&2; exit 2 ;;
   esac
 done
@@ -110,11 +119,18 @@ for line in (Path(root) / file_list).read_text().splitlines():
 Path(output).write_text("\n".join(paths) + "\n")
 SOURCES
 if [[ "$check_reset_guard" -eq 1 ]]; then
-  if [[ "$inject" -eq 1 || -n "$only" ]]; then
-    echo "--check-reset-guard cannot be combined with --only or --inject-failure" >&2
+  if [[ "$inject" -eq 1 || -n "$only" || "$check_write_reset_guard" -eq 1 ]]; then
+    echo "--check-reset-guard cannot be combined with --only, --inject-failure or --check-write-reset-guard" >&2
     exit 2
   fi
   CONFIGS=("reset_guard|bpu_sa_array_tb|Rows=8 Cols=8 AccW=32 TrafficCycles=0 ResetWaitCycles=0|single|")
+fi
+if [[ "$check_write_reset_guard" -eq 1 ]]; then
+  if [[ "$inject" -eq 1 || -n "$only" ]]; then
+    echo "--check-write-reset-guard cannot be combined with --only or --inject-failure" >&2
+    exit 2
+  fi
+  CONFIGS=("write_reset_guard|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 WriteResetWaitCycles=0|single|$M")
 fi
 
 sim_version="$("${PYTHON_CMD[@]}" scripts/vcs.py check)"
@@ -217,6 +233,7 @@ fi
   echo "- Seeds: $seeds (PE configurations: $first_seed)"
   [[ "$inject" -eq 1 ]] && echo "- Mode: --inject-failure (every run is expected to fail)"
   [[ "$check_reset_guard" -eq 1 ]] && echo "- Mode: --check-reset-guard (must fail: active-reset precondition not reached)"
+  [[ "$check_write_reset_guard" -eq 1 ]] && echo "- Mode: --check-write-reset-guard (must fail: pending-write reset precondition not reached)"
   echo "- Planned: $planned, run: $run, passed: $passed, failed: $failed, skipped: 0"
   echo
   echo "| Configuration | Seed | Result | Elapsed (s) | Counts from the RESULT line |"
