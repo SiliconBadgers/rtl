@@ -23,21 +23,21 @@ module fp_rsqrt (
   output logic [31:0] d32_o,
   output logic        error32_o
 );
-  localparam int N         = 39;           // r has at least 26 = FracBits+3 bits for F32
+  localparam int N = 39;  // r has at least 26 = FracBits+3 bits for F32
   localparam int ROOT_BITS = 28;
 
   localparam logic [80:0] TARGET = 81'd1 << (2 * N);
 
-  logic [7:0]  exp_a;
+  logic [ 7:0] exp_a;
   logic [23:0] sig_a;
   logic [24:0] m;
-  integer      msb, e_a;
-  logic        input_error;
+  integer msb, e_a;
+  logic input_error;
 
   logic [ROOT_BITS-1:0] root, trial;
-  logic [80:0]          product;
-  logic                 exact;
-  logic [4:0]           bit_index;
+  logic [80:0] product;
+  logic        exact;
+  logic [ 4:0] bit_index;
 
   logic overflow16, overflow32;
 
@@ -45,19 +45,19 @@ module fp_rsqrt (
   always_comb begin
     exp_a = a_i[30:23];
     sig_a = {(exp_a != 0), a_i[22:0]};
-    e_a = ((exp_a == 0) ? 1 : int'(exp_a)) - 150;              // A = sig_a * 2^e_a
+    e_a   = ((exp_a == 0) ? 1 : int'(exp_a)) - 150;  // A = sig_a * 2^e_a
 
-    msb = 0;
+    msb   = 0;
     for (int i = 0; i < 24; i++) begin
       if (sig_a[i]) begin
         msb = i;
       end
     end
-    m = {1'b0, sig_a} << (23 - msb);
+    m   = {1'b0, sig_a} << (23 - msb);
     e_a = e_a - (23 - msb);
 
     if (e_a[0]) begin
-      m = m << 1;
+      m   = m << 1;
       e_a = e_a - 1;
     end
 
@@ -65,7 +65,7 @@ module fp_rsqrt (
   end
 
   // Trial: the current root with the next bit set.
-  assign trial   = root | ({{(ROOT_BITS-1){1'b0}}, 1'b1} << bit_index);
+  assign trial   = root | ({{(ROOT_BITS - 1) {1'b0}}, 1'b1} << bit_index);
   assign product = 81'(trial) * 81'(trial) * 81'(m);
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
@@ -83,7 +83,7 @@ module fp_rsqrt (
       finished_o <= 1'b0;
     end else if (busy_o) begin
       if (product <= TARGET) begin
-        root <= trial;
+        root  <= trial;
         exact <= (product == TARGET);
       end
 
@@ -96,7 +96,10 @@ module fp_rsqrt (
     end
   end
 
-  fp_round #(.ExpBits(5), .FracBits(10)) u_round_f16 (
+  fp_round #(
+    .ExpBits (5),
+    .FracBits(10)
+  ) u_round_f16 (
     .sign_i(1'b0),
     .mag_i(64'(root)),
     .exponent_i(-N - (e_a >>> 1)),
@@ -105,7 +108,10 @@ module fp_rsqrt (
     .overflow_o(overflow16)
   );
 
-  fp_round #(.ExpBits(8), .FracBits(23)) u_round_f32 (
+  fp_round #(
+    .ExpBits (8),
+    .FracBits(23)
+  ) u_round_f32 (
     .sign_i(1'b0),
     .mag_i(64'(root)),
     .exponent_i(-N - (e_a >>> 1)),

@@ -51,13 +51,13 @@ module fp32_addsub (
     d_o = 32'h00000000;
 
     if (sign_a == sign_b) begin
-      magnitude = mag_a + mag_b;
+      magnitude   = mag_a + mag_b;
       sign_result = sign_a;
     end else if (mag_a >= mag_b) begin
-      magnitude = mag_a - mag_b;
+      magnitude   = mag_a - mag_b;
       sign_result = sign_a;
     end else begin
-      magnitude = mag_b - mag_a;
+      magnitude   = mag_b - mag_a;
       sign_result = sign_b;
     end
 
@@ -77,33 +77,33 @@ module fp32_addsub (
         d_o = {sign_result, 8'b00000000, magnitude[22:0]};
       end else begin
         // Retain 24 significant bits including the implicit one.
-      right_shift = msb - 23;
-      kept = 24'(magnitude >> right_shift);
+        right_shift = msb - 23;
+        kept = 24'(magnitude >> right_shift);
 
-      // Guard and sticky encode all discarded bits.
-      if (right_shift > 0) begin
+        // Guard and sticky encode all discarded bits.
+        if (right_shift > 0) begin
           guard_bit = magnitude[right_shift-1];
           for (int i = 0; i < 280; i++) begin
-              if (i < right_shift-1) begin
-                  sticky_bit = sticky_bit | magnitude[i];
-              end
+            if (i < right_shift - 1) begin
+              sticky_bit = sticky_bit | magnitude[i];
+            end
           end
-      end
+        end
         round_up = guard_bit && (sticky_bit || kept[0]);
         rounded = {1'b0, kept} + {24'b0, round_up};
         exponent_result = msb - 22;
 
         // Rounding can overflow the significand into the next exponent.
         if (rounded[24]) begin
-            rounded = rounded >> 1;
-            exponent_result = exponent_result + 1;
+          rounded = rounded >> 1;
+          exponent_result = exponent_result + 1;
         end
 
         if (exponent_result >= 255) begin
-            // Overflow is outside the finite-result contract.
-            d_o = {sign_result, 8'hFF, 23'b0};
+          // Overflow is outside the finite-result contract.
+          d_o = {sign_result, 8'hFF, 23'b0};
         end else begin
-            d_o = {sign_result, 8'(exponent_result), rounded[22:0]};
+          d_o = {sign_result, 8'(exponent_result), rounded[22:0]};
         end
       end
     end

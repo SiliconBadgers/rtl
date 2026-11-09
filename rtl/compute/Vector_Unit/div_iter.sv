@@ -19,22 +19,22 @@ module div_iter #(
   input  logic                       rst_ni,
   input  logic                       start_i,
   input  logic [$clog2(Width+1)-1:0] iterations_i,
-  input  logic [Width-1:0]           dividend_i,
-  input  logic [Width-1:0]           divisor_i,
+  input  logic [          Width-1:0] dividend_i,
+  input  logic [          Width-1:0] divisor_i,
   output logic                       busy_o,
   output logic                       finished_o,
-  output logic [Width-1:0]           quotient_o,
-  output logic [Width-1:0]           remainder_o
+  output logic [          Width-1:0] quotient_o,
+  output logic [          Width-1:0] remainder_o
 );
-  localparam int CW = $clog2(Width+1);
+  localparam int CW = $clog2(Width + 1);
 
-  logic [Width:0]   acc;             // partial remainder, one bit wider than the divisor
-  logic [Width-1:0] quo;             // remaining dividend bits shift out on the left,
-                                     // quotient bits shift in on the right
+  logic [  Width:0] acc;  // partial remainder, one bit wider than the divisor
+  logic [Width-1:0] quo;  // remaining dividend bits shift out on the left,
+                          // quotient bits shift in on the right
   logic [Width-1:0] div_reg;
-  logic [CW-1:0]    count;
+  logic [   CW-1:0] count;
 
-  logic [Width:0]   acc_shifted;
+  logic [  Width:0] acc_shifted;
   logic             fits;
 
   assign acc_shifted = {acc[Width-1:0], quo[Width-1]};

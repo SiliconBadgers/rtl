@@ -27,7 +27,7 @@ module vec_simd_tb;
   localparam int EXPECTED_CHECKS = 125;
   localparam int CMD_TIMEOUT_CYCLES = 500;
   localparam int TIMEOUT_CYCLES = 20000;
-  localparam int CW = $clog2(NUM_LANES+1);
+  localparam int CW = $clog2(NUM_LANES + 1);
 
   // Families
   localparam logic [2:0] CONTROL = 3'd0, ALU = 3'd1, PRODUCT = 3'd2, REDUCE = 3'd3,
@@ -47,6 +47,8 @@ module vec_simd_tb;
   logic done, error, faulted, busy;
   logic [CW-1:0] sat_add, sat_sub, sat_product, sat_convert;
 
+  // +inject_error=1: corrupt one expected value on purpose.
+  int inject_error = 0;
   int errors = 0;
   int checks = 0;
   int last_cycles;
@@ -55,7 +57,9 @@ module vec_simd_tb;
 
   always #5 clk = ~clk;
 
-  vec_simd #(.NumLanes(NUM_LANES)) u_dut (
+  vec_simd #(
+    .NumLanes(NUM_LANES)
+  ) u_dut (
     .clk_i(clk),
     .rst_ni(rst_n),
     .valid_i(valid),
@@ -73,9 +77,8 @@ module vec_simd_tb;
 
   // FAMILY[31:29] | SIG[28:22] | D[21:18] | A[17:13] | B[12:8] | C[7:3] | PM[2:0]
   function automatic logic [31:0] enc(input logic [2:0] family, input logic [6:0] sig,
-                                      input logic [4:0] d, input logic [4:0] a,
-                                      input logic [4:0] b, input logic [4:0] c,
-                                      input logic [2:0] pm = 3'd0);
+                                      input logic [4:0] d, input logic [4:0] a, input logic [4:0] b,
+                                      input logic [4:0] c, input logic [2:0] pm = 3'd0);
     return {family, sig, d[3:0], a, b, c, pm};
   endfunction
 
@@ -89,7 +92,7 @@ module vec_simd_tb;
     int cycles = 1;
     @(negedge clk);
     command = cmd;
-    valid = 1'b1;
+    valid   = 1'b1;
     #1;
     while (!(done || error)) begin
       @(negedge clk);
@@ -102,20 +105,20 @@ module vec_simd_tb;
         return;
       end
     end
-    last_cycles = cycles;
-    last_error = error;
+    last_cycles  = cycles;
+    last_error   = error;
     last_sat_add = sat_add;
     checks++;
     if (error != expect_err) begin
       $display("FAIL %-28s error=%0b expected %0b", name, error, expect_err);
       errors++;
     end
-    @(posedge clk);          // commit edge
+    @(posedge clk);  // commit edge
     #1;
     valid = 1'b0;
   endtask
 
-  task automatic check_v(input int r, input logic [63:0] want [NUM_LANES], input string name);
+  task automatic check_v(input int r, input logic [63:0] want[NUM_LANES], input string name);
     for (int l = 0; l < NUM_LANES; l++) begin
       checks++;
       if (v(l, r) !== want[l]) begin
@@ -142,6 +145,9 @@ module vec_simd_tb;
   endtask
 
   initial begin
+    if (!$value$plusargs("inject_error=%d", inject_error)) begin
+      inject_error = 0;
+    end
     repeat (2) @(posedge clk);
     rst_n = 1'b1;
 
@@ -159,7 +165,7 @@ module vec_simd_tb;
 
     // ---------------------------------------------------------------- DATA / ALU
     run(enc(DATA, 7'd6, V0, 5'd0, 5'd0, 5'd0), "IOTA V0");
-    if ($test$plusargs("inject_error")) begin
+    if (inject_error != 0) begin
       check_v(0, '{0, 1, 2, 4}, "IOTA (injected error)");
     end else begin
       check_v(0, '{0, 1, 2, 3}, "IOTA");

@@ -5,19 +5,19 @@
 // Float results that round to infinity are an error.
 module vec_cast (
   input  logic [63:0] a_i,
-  input  logic [63:0] b_i,                 // I32 exponent e
-  input  logic [6:0]  sig_i,
-  input  logic        strict_i,            // 1: saturation is an error, 0: write clamped value
+  input  logic [63:0] b_i,          // I32 exponent e
+  input  logic [ 6:0] sig_i,
+  input  logic        strict_i,     // 1: saturation is an error, 0: write clamped value
   output logic        error_o,
-  output logic        saturated_o,         // conversion stage clamped
+  output logic        saturated_o,  // conversion stage clamped
   output logic [63:0] result_o
 );
 
   // CAST type numbers
   localparam logic [2:0] C_F16 = 3'd0;
   localparam logic [2:0] C_F32 = 3'd1;
-  localparam logic [2:0] C_I8  = 3'd2;
-  localparam logic [2:0] C_U8  = 3'd3;
+  localparam logic [2:0] C_I8 = 3'd2;
+  localparam logic [2:0] C_U8 = 3'd3;
   localparam logic [2:0] C_I16 = 3'd4;
   localparam logic [2:0] C_U16 = 3'd5;
   localparam logic [2:0] C_I32 = 3'd6;
@@ -32,14 +32,14 @@ module vec_cast (
   localparam logic [6:0] CAST_F32_F32 = 7'd9;
   localparam logic [6:0] CAST_F32_I32 = 7'd14;
   localparam logic [6:0] CAST_F32_I64 = 7'd15;
-  localparam logic [6:0] CAST_I8_I32  = 7'd22;
-  localparam logic [6:0] CAST_U8_I32  = 7'd30;
+  localparam logic [6:0] CAST_I8_I32 = 7'd22;
+  localparam logic [6:0] CAST_U8_I32 = 7'd30;
   localparam logic [6:0] CAST_I16_I32 = 7'd38;
   localparam logic [6:0] CAST_U16_I32 = 7'd46;
   localparam logic [6:0] CAST_I32_F16 = 7'd48;
   localparam logic [6:0] CAST_I32_F32 = 7'd49;
-  localparam logic [6:0] CAST_I32_I8  = 7'd50;
-  localparam logic [6:0] CAST_I32_U8  = 7'd51;
+  localparam logic [6:0] CAST_I32_I8 = 7'd50;
+  localparam logic [6:0] CAST_I32_U8 = 7'd51;
   localparam logic [6:0] CAST_I32_I16 = 7'd52;
   localparam logic [6:0] CAST_I32_U16 = 7'd53;
   localparam logic [6:0] CAST_I32_I32 = 7'd54;
@@ -55,28 +55,28 @@ module vec_cast (
   // Exact source value: (-1)^sign * mag * 2^source_exponent
   logic        sign;
   logic [63:0] mag;
-  integer      source_exponent, scale, total_exponent;
-  logic        source_error, scale_error;
+  integer source_exponent, scale, total_exponent;
+  logic source_error, scale_error;
 
   // Integer destination
   logic [127:0] extended;
-  logic [128:0] int_mag;                 // rounded magnitude
-  logic         int_huge;                // magnitude is at least 2^64
-  logic         guard_bit, sticky_bit;
+  logic [128:0] int_mag;  // rounded magnitude
+  logic         int_huge;  // magnitude is at least 2^64
+  logic guard_bit, sticky_bit;
   logic [128:0] limit_positive, limit_negative;
-  logic         clamp;
-  logic [63:0]  int_value;
-  integer       right_shift;
+  logic          clamp;
+  logic   [63:0] int_value;
+  integer        right_shift;
 
   // Float destination
-  logic [15:0] f16_value;
-  logic [31:0] f32_value;
-  logic        f16_overflow, f32_overflow;
+  logic   [15:0] f16_value;
+  logic   [31:0] f32_value;
+  logic f16_overflow, f32_overflow;
 
   assign from_type = sig_i[5:3];
-  assign to_type   = sig_i[2:0];
+  assign to_type = sig_i[2:0];
   assign from_float = (from_type == C_F16) || (from_type == C_F32);
-  assign to_float   = (to_type == C_F16) || (to_type == C_F32);
+  assign to_float = (to_type == C_F16) || (to_type == C_F32);
 
   always_comb begin
     case (sig_i)
@@ -85,8 +85,9 @@ module vec_cast (
       CAST_I8_I32, CAST_U8_I32, CAST_I16_I32, CAST_U16_I32,
       CAST_I32_F16, CAST_I32_F32, CAST_I32_I8, CAST_I32_U8,
       CAST_I32_I16, CAST_I32_U16, CAST_I32_I32, CAST_I32_I64,
-      CAST_I64_F16, CAST_I64_F32, CAST_I64_I32, CAST_I64_I64: legal_sig = 1'b1;
-      default:                                                legal_sig = 1'b0;
+      CAST_I64_F16, CAST_I64_F32, CAST_I64_I32, CAST_I64_I64:
+      legal_sig = 1'b1;
+      default: legal_sig = 1'b0;
     endcase
   end
 
@@ -99,10 +100,10 @@ module vec_cast (
 
     case (from_type)
       C_F16: begin
-        sign = a_i[15];
-        mag = {53'b0, (a_i[14:10] != 0), a_i[9:0]};
+        sign            = a_i[15];
+        mag             = {53'b0, (a_i[14:10] != 0), a_i[9:0]};
         source_exponent = ((a_i[14:10] == 0) ? 1 : int'(a_i[14:10])) - 25;
-        source_error = &a_i[14:10];        // NaN or infinity
+        source_error    = &a_i[14:10];  // NaN or infinity
       end
 
       C_F32: begin
@@ -114,26 +115,26 @@ module vec_cast (
 
       C_I8: begin
         sign = a_i[7];
-        mag = {56'b0, (a_i[7] ? -a_i[7:0] : a_i[7:0])};
+        mag  = {56'b0, (a_i[7] ? -a_i[7:0] : a_i[7:0])};
       end
 
-      C_U8:  mag = {56'b0, a_i[7:0]};
+      C_U8: mag = {56'b0, a_i[7:0]};
 
       C_I16: begin
         sign = a_i[15];
-        mag = {48'b0, (a_i[15] ? -a_i[15:0] : a_i[15:0])};
+        mag  = {48'b0, (a_i[15] ? -a_i[15:0] : a_i[15:0])};
       end
 
       C_U16: mag = {48'b0, a_i[15:0]};
 
       C_I32: begin
         sign = a_i[31];
-        mag = {32'b0, (a_i[31] ? -a_i[31:0] : a_i[31:0])};
+        mag  = {32'b0, (a_i[31] ? -a_i[31:0] : a_i[31:0])};
       end
 
-      default: begin // C_I64; the minimum's magnitude 2^63 still fits 64 bits
+      default: begin  // C_I64; the minimum's magnitude 2^63 still fits 64 bits
         sign = a_i[63];
-        mag = a_i[63] ? -a_i : a_i;
+        mag  = a_i[63] ? -a_i : a_i;
       end
     endcase
   end
@@ -164,7 +165,7 @@ module vec_cast (
         int_mag = {1'b0, extended >> right_shift};
         guard_bit = extended[right_shift-1];
         for (int i = 0; i < 64; i++) begin
-          if (i < right_shift-1) begin
+          if (i < right_shift - 1) begin
             sticky_bit = sticky_bit | mag[i];
           end
         end
@@ -177,11 +178,26 @@ module vec_cast (
   // Destination range, as magnitudes on each side of zero.
   always_comb begin
     case (to_type)
-      C_I8:    begin limit_positive = 129'd127;        limit_negative = 129'd128;        end
-      C_U8:    begin limit_positive = 129'd255;        limit_negative = 129'd0;          end
-      C_I16:   begin limit_positive = 129'd32767;      limit_negative = 129'd32768;      end
-      C_U16:   begin limit_positive = 129'd65535;      limit_negative = 129'd0;          end
-      C_I32:   begin limit_positive = 129'd2147483647; limit_negative = 129'd2147483648; end
+      C_I8: begin
+        limit_positive = 129'd127;
+        limit_negative = 129'd128;
+      end
+      C_U8: begin
+        limit_positive = 129'd255;
+        limit_negative = 129'd0;
+      end
+      C_I16: begin
+        limit_positive = 129'd32767;
+        limit_negative = 129'd32768;
+      end
+      C_U16: begin
+        limit_positive = 129'd65535;
+        limit_negative = 129'd0;
+      end
+      C_I32: begin
+        limit_positive = 129'd2147483647;
+        limit_negative = 129'd2147483648;
+      end
       default: begin
         limit_positive = {66'b0, 63'h7FFF_FFFF_FFFF_FFFF};
         limit_negative = {65'b0, 64'h8000_0000_0000_0000};
@@ -197,7 +213,10 @@ module vec_cast (
     end
   end
 
-  fp_round #(.ExpBits(5), .FracBits(10)) u_round_f16 (
+  fp_round #(
+    .ExpBits (5),
+    .FracBits(10)
+  ) u_round_f16 (
     .sign_i(sign),
     .mag_i(mag),
     .exponent_i(total_exponent),
@@ -206,7 +225,10 @@ module vec_cast (
     .overflow_o(f16_overflow)
   );
 
-  fp_round #(.ExpBits(8), .FracBits(23)) u_round_f32 (
+  fp_round #(
+    .ExpBits (8),
+    .FracBits(23)
+  ) u_round_f32 (
     .sign_i(sign),
     .mag_i(mag),
     .exponent_i(total_exponent),
@@ -224,10 +246,10 @@ module vec_cast (
       if (to_float) begin
         // Float results must be finite.
         if (to_type == C_F16) begin
-          error_o = f16_overflow;
+          error_o  = f16_overflow;
           result_o = {48'b0, f16_value};
         end else begin
-          error_o = f32_overflow;
+          error_o  = f32_overflow;
           result_o = {32'b0, f32_value};
         end
       end else begin

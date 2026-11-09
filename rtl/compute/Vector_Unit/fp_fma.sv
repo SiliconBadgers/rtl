@@ -12,7 +12,7 @@ module fp_fma #(
   input  logic [AbExpBits+AbFracBits:0] b_i,
   input  logic [CdExpBits+CdFracBits:0] c_i,
   output logic [CdExpBits+CdFracBits:0] d_o,
-  output logic                    error_o
+  output logic                          error_o
 );
   localparam int AB_BIAS = (1 << (AbExpBits - 1)) - 1;
   localparam int CD_BIAS = (1 << (CdExpBits - 1)) - 1;
@@ -20,20 +20,20 @@ module fp_fma #(
   // Exponent of the smallest subnormal step: F16 -24, F32 -149.
   localparam int AB_UNIT = 1 - AB_BIAS - AbFracBits;
   localparam int CD_UNIT = 1 - CD_BIAS - CdFracBits;
-  localparam int P_UNIT  = 2 * AB_UNIT;
+  localparam int P_UNIT = 2 * AB_UNIT;
 
   // All magnitudes are held exactly in units of 2^UNIT.
-  localparam int UNIT    = (P_UNIT < CD_UNIT) ? P_UNIT : CD_UNIT;
+  localparam int UNIT = (P_UNIT < CD_UNIT) ? P_UNIT : CD_UNIT;
   localparam int P_ALIGN = P_UNIT - UNIT;
   localparam int C_ALIGN = CD_UNIT - UNIT;
 
   // Largest finite magnitudes, in bits, plus one bit for the sum carry.
   localparam int P_WIDTH = 2 * (AbFracBits + 1) + 2 * ((1 << AbExpBits) - 3) + P_ALIGN;
   localparam int C_WIDTH = (CdFracBits + 1) + ((1 << CdExpBits) - 3) + C_ALIGN;
-  localparam int Width   = ((P_WIDTH > C_WIDTH) ? P_WIDTH : C_WIDTH) + 1;
+  localparam int SUM_WIDTH = ((P_WIDTH > C_WIDTH) ? P_WIDTH : C_WIDTH) + 1;
 
   localparam int KEPT_WIDTH = CdFracBits + 2;
-  localparam int EXP_MAX    = (1 << CdExpBits) - 1;
+  localparam int EXP_MAX = (1 << CdExpBits) - 1;
 
   logic sign_a, sign_b, sign_c, sign_p, sign_result;
   logic [AbExpBits-1:0] exp_a, exp_b;
@@ -41,7 +41,7 @@ module fp_fma #(
   logic [AbFracBits:0] sig_a, sig_b;
   logic [CdFracBits:0] sig_c;
   logic [2*AbFracBits+1:0] sig_p;
-  logic [Width-1:0] mag_p, mag_c, magnitude;
+  logic [SUM_WIDTH-1:0] mag_p, mag_c, magnitude;
   logic [KEPT_WIDTH-1:0] kept, rounded;
   logic guard_bit, sticky_bit, round_up;
   integer shift_a, shift_b, shift_c;
@@ -68,8 +68,8 @@ module fp_fma #(
 
     // Exact product and addend, aligned to the common unit.
     sig_p = sig_a * sig_b;
-    mag_p = Width'(sig_p) << (shift_a + shift_b + P_ALIGN);
-    mag_c = Width'(sig_c) << (shift_c + C_ALIGN);
+    mag_p = SUM_WIDTH'(sig_p) << (shift_a + shift_b + P_ALIGN);
+    mag_c = SUM_WIDTH'(sig_c) << (shift_c + C_ALIGN);
 
     sign_result = 1'b0;
     magnitude = '0;
@@ -86,22 +86,22 @@ module fp_fma #(
     error_o = (&exp_a) || (&exp_b) || (&exp_c);
 
     if (sign_p == sign_c) begin
-      magnitude = mag_p + mag_c;
+      magnitude   = mag_p + mag_c;
       sign_result = sign_p;
     end else if (mag_p >= mag_c) begin
-      magnitude = mag_p - mag_c;
+      magnitude   = mag_p - mag_c;
       sign_result = sign_p;
     end else begin
-      magnitude = mag_c - mag_p;
+      magnitude   = mag_c - mag_p;
       sign_result = sign_c;
     end
 
     if (magnitude == 0) begin
       // Exact zero is +0 under RNE, except (-0) + (-0).
-      d_o = {((mag_p == 0) && (mag_c == 0) && sign_p && sign_c), {(CdExpBits+CdFracBits){1'b0}}};
+      d_o = {((mag_p == 0) && (mag_c == 0) && sign_p && sign_c), {(CdExpBits + CdFracBits) {1'b0}}};
     end else begin
       // Find highest set bit of the exact magnitude.
-      for (int i = 0; i < Width; i++) begin
+      for (int i = 0; i < SUM_WIDTH; i++) begin
         if (magnitude[i]) begin
           msb = i;
         end
@@ -115,8 +115,8 @@ module fp_fma #(
       // Guard and sticky encode all discarded bits.
       if (right_shift > 0) begin
         guard_bit = magnitude[right_shift-1];
-        for (int i = 0; i < Width; i++) begin
-          if (i < right_shift-1) begin
+        for (int i = 0; i < SUM_WIDTH; i++) begin
+          if (i < right_shift - 1) begin
             sticky_bit = sticky_bit | magnitude[i];
           end
         end

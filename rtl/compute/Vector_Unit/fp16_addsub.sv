@@ -51,13 +51,13 @@ module fp16_addsub (
     d_o = 16'h0000;
 
     if (sign_a == sign_b) begin
-      magnitude = mag_a + mag_b;
+      magnitude   = mag_a + mag_b;
       sign_result = sign_a;
     end else if (mag_a >= mag_b) begin
-      magnitude = mag_a - mag_b;
+      magnitude   = mag_a - mag_b;
       sign_result = sign_a;
     end else begin
-      magnitude = mag_b - mag_a;
+      magnitude   = mag_b - mag_a;
       sign_result = sign_b;
     end
 
@@ -85,7 +85,7 @@ module fp16_addsub (
         if (right_shift > 0) begin
           guard_bit = magnitude[right_shift-1];
           for (int i = 0; i < 42; i++) begin
-            if (i < right_shift-1) begin
+            if (i < right_shift - 1) begin
               sticky_bit |= magnitude[i];
             end
           end

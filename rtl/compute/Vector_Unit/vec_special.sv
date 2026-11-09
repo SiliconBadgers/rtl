@@ -10,35 +10,35 @@
 module vec_special (
   input  logic        clk_i,
   input  logic        rst_ni,
-  input  logic        start_i,             // first cycle of a multi-cycle operation
+  input  logic        start_i,     // first cycle of a multi-cycle operation
   input  logic [63:0] a_i,
   input  logic [63:0] b_i,
-  input  logic [6:0]  sig_i,
-  output logic        finished_o,          // result below is valid
+  input  logic [ 6:0] sig_i,
+  output logic        finished_o,  // result below is valid
   output logic        error_o,
   output logic [63:0] result_o,
   output logic [63:0] result2_o
 );
 
   // SPECIAL SIG encodings (Signatures sheet)
-  localparam logic [6:0] DIV_F16     = 7'd0;
-  localparam logic [6:0] DIV_F32     = 7'd1;
-  localparam logic [6:0] RCP_F16     = 7'd2;
-  localparam logic [6:0] RCP_F32     = 7'd3;
-  localparam logic [6:0] DIVMOD_I32  = 7'd4;
-  localparam logic [6:0] DIVMOD_U32  = 7'd5;
-  localparam logic [6:0] DIVMOD_I64  = 7'd6;
-  localparam logic [6:0] DIVMOD_U64  = 7'd7;
+  localparam logic [6:0] DIV_F16 = 7'd0;
+  localparam logic [6:0] DIV_F32 = 7'd1;
+  localparam logic [6:0] RCP_F16 = 7'd2;
+  localparam logic [6:0] RCP_F32 = 7'd3;
+  localparam logic [6:0] DIVMOD_I32 = 7'd4;
+  localparam logic [6:0] DIVMOD_U32 = 7'd5;
+  localparam logic [6:0] DIVMOD_I64 = 7'd6;
+  localparam logic [6:0] DIVMOD_U64 = 7'd7;
   localparam logic [6:0] DIV_RNE_I32 = 7'd8;
   localparam logic [6:0] DIV_RNE_U32 = 7'd9;
   localparam logic [6:0] DIV_RNE_I64 = 7'd10;
   localparam logic [6:0] DIV_RNE_U64 = 7'd11;
-  localparam logic [6:0] ISQRT_U32   = 7'd12;
-  localparam logic [6:0] ISQRT_U64   = 7'd13;
-  localparam logic [6:0] EXP_F16     = 7'd14;
-  localparam logic [6:0] EXP_F32     = 7'd15;
-  localparam logic [6:0] RSQRT_F16   = 7'd16;
-  localparam logic [6:0] RSQRT_F32   = 7'd17;
+  localparam logic [6:0] ISQRT_U32 = 7'd12;
+  localparam logic [6:0] ISQRT_U64 = 7'd13;
+  localparam logic [6:0] EXP_F16 = 7'd14;
+  localparam logic [6:0] EXP_F32 = 7'd15;
+  localparam logic [6:0] RSQRT_F16 = 7'd16;
+  localparam logic [6:0] RSQRT_F32 = 7'd17;
 
   localparam logic [31:0] F32_ONE = 32'h3F80_0000;
 
@@ -49,34 +49,34 @@ module vec_special (
 
   // FP division (F16 operands are widened exactly to F32)
   logic [31:0] num32, den32;
-  logic [7:0]  exp_n, exp_d;
+  logic [7:0] exp_n, exp_d;
   logic [23:0] sig_n, sig_d, norm_n, norm_d;
-  integer      msb_n, msb_d, e_n, e_d, q_exponent;
-  logic        fp_input_error, fp_sign;
+  integer msb_n, msb_d, e_n, e_d, q_exponent;
+  logic fp_input_error, fp_sign;
   logic [15:0] fdiv16_result;
   logic [31:0] fdiv32_result;
-  logic        fdiv16_overflow, fdiv32_overflow;
+  logic fdiv16_overflow, fdiv32_overflow;
 
   // Integer division on magnitudes
-  logic        int_signed, int_wide;
-  logic        sign_a, sign_b, quotient_negative;
+  logic int_signed, int_wide;
+  logic sign_a, sign_b, quotient_negative;
   logic [63:0] mag_a, mag_b, mag_q, mag_r;
   logic [64:0] mag_rne;
   logic [64:0] limit_positive, limit_negative;
-  logic        round_up, quotient_overflow, rne_overflow;
+  logic round_up, quotient_overflow, rne_overflow;
   logic [63:0] quotient, remainder, rne_quotient;
 
   // Shared divider
-  logic [6:0]  div_iterations;
+  logic [6:0] div_iterations;
   logic [63:0] div_dividend, div_divisor, div_quotient, div_remainder;
-  logic        div_busy, div_finished;
+  logic div_busy, div_finished;
 
   // RSQRT and ExpBits
   logic [31:0] unary_input;
   logic [15:0] rsqrt16_result, exp16_result;
   logic [31:0] rsqrt32_result, exp32_result;
-  logic        rsqrt16_error, rsqrt32_error, exp16_error, exp32_error;
-  logic        rsqrt_busy, rsqrt_finished;
+  logic rsqrt16_error, rsqrt32_error, exp16_error, exp32_error;
+  logic rsqrt_busy, rsqrt_finished;
 
   // Exact F16 -> F32 widening (subnormals become normal; NaN/Inf stay NaN/Inf).
   function automatic logic [31:0] f16_to_f32(input logic [15:0] h);
@@ -103,12 +103,12 @@ module vec_special (
   // Floor square root of a 64-bit value, one result bit per step (no division).
   function automatic logic [63:0] isqrt64(input logic [63:0] value);
     logic [63:0] op, res, one;
-    op = value;
+    op  = value;
     res = 64'b0;
     one = 64'h4000_0000_0000_0000;
     for (int i = 0; i < 32; i++) begin
       if (op >= res + one) begin
-        op = op - (res + one);
+        op  = op - (res + one);
         res = (res >> 1) + one;
       end else begin
         res = res >> 1;
@@ -118,9 +118,9 @@ module vec_special (
     isqrt64 = res;
   endfunction
 
-  assign fp_div_op  = (sig_i <= RCP_F32);
+  assign fp_div_op = (sig_i <= RCP_F32);
   assign int_div_op = (sig_i >= DIVMOD_I32) && (sig_i <= DIV_RNE_U64);
-  assign rsqrt_op   = (sig_i == RSQRT_F16) || (sig_i == RSQRT_F32);
+  assign rsqrt_op = (sig_i == RSQRT_F16) || (sig_i == RSQRT_F32);
   assign f16_op     = (sig_i == DIV_F16) || (sig_i == RCP_F16) ||
                       (sig_i == EXP_F16) || (sig_i == RSQRT_F16);
 
@@ -128,10 +128,22 @@ module vec_special (
   // RCP is DIV with a numerator of one.
   always_comb begin
     case (sig_i)
-      DIV_F16: begin num32 = f16_to_f32(a_i[15:0]); den32 = f16_to_f32(b_i[15:0]); end
-      RCP_F16: begin num32 = F32_ONE;             den32 = f16_to_f32(a_i[15:0]); end
-      RCP_F32: begin num32 = F32_ONE;             den32 = a_i[31:0];             end
-      default: begin num32 = a_i[31:0];             den32 = b_i[31:0];             end
+      DIV_F16: begin
+        num32 = f16_to_f32(a_i[15:0]);
+        den32 = f16_to_f32(b_i[15:0]);
+      end
+      RCP_F16: begin
+        num32 = F32_ONE;
+        den32 = f16_to_f32(a_i[15:0]);
+      end
+      RCP_F32: begin
+        num32 = F32_ONE;
+        den32 = a_i[31:0];
+      end
+      default: begin
+        num32 = a_i[31:0];
+        den32 = b_i[31:0];
+      end
     endcase
 
     exp_n = num32[30:23];
@@ -140,8 +152,8 @@ module vec_special (
     sig_d = {(exp_d != 0), den32[22:0]};
 
     // Value = sig * 2^(e - 23); normalize subnormal significands so bit 23 is set.
-    e_n = ((exp_n == 0) ? 1 : int'(exp_n)) - 127;
-    e_d = ((exp_d == 0) ? 1 : int'(exp_d)) - 127;
+    e_n   = ((exp_n == 0) ? 1 : int'(exp_n)) - 127;
+    e_d   = ((exp_d == 0) ? 1 : int'(exp_d)) - 127;
     msb_n = 0;
     msb_d = 0;
     for (int i = 0; i < 24; i++) begin
@@ -164,7 +176,10 @@ module vec_special (
   end
 
   // A zero dividend gives a zero with the XOR of the signs.
-  fp_round #(.ExpBits(5), .FracBits(10)) u_fdiv_round16 (
+  fp_round #(
+    .ExpBits (5),
+    .FracBits(10)
+  ) u_fdiv_round16 (
     .sign_i(fp_sign),
     .mag_i((sig_n == 0) ? 64'b0 : div_quotient),
     .exponent_i(q_exponent),
@@ -173,7 +188,10 @@ module vec_special (
     .overflow_o(fdiv16_overflow)
   );
 
-  fp_round #(.ExpBits(8), .FracBits(23)) u_fdiv_round32 (
+  fp_round #(
+    .ExpBits (8),
+    .FracBits(23)
+  ) u_fdiv_round32 (
     .sign_i(fp_sign),
     .mag_i((sig_n == 0) ? 64'b0 : div_quotient),
     .exponent_i(q_exponent),
@@ -185,8 +203,8 @@ module vec_special (
   // ------------------------------------------------------- integer DIVMOD / DIV_RNE
   // Divide magnitudes, then apply signs.
   always_comb begin
-    int_signed = !sig_i[0];                         // I32, I64 have even SIGs
-    int_wide   = sig_i[1];                          // I64, U64
+    int_signed = !sig_i[0];  // I32, I64 have even SIGs
+    int_wide   = sig_i[1];  // I64, U64
 
     if (int_wide) begin
       sign_a = int_signed && a_i[63];
@@ -211,12 +229,11 @@ module vec_special (
     // Truncated quotient; a nonzero remainder takes A's sign.
     quotient_overflow = quotient_negative ? ({1'b0, mag_q} > limit_negative)
                                           : ({1'b0, mag_q} > limit_positive);
-    quotient  = quotient_negative ? -mag_q : mag_q;
+    quotient = quotient_negative ? -mag_q : mag_q;
     remainder = sign_a ? -mag_r : mag_r;
 
     // Nearest quotient, ties to even. 2*r is compared without forming q*b.
-    round_up = ({mag_r, 1'b0} > {1'b0, mag_b}) ||
-               (({mag_r, 1'b0} == {1'b0, mag_b}) && mag_q[0]);
+    round_up = ({mag_r, 1'b0} > {1'b0, mag_b}) || (({mag_r, 1'b0} == {1'b0, mag_b}) && mag_q[0]);
     mag_rne = {1'b0, mag_q} + 65'(round_up);
     rne_overflow = quotient_negative ? (mag_rne > limit_negative) : (mag_rne > limit_positive);
     rne_quotient = quotient_negative ? -mag_rne[63:0] : mag_rne[63:0];
@@ -241,7 +258,9 @@ module vec_special (
     end
   end
 
-  div_iter #(.Width(64)) u_div (
+  div_iter #(
+    .Width(64)
+  ) u_div (
     .clk_i(clk_i),
     .rst_ni(rst_ni),
     .start_i(start_i && (fp_div_op || int_div_op)),
@@ -291,54 +310,54 @@ module vec_special (
   end
 
   always_comb begin
-    result_o = 64'b0;
+    result_o  = 64'b0;
     result2_o = 64'b0;
-    error_o = 1'b0;
+    error_o   = 1'b0;
 
     case (sig_i)
 
       DIV_F16, RCP_F16: begin
-        error_o = fp_input_error || fdiv16_overflow;
+        error_o  = fp_input_error || fdiv16_overflow;
         result_o = {48'b0, fdiv16_result};
       end
 
       DIV_F32, RCP_F32: begin
-        error_o = fp_input_error || fdiv32_overflow;
+        error_o  = fp_input_error || fdiv32_overflow;
         result_o = {32'b0, fdiv32_result};
       end
 
       // Zero divisor or quotient overflow (signed minimum / -1) faults.
       DIVMOD_I32, DIVMOD_U32, DIVMOD_I64, DIVMOD_U64: begin
-        error_o = (mag_b == 0) || quotient_overflow;
-        result_o = quotient;
+        error_o   = (mag_b == 0) || quotient_overflow;
+        result_o  = quotient;
         result2_o = remainder;
       end
 
       DIV_RNE_I32, DIV_RNE_U32, DIV_RNE_I64, DIV_RNE_U64: begin
-        error_o = (mag_b == 0) || rne_overflow;
+        error_o  = (mag_b == 0) || rne_overflow;
         result_o = rne_quotient;
       end
 
       ISQRT_U32: result_o = isqrt64({32'b0, a_i[31:0]});
-      ISQRT_U64: result_o = isqrt64(a_i);            // the root always fits U32
+      ISQRT_U64: result_o = isqrt64(a_i);  // the root always fits U32
 
       EXP_F16: begin
-        error_o = exp16_error;
+        error_o  = exp16_error;
         result_o = {48'b0, exp16_result};
       end
 
       EXP_F32: begin
-        error_o = exp32_error;
+        error_o  = exp32_error;
         result_o = {32'b0, exp32_result};
       end
 
       RSQRT_F16: begin
-        error_o = rsqrt16_error;
+        error_o  = rsqrt16_error;
         result_o = {48'b0, rsqrt16_result};
       end
 
       RSQRT_F32: begin
-        error_o = rsqrt32_error;
+        error_o  = rsqrt32_error;
         result_o = {32'b0, rsqrt32_result};
       end
 
@@ -347,7 +366,7 @@ module vec_special (
     endcase
 
     if (error_o) begin
-      result_o = 64'b0;
+      result_o  = 64'b0;
       result2_o = 64'b0;
     end
   end

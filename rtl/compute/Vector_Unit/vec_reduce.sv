@@ -8,12 +8,12 @@
 module vec_reduce #(
   parameter int NumLanes = 8
 ) (
-  input  logic [63:0]          lane_value_i [NumLanes],   // each lane's A operand
+  input  logic [        63:0] lane_value_i [NumLanes],  // each lane's A operand
   input  logic [NumLanes-1:0] lane_enable_i,
-  input  logic [31:0]          vl_i,
-  input  logic [6:0]           sig_i,
-  output logic                 error_o,
-  output logic [63:0]          result_o
+  input  logic [        31:0] vl_i,
+  input  logic [         6:0] sig_i,
+  output logic                error_o,
+  output logic [        63:0] result_o
 );
 
   // REDUCE SIG encodings (Signatures sheet)
@@ -23,35 +23,35 @@ module vec_reduce #(
   localparam logic [6:0] SUM_I64_I64 = 7'd3;
   localparam logic [6:0] SUM_U32_U64 = 7'd4;
   localparam logic [6:0] SUM_U64_U64 = 7'd5;
-  localparam logic [6:0] MAX_F16     = 7'd6;
-  localparam logic [6:0] MAX_F32     = 7'd7;
-  localparam logic [6:0] MAX_I32     = 7'd8;
-  localparam logic [6:0] MAX_U32     = 7'd9;
-  localparam logic [6:0] MAX_I64     = 7'd10;
-  localparam logic [6:0] MAX_U64     = 7'd11;
-  localparam logic [6:0] MIN_F16     = 7'd12;
-  localparam logic [6:0] MIN_F32     = 7'd13;
-  localparam logic [6:0] MIN_I32     = 7'd14;
-  localparam logic [6:0] MIN_U32     = 7'd15;
-  localparam logic [6:0] MIN_I64     = 7'd16;
-  localparam logic [6:0] MIN_U64     = 7'd17;
+  localparam logic [6:0] MAX_F16 = 7'd6;
+  localparam logic [6:0] MAX_F32 = 7'd7;
+  localparam logic [6:0] MAX_I32 = 7'd8;
+  localparam logic [6:0] MAX_U32 = 7'd9;
+  localparam logic [6:0] MAX_I64 = 7'd10;
+  localparam logic [6:0] MAX_U64 = 7'd11;
+  localparam logic [6:0] MIN_F16 = 7'd12;
+  localparam logic [6:0] MIN_F32 = 7'd13;
+  localparam logic [6:0] MIN_I32 = 7'd14;
+  localparam logic [6:0] MIN_U32 = 7'd15;
+  localparam logic [6:0] MIN_I64 = 7'd16;
+  localparam logic [6:0] MIN_U64 = 7'd17;
 
   // Tree size: NumLanes rounded up to a power of two. Heap layout: node 1 is the
   // root, node n has children 2n and 2n+1, leaves are TREE..2*TREE-1.
   localparam int LEVELS = (NumLanes > 1) ? $clog2(NumLanes) : 0;
-  localparam int TREE   = 1 << LEVELS;
+  localparam int TREE = 1 << LEVELS;
 
-  logic [2*TREE-1:0] present;              // node lies inside the logical tree
-  logic [31:0]       fsum  [2*TREE];       // F32 partial sums
-  logic [31:0]       fadd  [2*TREE];       // adder outputs
-  logic [64:0]       isum  [2*TREE];       // integer partial sums, one extra bit
-  logic [31:0]       tree_size;            // next power of two >= VL
+  logic [2*TREE-1:0] present;  // node lies inside the logical tree
+  logic [31:0] fsum[2*TREE];  // F32 partial sums
+  logic [31:0] fadd[2*TREE];  // adder outputs
+  logic [64:0] isum[2*TREE];  // integer partial sums, one extra bit
+  logic [31:0] tree_size;  // next power of two >= VL
 
   logic sum_float, sum_signed, sum_from32, is_max, is_min;
   logic float_error, int_overflow;
-  logic [2:0] cmp_type;                    // 0 F16, 1 F32, 2 I32, 3 U32, 4 I64, 5 U64
+  logic [2:0] cmp_type;  // 0 F16, 1 F32, 2 I32, 3 U32, 4 I64, 5 U64
 
-  logic        found;
+  logic       found;
   logic [63:0] best_value, best_key, key;
 
   // Exact F16 -> F32 widening.
@@ -78,9 +78,10 @@ module vec_reduce #(
   // Unsigned ordering key; +0 and -0 map to the same key.
   function automatic logic [63:0] order_key(input logic [63:0] v, input logic [2:0] t);
     case (t)
-      3'd0: order_key = (v[14:0] == 0) ? 64'h8000 :
-                        (v[15] ? {48'b0, ~v[15:0]} : {48'b0, 1'b1, v[14:0]});
-      3'd1: order_key = (v[30:0] == 0) ? 64'h8000_0000 :
+      3'd0:
+      order_key = (v[14:0] == 0) ? 64'h8000 : (v[15] ? {48'b0, ~v[15:0]} : {48'b0, 1'b1, v[14:0]});
+      3'd1:
+      order_key = (v[30:0] == 0) ? 64'h8000_0000 :
                         (v[31] ? {32'b0, ~v[31:0]} : {32'b0, 1'b1, v[30:0]});
       3'd2: order_key = {32'b0, ~v[31], v[30:0]};
       3'd3: order_key = {32'b0, v[31:0]};
@@ -89,7 +90,7 @@ module vec_reduce #(
     endcase
   endfunction
 
-  assign sum_float  = (sig_i == SUM_F16_F32) || (sig_i == SUM_F32_F32);
+  assign sum_float = (sig_i == SUM_F16_F32) || (sig_i == SUM_F32_F32);
   assign sum_signed = (sig_i == SUM_I32_I64) || (sig_i == SUM_I64_I64);
   assign sum_from32 = (sig_i == SUM_I32_I64) || (sig_i == SUM_U32_U64);
   assign is_max = (sig_i >= MAX_F16) && (sig_i <= MAX_U64);
@@ -108,18 +109,18 @@ module vec_reduce #(
   // Leaves.
   genvar n;
   generate
-    for (n = 0; n < TREE; n++) begin : leaves
-      if (n < NumLanes) begin : lane
+    for (n = 0; n < TREE; n++) begin : g_leaves
+      if (n < NumLanes) begin : g_lane
         assign present[TREE+n] = (n < tree_size);
-        assign fsum[TREE+n] = !lane_enable_i[n] ? 32'b0 :
-                              (sig_i == SUM_F16_F32) ? f16_to_f32(lane_value_i[n][15:0]) :
-                                                     lane_value_i[n][31:0];
+        assign fsum[TREE+n] = !lane_enable_i[n] ? 32'b0 : (sig_i == SUM_F16_F32) ? f16_to_f32(
+          lane_value_i[n][15:0]
+        ) : lane_value_i[n][31:0];
         assign isum[TREE+n] = !lane_enable_i[n] ? 65'b0 :
                               !sum_from32 ?
                                 {sum_signed && lane_value_i[n][63], lane_value_i[n]} :
                               sum_signed      ? {{33{lane_value_i[n][31]}}, lane_value_i[n][31:0]} :
                                                 {33'b0, lane_value_i[n][31:0]};
-      end else begin : pad
+      end else begin : g_pad
         assign present[TREE+n] = (n < tree_size);
         assign fsum[TREE+n] = 32'b0;
         assign isum[TREE+n] = 65'b0;
@@ -128,12 +129,12 @@ module vec_reduce #(
     end
 
     // Internal nodes: add when both sides are in the tree, else pass one through.
-    for (n = 1; n < TREE; n++) begin : nodes
+    for (n = 1; n < TREE; n++) begin : g_nodes
       fp32_addsub u_add (
-        .a_i(fsum[2*n]),
-        .b_i(fsum[2*n+1]),
+        .a_i  (fsum[2*n]),
+        .b_i  (fsum[2*n+1]),
         .sub_i(1'b0),
-        .d_o(fadd[n])
+        .d_o  (fadd[n])
       );
 
       assign present[n] = present[2*n] || present[2*n+1];
@@ -152,7 +153,7 @@ module vec_reduce #(
   // Every enabled float input must be finite; so must every partial sum.
   // Every integer partial sum must fit the destination.
   always_comb begin
-    float_error = 1'b0;
+    float_error  = 1'b0;
     int_overflow = 1'b0;
     for (int i = 0; i < NumLanes; i++) begin
       if (lane_enable_i[i] && sum_float && (&fsum[TREE+i][30:23])) begin
@@ -183,7 +184,7 @@ module vec_reduce #(
       if (lane_enable_i[i]) begin
         if (!found || (is_max ? (key > best_key) : (key < best_key))) begin
           best_value = lane_value_i[i];
-          best_key = key;
+          best_key   = key;
         end
         found = 1'b1;
       end
@@ -191,14 +192,14 @@ module vec_reduce #(
   end
 
   always_comb begin
-    error_o = 1'b0;
+    error_o  = 1'b0;
     result_o = 64'b0;
 
     if (sum_float) begin
-      error_o = float_error;
+      error_o  = float_error;
       result_o = {32'b0, fsum[1]};
     end else if (sig_i <= SUM_U64_U64) begin
-      error_o = int_overflow;
+      error_o  = int_overflow;
       result_o = isum[1][63:0];
     end else if (is_max || is_min) begin
       // Float inputs in enabled lanes must be finite.
@@ -208,10 +209,9 @@ module vec_reduce #(
           error_o = 1'b1;
       end
       case (cmp_type)
-        3'd0:       result_o = {48'b0, best_value[15:0]};
-        3'd1, 3'd2,
-        3'd3:       result_o = {32'b0, best_value[31:0]};
-        default:    result_o = best_value;
+        3'd0:             result_o = {48'b0, best_value[15:0]};
+        3'd1, 3'd2, 3'd3: result_o = {32'b0, best_value[31:0]};
+        default:          result_o = best_value;
       endcase
     end else begin
       error_o = 1'b1;

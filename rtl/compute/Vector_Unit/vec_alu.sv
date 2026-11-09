@@ -1,82 +1,82 @@
 module vec_alu (
-  input logic [63:0]  a_i,
-  input logic [63:0]  b_i,
-  input logic [6:0]   sig_i,
-  input logic         select_predicate_i,
-  input logic         strict_i,           // 1: saturation is an error, 0: write clamped value
+  input  logic [63:0] a_i,
+  input  logic [63:0] b_i,
+  input  logic [ 6:0] sig_i,
+  input  logic        select_predicate_i,
+  input  logic        strict_i,            // 1: saturation is an error, 0: write clamped value
   output logic        error_o,
   output logic        predicate_result_o,
-  output logic        saturated_add_o,    // ADD_SAT clamped
-  output logic        saturated_sub_o,    // SUB_SAT clamped
+  output logic        saturated_add_o,     // ADD_SAT clamped
+  output logic        saturated_sub_o,     // SUB_SAT clamped
   output logic [63:0] result_o
 );
 
   // ALU SIG encodings (Signatures sheet, SIG = FN*8 + TYPE)
-  localparam logic [6:0] ADD_F16        = 7'b000_0000;
-  localparam logic [6:0] ADD_F32        = 7'b000_0001;
-  localparam logic [6:0] ADD_I32        = 7'b000_0010;
-  localparam logic [6:0] ADD_U32        = 7'b000_0011;
-  localparam logic [6:0] ADD_I64        = 7'b000_0100;
-  localparam logic [6:0] ADD_U64        = 7'b000_0101;
+  localparam logic [6:0] ADD_F16 = 7'b000_0000;
+  localparam logic [6:0] ADD_F32 = 7'b000_0001;
+  localparam logic [6:0] ADD_I32 = 7'b000_0010;
+  localparam logic [6:0] ADD_U32 = 7'b000_0011;
+  localparam logic [6:0] ADD_I64 = 7'b000_0100;
+  localparam logic [6:0] ADD_U64 = 7'b000_0101;
 
-  localparam logic [6:0] SUB_F16        = 7'b000_1000;
-  localparam logic [6:0] SUB_F32        = 7'b000_1001;
-  localparam logic [6:0] SUB_I32        = 7'b000_1010;
-  localparam logic [6:0] SUB_U32        = 7'b000_1011;
-  localparam logic [6:0] SUB_I64        = 7'b000_1100;
-  localparam logic [6:0] SUB_U64        = 7'b000_1101;
+  localparam logic [6:0] SUB_F16 = 7'b000_1000;
+  localparam logic [6:0] SUB_F32 = 7'b000_1001;
+  localparam logic [6:0] SUB_I32 = 7'b000_1010;
+  localparam logic [6:0] SUB_U32 = 7'b000_1011;
+  localparam logic [6:0] SUB_I64 = 7'b000_1100;
+  localparam logic [6:0] SUB_U64 = 7'b000_1101;
 
-  localparam logic [6:0] EQ_F16         = 7'b001_0000;
-  localparam logic [6:0] EQ_F32         = 7'b001_0001;
-  localparam logic [6:0] EQ_I32         = 7'b001_0010;
-  localparam logic [6:0] EQ_U32         = 7'b001_0011;
-  localparam logic [6:0] EQ_I64         = 7'b001_0100;
-  localparam logic [6:0] EQ_U64         = 7'b001_0101;
+  localparam logic [6:0] EQ_F16 = 7'b001_0000;
+  localparam logic [6:0] EQ_F32 = 7'b001_0001;
+  localparam logic [6:0] EQ_I32 = 7'b001_0010;
+  localparam logic [6:0] EQ_U32 = 7'b001_0011;
+  localparam logic [6:0] EQ_I64 = 7'b001_0100;
+  localparam logic [6:0] EQ_U64 = 7'b001_0101;
 
-  localparam logic [6:0] LT_F16         = 7'b001_1000;
-  localparam logic [6:0] LT_F32         = 7'b001_1001;
-  localparam logic [6:0] LT_I32         = 7'b001_1010;
-  localparam logic [6:0] LT_U32         = 7'b001_1011;
-  localparam logic [6:0] LT_I64         = 7'b001_1100;
-  localparam logic [6:0] LT_U64         = 7'b001_1101;
+  localparam logic [6:0] LT_F16 = 7'b001_1000;
+  localparam logic [6:0] LT_F32 = 7'b001_1001;
+  localparam logic [6:0] LT_I32 = 7'b001_1010;
+  localparam logic [6:0] LT_U32 = 7'b001_1011;
+  localparam logic [6:0] LT_I64 = 7'b001_1100;
+  localparam logic [6:0] LT_U64 = 7'b001_1101;
 
-  localparam logic [6:0] SELECT_F16     = 7'b010_0000;
-  localparam logic [6:0] SELECT_F32     = 7'b010_0001;
-  localparam logic [6:0] SELECT_I32     = 7'b010_0010;
-  localparam logic [6:0] SELECT_U32     = 7'b010_0011;
-  localparam logic [6:0] SELECT_I64     = 7'b010_0100;
-  localparam logic [6:0] SELECT_U64     = 7'b010_0101;
+  localparam logic [6:0] SELECT_F16 = 7'b010_0000;
+  localparam logic [6:0] SELECT_F32 = 7'b010_0001;
+  localparam logic [6:0] SELECT_I32 = 7'b010_0010;
+  localparam logic [6:0] SELECT_U32 = 7'b010_0011;
+  localparam logic [6:0] SELECT_I64 = 7'b010_0100;
+  localparam logic [6:0] SELECT_U64 = 7'b010_0101;
 
-  localparam logic [6:0] AND_I32        = 7'b010_1010;
-  localparam logic [6:0] AND_U32        = 7'b010_1011;
-  localparam logic [6:0] AND_I64        = 7'b010_1100;
-  localparam logic [6:0] AND_U64        = 7'b010_1101;
+  localparam logic [6:0] AND_I32 = 7'b010_1010;
+  localparam logic [6:0] AND_U32 = 7'b010_1011;
+  localparam logic [6:0] AND_I64 = 7'b010_1100;
+  localparam logic [6:0] AND_U64 = 7'b010_1101;
 
-  localparam logic [6:0] XOR_I32        = 7'b011_0010;
-  localparam logic [6:0] XOR_U32        = 7'b011_0011;
-  localparam logic [6:0] XOR_I64        = 7'b011_0100;
-  localparam logic [6:0] XOR_U64        = 7'b011_0101;
+  localparam logic [6:0] XOR_I32 = 7'b011_0010;
+  localparam logic [6:0] XOR_U32 = 7'b011_0011;
+  localparam logic [6:0] XOR_I64 = 7'b011_0100;
+  localparam logic [6:0] XOR_U64 = 7'b011_0101;
 
-  localparam logic [6:0] SHL_I32        = 7'b011_1010;
-  localparam logic [6:0] SHL_U32        = 7'b011_1011;
-  localparam logic [6:0] SHL_I64        = 7'b011_1100;
-  localparam logic [6:0] SHL_U64        = 7'b011_1101;
+  localparam logic [6:0] SHL_I32 = 7'b011_1010;
+  localparam logic [6:0] SHL_U32 = 7'b011_1011;
+  localparam logic [6:0] SHL_I64 = 7'b011_1100;
+  localparam logic [6:0] SHL_U64 = 7'b011_1101;
 
-  localparam logic [6:0] SHR_I32        = 7'b100_0010;
-  localparam logic [6:0] SHR_U32        = 7'b100_0011;
-  localparam logic [6:0] SHR_I64        = 7'b100_0100;
-  localparam logic [6:0] SHR_U64        = 7'b100_0101;
+  localparam logic [6:0] SHR_I32 = 7'b100_0010;
+  localparam logic [6:0] SHR_U32 = 7'b100_0011;
+  localparam logic [6:0] SHR_I64 = 7'b100_0100;
+  localparam logic [6:0] SHR_U64 = 7'b100_0101;
 
-  localparam logic [6:0] CLZ_I32        = 7'b100_1010;
-  localparam logic [6:0] CLZ_U32        = 7'b100_1011;
-  localparam logic [6:0] CLZ_I64        = 7'b100_1100;
-  localparam logic [6:0] CLZ_U64        = 7'b100_1101;
+  localparam logic [6:0] CLZ_I32 = 7'b100_1010;
+  localparam logic [6:0] CLZ_U32 = 7'b100_1011;
+  localparam logic [6:0] CLZ_I64 = 7'b100_1100;
+  localparam logic [6:0] CLZ_U64 = 7'b100_1101;
 
-  localparam logic [6:0] ADD_SAT_I32    = 7'b101_0010;
-  localparam logic [6:0] ADD_SAT_I64    = 7'b101_0100;
+  localparam logic [6:0] ADD_SAT_I32 = 7'b101_0010;
+  localparam logic [6:0] ADD_SAT_I64 = 7'b101_0100;
 
-  localparam logic [6:0] SUB_SAT_I32    = 7'b101_1010;
-  localparam logic [6:0] SUB_SAT_I64    = 7'b101_1100;
+  localparam logic [6:0] SUB_SAT_I32 = 7'b101_1010;
+  localparam logic [6:0] SUB_SAT_I64 = 7'b101_1100;
 
   localparam logic [6:0] RSHIFT_RNE_I32 = 7'b110_0010;
   localparam logic [6:0] RSHIFT_RNE_I64 = 7'b110_0100;
@@ -102,17 +102,17 @@ module vec_alu (
   assign sub = sig_i[3];
 
   fp16_addsub u_fp16_addsub (
-    .a_i(a_i[15:0]),
-    .b_i(b_i[15:0]),
+    .a_i  (a_i[15:0]),
+    .b_i  (b_i[15:0]),
     .sub_i(sub),
-    .d_o(fp16_result)
+    .d_o  (fp16_result)
   );
 
   fp32_addsub u_fp32_addsub (
-    .a_i(a_i[31:0]),
-    .b_i(b_i[31:0]),
+    .a_i  (a_i[31:0]),
+    .b_i  (b_i[31:0]),
     .sub_i(sub),
-    .d_o(fp32_result)
+    .d_o  (fp32_result)
   );
 
   alu_eq u_alu_eq (
@@ -414,7 +414,7 @@ module vec_alu (
           result_o = {32'b0, a_i[31:0]};
         end else begin
           rne_shifted = {32'b0, ($signed(a_i[31:0]) >>> b_i[4:0])};
-          rne_half = a_i[6'(b_i[4:0] - 5'd1)];
+          rne_half = a_i[6'(b_i[4:0]-5'd1)];
           rne_sticky = |(a_i[31:0] & ((32'd1 << (b_i[4:0] - 5'd1)) - 32'd1));
           rne_round = rne_half && (rne_sticky || rne_shifted[0]);
           result_o = {32'b0, (rne_shifted[31:0] + {31'b0, rne_round})};
@@ -430,7 +430,7 @@ module vec_alu (
           result_o = a_i;
         end else begin
           rne_shifted = $signed(a_i) >>> b_i[5:0];
-          rne_half = a_i[b_i[5:0] - 6'd1];
+          rne_half = a_i[b_i[5:0]-6'd1];
           rne_sticky = |(a_i & ((64'd1 << (b_i[5:0] - 6'd1)) - 64'd1));
           rne_round = rne_half && (rne_sticky || rne_shifted[0]);
           result_o = rne_shifted + {63'b0, rne_round};
@@ -444,6 +444,6 @@ module vec_alu (
       end
 
     endcase
-end
+  end
 
 endmodule
