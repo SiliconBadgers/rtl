@@ -39,15 +39,17 @@ The runner builds and runs every configuration in its `CONFIGS` table:
 
 - **PE:** three builds, at two widths, with and without `Int4` and `Scale`.
 - **Array:** eleven shapes and modes, three of them block-scaled (INT8, INT4, and the narrowest `AccW` = 25 with block size 32).
-- **Wrapper:** ten configurations cover shapes, read latencies from 1 to 40, ready rates,
+- **Wrapper:** twelve configurations cover shapes, read latencies from 1 to 40, ready rates,
   buffer depths, block size 32, a 256-bit SRAM row (several writes per tile, stalled and
-  always ready), and builds without `Int4` and without `Scale`.
+  always ready), builds without `Int4` and without `Scale`, and a write-back queue of one
+  and of two rows behind a slow write port (`OutDepth`; with `RequireOutStall` each run must
+  see the array hold a finished row because the queue is full).
 - **Real tensors:** `wrap_8x8_golden`, `bpu_sa_sram_wrapper_golden_tb` on the generated vectors.
 - **Output conversion:** `convert_4lanes`, `bpu_sa_output_convert_tb` with four lanes.
 - **Record decoder:** `decoder`, `bpu_sa_command_decoder_tb`.
 
 The array, wrapper, real-tensor, conversion and decoder configurations run three seeds each. The
-default runner plans 27 configurations and 75 runs; the summary records which actually ran and
+default runner plans 29 configurations and 81 runs; the summary records which actually ran and
 passed.
 
 The runner enforces compile and simulation timeouts. It exits nonzero on a compile error, a failed or missing result, or a timeout. Each run must end with one `RESULT ... status=PASS` line and a zero exit status; the testbenches call `$fatal(1, ...)` on any failure.

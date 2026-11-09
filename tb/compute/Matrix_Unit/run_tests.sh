@@ -61,6 +61,8 @@ CONFIGS=(
   "wrap_8x8_int8only|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 Int4=0 Latency=4 ReadyPct=70|all|$M"
   "wrap_8x8_data256|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 DataW=256 SizeW=6 Latency=3 ReadyPct=60|all|$M"
   "wrap_8x8_data256_ready100|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 DataW=256 SizeW=6 Latency=1 ReadyPct=100|all|$M"
+  "wrap_8x8_data256_out1|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 DataW=256 SizeW=6 OutDepth=1 RequireOutStall=1 Latency=2 ReadyPct=40|all|$M"
+  "wrap_8x8_data256_out2|bpu_sa_sram_wrapper_tb|Rows=8 Cols=8 DataW=256 SizeW=6 OutDepth=2 RequireOutStall=1 Latency=6 ReadyPct=25|all|$M"
   "wrap_2x128_noscale_acc20|bpu_sa_sram_wrapper_tb|Rows=2 Cols=128 AccW=20 Scale=0 BufRows=3 Latency=3 ReadyPct=90 Commands=4 MaxK=300|all|$M"
   "wrap_1x1_minimal|bpu_sa_sram_wrapper_tb|Rows=1 Cols=1 AccW=16 Int4=0 Scale=0 Latency=2 ReadyPct=60|all|$M"
   "wrap_8x8_golden|bpu_sa_sram_wrapper_golden_tb|Latency=5 ReadyPct=75|all|bpu_sa_golden_vectors_pkg.sv $M"

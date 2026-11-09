@@ -41,7 +41,7 @@ before relying on the port and module figures.
 The wrapper testbench also covers logical shapes with junk outside M × N, short final scale
 blocks, output encodings 1–4 at their packed sizes, milestone counts and decode errors.
 
-The default runner plans 75 configuration/seed pairs across 27 configurations. These counts
+The default runner plans 81 configuration/seed pairs across 29 configurations. These counts
 describe the selected tests; results for a revision belong in its generated summary and logs.
 
 **The arbiter model** follows the [arbiter I/O scheme](../../memory/sram_arbiter_io_scheme.md):

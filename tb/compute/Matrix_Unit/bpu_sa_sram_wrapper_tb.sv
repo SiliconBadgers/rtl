@@ -7,11 +7,13 @@
 // (tb/compute/Matrix_Unit/run_tests.sh) runs several shapes, port widths, latencies,
 // feature sets and seeds.
 //
-// Parameters: Rows, Cols, AccW, DataW, SizeW, BufRows, Int4, Scale, BlockK (the
-// wrapper); Latency, ReadyPct (the model's read latency and request-ready rate;
+// Parameters: Rows, Cols, AccW, DataW, SizeW, BufRows, Int4, Scale, BlockK, OutDepth
+// (the wrapper); Latency, ReadyPct (the model's read latency and request-ready rate;
 // writes commit on the edge after acceptance, fixed); WriteResetWaitCycles (bounded
 // attempt to reach reset between a write's acceptance and its commit; zero
-// exercises the prerequisite guard); Commands (random commands per random phase),
+// exercises the prerequisite guard); RequireOutStall (the run must see the array
+// hold a finished row because the write-back queue is full, so a small OutDepth
+// really exercises backpressure); Commands (random commands per random phase),
 // MaxK (cap on unscaled K), MaxBlocks (cap on random block counts) and Seed.
 // Plusargs:
 //   +seed=<n>       random seed (default: Seed)
@@ -122,8 +124,10 @@ module bpu_sa_sram_wrapper_tb;
   parameter bit Int4 = 1'b1;
   parameter bit Scale = 1'b1;
   parameter int BlockK = 16;
+  parameter int OutDepth = 9;
   parameter int Latency = 4;
   parameter int WriteResetWaitCycles = 100000;
+  parameter bit RequireOutStall = 1'b0;
   parameter int ReadyPct = 70;
   parameter int Commands = 16;
   parameter int MaxK = 600;
@@ -241,6 +245,7 @@ module bpu_sa_sram_wrapper_tb;
   int in_flight;
   int write_in_flight;
   int completed_writes;
+  int out_stalls;  // cycles a finished row waited because the write-back queue was full
 
   // Reference model.
   int a_val[Rows][K_MAX];
@@ -294,17 +299,18 @@ module bpu_sa_sram_wrapper_tb;
   string status;
 
   bpu_sa_sram_wrapper #(
-    .Rows   (Rows),
-    .Cols   (Cols),
-    .AccW   (AccW),
-    .AddrW  (ADDR_WIDTH),
-    .DataW  (DataW),
-    .SizeW  (SizeW),
-    .KW     (K_WIDTH),
-    .BufRows(BufRows),
-    .Int4   (Int4),
-    .Scale  (Scale),
-    .BlockK (BlockK)
+    .Rows    (Rows),
+    .Cols    (Cols),
+    .AccW    (AccW),
+    .AddrW   (ADDR_WIDTH),
+    .DataW   (DataW),
+    .SizeW   (SizeW),
+    .KW      (K_WIDTH),
+    .BufRows (BufRows),
+    .Int4    (Int4),
+    .Scale   (Scale),
+    .BlockK  (BlockK),
+    .OutDepth(OutDepth)
   ) u_dut (
     .clk_i                  (clk),
     .rst_ni                 (rst_n),
@@ -384,6 +390,14 @@ module bpu_sa_sram_wrapper_tb;
         $display("bpu_sa_sram_wrapper_tb: milestone_inc_o = %b", milestone_inc);
       end
       progress <= progress + int'(milestone_inc);
+    end
+  end
+
+  // Write-back backpressure, observed inside the unit: the array offers a finished row
+  // and the wrapper holds it because every write-back queue entry is taken.
+  always @(posedge clk) begin
+    if (rst_n === 1'b1 && u_dut.sa_out_valid === 1'b1 && u_dut.sa_out_ready === 1'b0) begin
+      out_stalls++;
     end
   end
 
@@ -1314,6 +1328,7 @@ module bpu_sa_sram_wrapper_tb;
     tb_decode_error  = 1'b0;
     set_format(0, 0, 0, 0);
     resets               = 0;
+    out_stalls           = 0;
     ksteps               = 0;
     busy_cycles          = 0;
     c_checked            = 0;
@@ -1594,7 +1609,7 @@ module bpu_sa_sram_wrapper_tb;
         || dependent_checks != 2 * Rows * Cols
         || pending_write_resets != 1 || cancelled_writes == 0
         || completed_writes + cancelled_writes != writes
-        || (ReadyPct < 100 && req_stalls == 0)) begin
+        || (ReadyPct < 100 && req_stalls == 0) || (RequireOutStall && out_stalls == 0)) begin
       status = "FAIL";
     end else begin
       status = "PASS";
@@ -1607,8 +1622,8 @@ module bpu_sa_sram_wrapper_tb;
            scaled_done, int4_done, illegal_done, resets);
     $write(" ksteps=%0d busy_cycles=%0d k_limit=%0d cycles_int8=%0d cycles_int4=%0d", ksteps,
            busy_cycles, K_LIMIT, k_limit_cycles8, k_limit_cycles4);
-    $write(" reads=%0d writes=%0d req_stalls=%0d c_checked=%0d", reads, writes, req_stalls,
-           c_checked);
+    $write(" reads=%0d writes=%0d req_stalls=%0d out_depth=%0d out_stalls=%0d c_checked=%0d",
+           reads, writes, req_stalls, OutDepth, out_stalls, c_checked);
     $write(" written=%0d kept=%0d continued=%0d continued_scaled=%0d", written_done, kept_done,
            continued_done, continued_scaled);
     $write(" masked=%0d partial_blocks=%0d", masked_done, partial_done);
