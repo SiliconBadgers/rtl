@@ -23,10 +23,9 @@ module sram_arb_addr_decode
   assign read_path_en_o  = ~unified_req_i.is_write;
   assign write_path_en_o =  unified_req_i.is_write;
 
-  //Address bits below the bank word are not used 
+//Address bits below the bank word are not used
   assign unused_addr = ^{unified_req_i.addr[ADDR_WIDTH-1:SRAM_ADDR_BITS],
                          unified_req_i.addr[BANK_WORD_BITS-1:0],
                          unified_req_i.wdata, unified_req_i.size_bytes,
                          unified_req_i.transpose, unified_req_i.tag};
-
 endmodule

@@ -77,5 +77,4 @@ module sram_arb_req_mux
   assign unused_row_offset = ^{matrix_req_addr_i[ROW_OFFSET_BITS-1:0],
                                mm_req_addr_i[ROW_OFFSET_BITS-1:0],
                                vec_addr[ROW_OFFSET_BITS-1:0]};
-
 endmodule

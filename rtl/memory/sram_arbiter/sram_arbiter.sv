@@ -1,9 +1,8 @@
 // sram_arbiter: shares the 8 MB SRAM between the Matrix engine, four Vector lanes and the
 // Memory Manager
-
 // Request channels are ready/valid; response and scoreboard channels are one-cycle signals. 
 // One request is sent to the SRAM per cycle, in acceptance order.
-// Reset: the only state is the Block 4 busy counters, cleared by rst_ni. 
+// Reset: the only state is the Block 4 busy counters, cleared by rst_ni.
 module sram_arbiter
   import sram_arbiter_pkg::*;
 #(
@@ -186,6 +185,5 @@ module sram_arbiter
   // bank_id and bank_offset are decoded for the SRAM wrapper and for debug
   // the SRAM takes the full row address on sram_addr_o
   assign unused_decode = ^{bank_id, bank_offset};
-
 
 endmodule

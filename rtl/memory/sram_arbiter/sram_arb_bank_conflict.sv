@@ -14,10 +14,10 @@ module sram_arb_bank_conflict
   output logic                 conflict_o
 );
 
-  localparam int unsigned CntWidth = (BankBusyCycles > 0) ? $clog2(BankBusyCycles + 1) : 1;
+  localparam int unsigned CNT_WIDTH = (BankBusyCycles > 0) ? $clog2(BankBusyCycles + 1) : 1;
 
-  logic [NUM_LANES-1:0][CntWidth-1:0] stall_cycles_d;
-  logic [NUM_LANES-1:0][CntWidth-1:0] stall_cycles_q;
+  logic [NUM_LANES-1:0][CNT_WIDTH-1:0] stall_cycles_d;
+  logic [NUM_LANES-1:0][CNT_WIDTH-1:0] stall_cycles_q;
   logic [NUM_LANES-1:0]               group_busy;
 
   //kept in its own block: computing it inside the next-state block would create a false combinational loop through conflict_o -> can_proceed -> issue_i
@@ -31,7 +31,7 @@ module sram_arb_bank_conflict
     for (int unsigned g = 0; g < NUM_LANES; g++) begin
       stall_cycles_d[g] = stall_cycles_q[g];
       if (issue_i && lane_mask_i[g]) begin
-        stall_cycles_d[g] = CntWidth'(BankBusyCycles);
+        stall_cycles_d[g] = CNT_WIDTH'(BankBusyCycles);
       end else if (group_busy[g]) begin
         stall_cycles_d[g] = stall_cycles_q[g] - 1'b1;
       end
