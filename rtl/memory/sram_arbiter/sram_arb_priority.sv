@@ -4,17 +4,17 @@
 module sram_arb_priority
   import sram_arbiter_pkg::*;
 (
-  input  logic                 mm_valid_i,
-  input  logic                 matrix_valid_i,
-  input  logic [NUM_LANES-1:0] vec_valid_i,
-  output logic                 grant_valid_o,
-  output logic                 grant_mm_o,
-  output logic                 grant_matrix_o,
-  output logic [NUM_LANES-1:0] grant_vec_o,
-  output req_tag_e             grant_idx_o
+  input  logic                     mm_valid_i,
+  input  logic                     matrix_valid_i,
+  input  logic     [NUM_LANES-1:0] vec_valid_i,
+  output logic                     grant_valid_o,
+  output logic                     grant_mm_o,
+  output logic                     grant_matrix_o,
+  output logic     [NUM_LANES-1:0] grant_vec_o,
+  output req_tag_e                 grant_idx_o
 );
 
-  logic [NUM_LANES-1:0]     vec_first;      // lowest-index valid lane
+  logic [    NUM_LANES-1:0] vec_first;  // lowest-index valid lane
   logic [LANE_IDX_BITS-1:0] vec_first_idx;
 
   // Isolate the lowest set bit of vec_valid_i, then encode its index.

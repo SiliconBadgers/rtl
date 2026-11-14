@@ -10,7 +10,7 @@ module sram_arb_bank_conflict
   input  logic                 clk_i,
   input  logic                 rst_ni,
   input  logic [NUM_LANES-1:0] lane_mask_i,
-  input  logic                 issue_i,       // request sent to the SRAM this cycle
+  input  logic                 issue_i,      // request sent to the SRAM this cycle
   output logic                 conflict_o
 );
 
