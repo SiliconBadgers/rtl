@@ -24,8 +24,8 @@ if [ "$MODE" = "invalid" ]; then
   INVALID=1
 fi
 
-# RTL lint, all warnings, no waivers.
-verilator --lint-only -Wall -GBankBusyCycles="$BUSY" --top-module sram_arbiter $RTL
+# RTL lint, all warnings. Waiver: SYNCASYNCNET, raised by `disable iff (!rst_ni)` in the assertions.
+verilator --lint-only -Wall -Wno-SYNCASYNCNET -GBankBusyCycles="$BUSY" --top-module sram_arbiter $RTL
 
 # Testbench build, all warnings enabled except:
 #  - TIMESCALEMOD: only the testbench declares timeunit; the RTL has no delays and needs none.

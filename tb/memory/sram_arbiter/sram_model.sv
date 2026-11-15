@@ -42,7 +42,7 @@ module sram_model
   logic [     Latency-1:0][DATA_WIDTH-1:0] pipe_rdata_d;
   logic [ROW_IDX_BITS-1:0]                 row;
   logic                                    unused_addr;
-  logic                                    transpose_seen_q = 1'b0;  // report only the first one
+  logic                                    transpose_seen_q;  // report only the first one
 
   if (Latency < 1) begin : gen_latency_check
     $error("sram_model: Latency must be at least 1");
@@ -103,8 +103,10 @@ module sram_model
     pipe_rdata_q <= pipe_rdata_d;
   end
 
-  always_ff @(posedge clk_i) begin
-    if ((rd_req_i || wr_req_i) && transpose_i && !transpose_seen_q) begin
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if (!rst_ni) begin
+      transpose_seen_q <= 1'b0;
+    end else if ((rd_req_i || wr_req_i) && transpose_i && !transpose_seen_q) begin
       $warning("sram_model: transpose not modelled; transposed requests are not performed");
       transpose_seen_q <= 1'b1;
     end
