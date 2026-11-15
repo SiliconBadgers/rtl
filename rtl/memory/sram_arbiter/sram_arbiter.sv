@@ -186,4 +186,98 @@ module sram_arbiter
   // the SRAM takes the full row address on sram_addr_o
   assign unused_decode = ^{bank_id, bank_offset};
 
+`ifndef SYNTHESIS
+  // ---------------------------------------------------------------------------------------------
+  // Assertions
+  // ---------------------------------------------------------------------------------------------
+  GrantOneHot_A :
+  assert property (@(posedge clk_i) disable iff (!rst_ni) $onehot0(
+      {grant_mm, grant_matrix, grant_vec}
+  ));
+
+  SramReqExclusive_A :
+  assert property (@(posedge clk_i) disable iff (!rst_ni) !(sram_rd_req_o && sram_wr_req_o));
+
+  SramReqNeedsReady_A :
+  assert property (
+    @(posedge clk_i) disable iff (!rst_ni)
+    (sram_rd_req_o || sram_wr_req_o) |-> sram_req_ready_i
+  );
+
+  MmPriority_A :
+  assert property (
+    @(posedge clk_i) disable iff (!rst_ni)
+    mm_req_valid_i && sram_req_ready_i && !conflict |-> mm_req_ready_o
+  );
+
+  MatrixReqHeld_A :
+  assert property (
+    @(posedge clk_i) disable iff (!rst_ni)
+    matrix_req_valid_i && !matrix_req_ready_o |=> matrix_req_valid_i
+  );
+
+  MatrixReqStable_A :
+  assert property (
+    @(posedge clk_i) disable iff (!rst_ni)
+    matrix_req_valid_i && !matrix_req_ready_o |=> $stable(
+      {matrix_req_addr_i, matrix_req_is_write_i}
+  ));
+
+  MmReqHeld_A :
+  assert property (
+    @(posedge clk_i) disable iff (!rst_ni)
+    mm_req_valid_i && !mm_req_ready_o |=> mm_req_valid_i
+  );
+
+  MmReqStable_A :
+  assert property (
+    @(posedge clk_i) disable iff (!rst_ni)
+    mm_req_valid_i && !mm_req_ready_o |=> $stable(
+      {mm_req_addr_i, mm_req_is_write_i}
+  ));
+
+  RspOneHot_A :
+  assert property (@(posedge clk_i) disable iff (!rst_ni) $onehot0(
+      {matrix_rsp_valid_o, mm_rsp_valid_o, vec_rsp_valid_o}
+  ));
+
+`ifndef SRAM_ARB_NO_INPUT_ASSERTS
+  // Input-legality checks. The invalid-input test builds with SRAM_ARB_NO_INPUT_ASSERTS defined
+  // so it can drive illegal requests and check the defined illegal-input behaviour.
+  MmReqAligned_A :
+  assert property (
+    @(posedge clk_i) disable iff (!rst_ni)
+    mm_req_valid_i |-> (mm_req_addr_i[ROW_OFFSET_BITS-1:0] == '0)
+  );
+
+  MatrixReqAligned_A :
+  assert property (
+    @(posedge clk_i) disable iff (!rst_ni)
+    matrix_req_valid_i |-> (matrix_req_addr_i[ROW_OFFSET_BITS-1:0] == '0)
+  );
+
+  MatrixSizeLegal_A :
+  assert property (
+    @(posedge clk_i) disable iff (!rst_ni)
+    matrix_req_valid_i |-> (matrix_req_size_bytes_i inside {[1:ROW_BYTES]})
+  );
+
+  for (genvar lane = 0; lane < NUM_LANES; lane++) begin : gen_vec_checks
+    VecReqAligned_A :
+    assert property (
+      @(posedge clk_i) disable iff (!rst_ni)
+      vec_req_valid_i[lane] |->
+        (vec_req_addr_i[lane][ROW_OFFSET_BITS-1:0] == {LANE_IDX_BITS'(lane),
+                                                       LANE_OFFSET_BITS'(0)})
+    );
+  end
+
+  RspTagLegal_A :
+  assert property (
+    @(posedge clk_i) disable iff (!rst_ni)
+    sram_rsp_valid_i |-> (sram_rsp_tag_i <= TagVec3)
+  );
+`endif
+`endif
+
 endmodule
