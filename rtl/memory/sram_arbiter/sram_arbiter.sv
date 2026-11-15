@@ -192,7 +192,7 @@ module sram_arbiter
   // ---------------------------------------------------------------------------------------------
   GrantOneHot_A :
   assert property (@(posedge clk_i) disable iff (!rst_ni) $onehot0(
-      {grant_mm, grant_matrix, grant_vec}
+    {grant_mm, grant_matrix, grant_vec}
   ));
 
   SramReqExclusive_A :
@@ -220,7 +220,7 @@ module sram_arbiter
   assert property (
     @(posedge clk_i) disable iff (!rst_ni)
     matrix_req_valid_i && !matrix_req_ready_o |=> $stable(
-      {matrix_req_addr_i, matrix_req_is_write_i}
+    {matrix_req_addr_i, matrix_req_is_write_i}
   ));
 
   MmReqHeld_A :
@@ -233,12 +233,12 @@ module sram_arbiter
   assert property (
     @(posedge clk_i) disable iff (!rst_ni)
     mm_req_valid_i && !mm_req_ready_o |=> $stable(
-      {mm_req_addr_i, mm_req_is_write_i}
+    {mm_req_addr_i, mm_req_is_write_i}
   ));
 
   RspOneHot_A :
   assert property (@(posedge clk_i) disable iff (!rst_ni) $onehot0(
-      {matrix_rsp_valid_o, mm_rsp_valid_o, vec_rsp_valid_o}
+    {matrix_rsp_valid_o, mm_rsp_valid_o, vec_rsp_valid_o}
   ));
 
 `ifndef SRAM_ARB_NO_INPUT_ASSERTS
