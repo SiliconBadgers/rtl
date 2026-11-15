@@ -18,7 +18,7 @@ module sram_arb_bank_conflict
 
   logic [NUM_LANES-1:0][CNT_WIDTH-1:0] stall_cycles_d;
   logic [NUM_LANES-1:0][CNT_WIDTH-1:0] stall_cycles_q;
-  logic [NUM_LANES-1:0]               group_busy;
+  logic [NUM_LANES-1:0]                group_busy;
 
   //kept in its own block: computing it inside the next-state block would create a false combinational loop through conflict_o -> can_proceed -> issue_i
   always_comb begin
