@@ -1,0 +1,15 @@
+$ /usr/bin/python3 /tmp/rtl-pr29.k6BXOeL0/scripts/vcs.py --timeout 120 run /tmp/rtl-pr29.k6BXOeL0/build/command_queues-final/scoreboard-invalid-map/simv
+$ synopsys-run /tmp/rtl-pr29.k6BXOeL0/build/command_queues-final/scoreboard-invalid-map/simv -exitstatus
+Info: [VCS_SAVE_RESTORE_INFO] ASLR (Address Space Layout Randomization) is detected on the machine. To enable $save functionality, ASLR will be switched off and simv re-executed.
+Please use '-no_save' simv switch to avoid re-execution or '-suppress=ASLR_DETECTED_INFO' to suppress this message.
+Chronologic VCS simulator copyright 1991-2026
+Contains Synopsys proprietary information.
+Compiler version Y-2026.03_Full64; Runtime version Y-2026.03_Full64;  Nov 16 12:17 2026
+"/tmp/rtl-pr29.k6BXOeL0/rtl/control/shared_scoreboard.sv", 108: shared_scoreboard_tb.u_scoreboard.gen_dependencies[0].gen_invalid_mapping.WaitMappingValid_A: started at 0ps failed at 0ps
+	Offending 'gen_dependencies[0].MAPPING_VALID'
+Fatal: "/tmp/rtl-pr29.k6BXOeL0/rtl/control/shared_scoreboard.sv", 108: shared_scoreboard_tb.u_scoreboard.gen_dependencies[0].gen_invalid_mapping.WaitMappingValid_A: at time 0 ps
+Set valid WaitCounter0/1 indices for queue 0
+$finish called from file "/tmp/rtl-pr29.k6BXOeL0/rtl/control/shared_scoreboard.sv", line 108.
+$finish at simulation time                    0
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 0 ps

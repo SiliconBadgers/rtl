@@ -1,7 +1,10 @@
 # Matrix unit specification
 
-This document proposes the Matrix interface and behavior. Implementation and
-verification are separate work.
+This document proposes the Matrix interface and behavior. The
+[current I/O scheme](matrix_unit_io_scheme.md) describes the implemented baseline.
+Logical edge masks, partial scale blocks, additional output conversions, command
+decoding, overlapping K contributions, and ordered progress pulses remain
+proposed extensions; their implementation and verification are separate work.
 
 The matrix unit computes `C = A × B`, with `A` of shape `M × K` and `B` of
 shape `K × N`. Matrix–vector multiplication uses `N = 1`; an outer product uses
