@@ -44,3 +44,8 @@ test-f2-hbm-latency:
 
 test-f2-hbm-latency-cae:
 	$(RUN_PYTHON) scripts/f2_hbm.py remote --bench latency $(F2_HBM_ARGS)
+
+.PHONY: test-command-queues
+COMMAND_QUEUES_ARGS ?=
+test-command-queues:
+	$(RUN_PYTHON) scripts/command_queues.py $(COMMAND_QUEUES_ARGS)

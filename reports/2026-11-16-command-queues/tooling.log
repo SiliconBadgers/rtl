@@ -1,0 +1,6 @@
+"/tmp/pr31-tools/uv" run --locked "python3" -m unittest discover -s scripts -p 'test_*.py'
+.........................
+----------------------------------------------------------------------
+Ran 25 tests in 2.423s
+
+OK

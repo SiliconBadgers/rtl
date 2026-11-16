@@ -1,0 +1,4 @@
+"/tmp/pr31-tools/uv" run --locked --group dev "python3" scripts/check_style.py
+All checks passed!
+9 files already formatted
+Style checks passed for 14 SystemVerilog sources
