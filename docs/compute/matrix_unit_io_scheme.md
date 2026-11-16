@@ -1,5 +1,12 @@
 # Matrix Unit I/O Scheme
 
+This guide describes the current RTL. The [Matrix unit specification](matrix_unit_spec.md)
+proposes logical M/N masks, partial scale blocks, additional output conversions,
+a command decoder, overlapping K contributions, and ordered progress pulses.
+Those extensions are not implemented by the wrapper described here. Its existing
+`done_o` behavior is distinct from the proposed fixed-cycle write-completion
+tracking and `complete_o` milestone.
+
 The Matrix Unit computes one tile of `C = A · B` per command on an output-stationary
 systolic array:
 - A holds INT8 activations;
@@ -13,8 +20,8 @@ The top level is `bpu_sa_sram_wrapper`. It takes one command at a time and works
 2. runs the array;
 3. writes C back through the same port.
 
-The command interface and the matrix port below are the ones the final Matrix Unit keeps. **Update
-this document alongside RTL changes.** The RTL header comments are the detailed reference:
+The command interface and matrix port below describe the current implementation.
+**Update this document alongside RTL changes.** The RTL header comments are the detailed reference:
 [bpu_sa_sram_wrapper.sv](../../rtl/compute/Matrix_Unit/bpu_sa_sram_wrapper.sv) for the unit and
 [bpu_sa_array.sv](../../rtl/compute/Matrix_Unit/bpu_sa_array.sv) for the array. Diagrams are in
 [matrix_unit/](matrix_unit/README.md).
@@ -164,8 +171,9 @@ largest values come from two negative limits multiplied together:
 | Unscaled sum over K | at most `K · 2^14` | exact while K < 2^(AccW − 15) |
 | Block-scaled sum (Q23.24) | below 2^23 ≈ 8.4 million, in steps of 2^−24 ≈ 6·10^−8 | 48 |
 
-**What is decided and what is assumed.** No written specification fixes the block-scaled
-numerics yet, so this implementation marks its choices:
+**What is decided and what is assumed.** The [proposed specification](matrix_unit_spec.md)
+defines block-scaled numerics and additional output formats for review. The table
+below records the current implementation's choices and their original basis:
 
 | Choice | Status |
 | --- | --- |
@@ -366,8 +374,9 @@ yet.
   bf16 scales, Q23.24 in 48 bits, binary32 output, and partial blocks. Two related questions are
   also open: how activation scales are grouped (here one per row and block), and whether
   per-tensor scales are folded into `sB`.
-- **Requantization to INT8**, which the compute-team decisions ask for, needs a specification of
-  the scale, rounding and saturation.
+- **Requantization to INT8**, which the compute-team decisions ask for, is defined for review
+  in the [proposed output contract](matrix_unit_spec.md#output-representations); implementation
+  and verification remain open.
 - **Arbiter reset contract:** dropping in-flight responses on reset is the arbiter's proposed
   contract and still needs confirmation.
 - **Command source:** a sequencer or RISC-V command issuer will drive the command port. Its
