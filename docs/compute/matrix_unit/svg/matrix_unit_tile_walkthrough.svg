@@ -1,0 +1,625 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1540" height="660" viewBox="0 0 1540 660"><defs><marker id="arrow" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#B89A9A"/></marker></defs>
+<rect width="1540" height="660" fill="#050303"/>
+<circle cx="32" cy="21" r="12" fill="#C5050C" stroke="none"/>
+<text x="32" y="27" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#FFFFFF" text-anchor="middle" font-weight="bold" opacity="1.0">1</text>
+<text x="52" y="28" font-family="DM Sans, Segoe UI, sans-serif" font-size="22" xml:space="preserve"><tspan fill="#EF6B70" font-weight="bold">Cycle 5</tspan><tspan fill="#F2E6E6" font-weight="normal">  ·  filling</tspan></text>
+<rect x="20" y="80" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="37.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">4</text>
+<rect x="58" y="80" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="75.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">3</text>
+<rect x="96" y="80" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="113.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">2</text>
+<rect x="134" y="80" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="151.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">1</text>
+<rect x="172" y="80" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="189.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">0</text>
+<rect x="210" y="80" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="248" y="80" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="286" y="80" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="20" y="118" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="37.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">3</text>
+<rect x="58" y="118" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="75.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">2</text>
+<rect x="96" y="118" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="113.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">1</text>
+<rect x="134" y="118" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="151.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">0</text>
+<rect x="172" y="118" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="210" y="118" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="248" y="118" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="286" y="118" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="20" y="156" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="37.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">2</text>
+<rect x="58" y="156" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="75.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">1</text>
+<rect x="96" y="156" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="113.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">0</text>
+<rect x="134" y="156" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="172" y="156" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="210" y="156" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="248" y="156" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="286" y="156" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="20" y="194" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="37.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">1</text>
+<rect x="58" y="194" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="75.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">0</text>
+<rect x="96" y="194" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="134" y="194" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="172" y="194" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="210" y="194" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="248" y="194" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="286" y="194" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="20" y="232" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="37.0" y="255" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">0</text>
+<rect x="58" y="232" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="96" y="232" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="134" y="232" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="172" y="232" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="210" y="232" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="248" y="232" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="286" y="232" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="20" y="270" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="58" y="270" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="96" y="270" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="134" y="270" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="172" y="270" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="210" y="270" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="248" y="270" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="286" y="270" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="20" y="308" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="58" y="308" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="96" y="308" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="134" y="308" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="172" y="308" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="210" y="308" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="248" y="308" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="286" y="308" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="20" y="346" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="58" y="346" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="96" y="346" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="134" y="346" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="172" y="346" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="210" y="346" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="248" y="346" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<rect x="286" y="346" width="34" height="34" rx="4" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<text x="20" y="412" font-family="DM Sans, Segoe UI, sans-serif" font-size="20" fill="#F2E6E6" text-anchor="start" font-weight="normal" opacity="1.0">k-step 0 has reached PEs with</text>
+<text x="20" y="439" font-family="DM Sans, Segoe UI, sans-serif" font-size="20" fill="#B89A9A" text-anchor="start" font-weight="normal" opacity="1.0">i + j ≤ 4; the rest add zeros.</text>
+<text x="20" y="466" font-family="DM Sans, Segoe UI, sans-serif" font-size="20" fill="#B89A9A" text-anchor="start" font-weight="normal" opacity="1.0">Number = k added this cycle.</text>
+<circle cx="417" cy="21" r="12" fill="#C5050C" stroke="none"/>
+<text x="417" y="27" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#FFFFFF" text-anchor="middle" font-weight="bold" opacity="1.0">2</text>
+<text x="437" y="28" font-family="DM Sans, Segoe UI, sans-serif" font-size="22" xml:space="preserve"><tspan fill="#EF6B70" font-weight="bold">Cycle 40</tspan><tspan fill="#F2E6E6" font-weight="normal">  ·  all PEs busy</tspan></text>
+<rect x="405" y="80" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="422.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">39</text>
+<rect x="443" y="80" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="460.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">38</text>
+<rect x="481" y="80" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="498.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">37</text>
+<rect x="519" y="80" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="536.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">36</text>
+<rect x="557" y="80" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="574.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">35</text>
+<rect x="595" y="80" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="612.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">34</text>
+<rect x="633" y="80" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="650.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">33</text>
+<rect x="671" y="80" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="688.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">32</text>
+<rect x="405" y="118" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="422.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">38</text>
+<rect x="443" y="118" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="460.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">37</text>
+<rect x="481" y="118" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="498.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">36</text>
+<rect x="519" y="118" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="536.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">35</text>
+<rect x="557" y="118" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="574.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">34</text>
+<rect x="595" y="118" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="612.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">33</text>
+<rect x="633" y="118" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="650.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">32</text>
+<rect x="671" y="118" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="688.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">31</text>
+<rect x="405" y="156" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="422.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">37</text>
+<rect x="443" y="156" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="460.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">36</text>
+<rect x="481" y="156" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="498.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">35</text>
+<rect x="519" y="156" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="536.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">34</text>
+<rect x="557" y="156" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="574.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">33</text>
+<rect x="595" y="156" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="612.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">32</text>
+<rect x="633" y="156" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="650.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">31</text>
+<rect x="671" y="156" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="688.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">30</text>
+<rect x="405" y="194" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="422.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">36</text>
+<rect x="443" y="194" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="460.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">35</text>
+<rect x="481" y="194" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="498.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">34</text>
+<rect x="519" y="194" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="536.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">33</text>
+<rect x="557" y="194" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="574.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">32</text>
+<rect x="595" y="194" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="612.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">31</text>
+<rect x="633" y="194" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="650.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">30</text>
+<rect x="671" y="194" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="688.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">29</text>
+<rect x="405" y="232" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="422.0" y="255" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">35</text>
+<rect x="443" y="232" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="460.0" y="255" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">34</text>
+<rect x="481" y="232" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="498.0" y="255" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">33</text>
+<rect x="519" y="232" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="536.0" y="255" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">32</text>
+<rect x="557" y="232" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="574.0" y="255" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">31</text>
+<rect x="595" y="232" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="612.0" y="255" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">30</text>
+<rect x="633" y="232" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="650.0" y="255" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">29</text>
+<rect x="671" y="232" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="688.0" y="255" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">28</text>
+<rect x="405" y="270" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="422.0" y="293" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">34</text>
+<rect x="443" y="270" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="460.0" y="293" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">33</text>
+<rect x="481" y="270" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="498.0" y="293" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">32</text>
+<rect x="519" y="270" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="536.0" y="293" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">31</text>
+<rect x="557" y="270" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="574.0" y="293" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">30</text>
+<rect x="595" y="270" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="612.0" y="293" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">29</text>
+<rect x="633" y="270" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="650.0" y="293" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">28</text>
+<rect x="671" y="270" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="688.0" y="293" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">27</text>
+<rect x="405" y="308" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="422.0" y="331" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">33</text>
+<rect x="443" y="308" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="460.0" y="331" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">32</text>
+<rect x="481" y="308" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="498.0" y="331" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">31</text>
+<rect x="519" y="308" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="536.0" y="331" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">30</text>
+<rect x="557" y="308" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="574.0" y="331" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">29</text>
+<rect x="595" y="308" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="612.0" y="331" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">28</text>
+<rect x="633" y="308" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="650.0" y="331" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">27</text>
+<rect x="671" y="308" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="688.0" y="331" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">26</text>
+<rect x="405" y="346" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="422.0" y="369" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">32</text>
+<rect x="443" y="346" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="460.0" y="369" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">31</text>
+<rect x="481" y="346" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="498.0" y="369" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">30</text>
+<rect x="519" y="346" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="536.0" y="369" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">29</text>
+<rect x="557" y="346" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="574.0" y="369" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">28</text>
+<rect x="595" y="346" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="612.0" y="369" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">27</text>
+<rect x="633" y="346" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="650.0" y="369" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">26</text>
+<rect x="671" y="346" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="688.0" y="369" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">25</text>
+<text x="405" y="412" font-family="DM Sans, Segoe UI, sans-serif" font-size="20" fill="#F2E6E6" text-anchor="start" font-weight="normal" opacity="1.0">PE(i,j) adds k = 39 − i − j.</text>
+<text x="405" y="439" font-family="DM Sans, Segoe UI, sans-serif" font-size="20" fill="#B89A9A" text-anchor="start" font-weight="normal" opacity="1.0">One k-step per anti-diagonal;</text>
+<text x="405" y="466" font-family="DM Sans, Segoe UI, sans-serif" font-size="20" fill="#B89A9A" text-anchor="start" font-weight="normal" opacity="1.0">64 MACs every cycle.</text>
+<circle cx="802" cy="21" r="12" fill="#C5050C" stroke="none"/>
+<text x="802" y="27" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#FFFFFF" text-anchor="middle" font-weight="bold" opacity="1.0">3</text>
+<text x="822" y="28" font-family="DM Sans, Segoe UI, sans-serif" font-size="22" xml:space="preserve"><tspan fill="#EF6B70" font-weight="bold">Cycle 70</tspan><tspan fill="#F2E6E6" font-weight="normal">  ·  last ripples</tspan></text>
+<rect x="790" y="80" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="807.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">5</text>
+<rect x="814" y="83" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="828" y="80" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="845.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">4</text>
+<rect x="852" y="83" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="866" y="80" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="883.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">3</text>
+<rect x="890" y="83" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="904" y="80" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="921.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">2</text>
+<rect x="928" y="83" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="942" y="80" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="959.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">1</text>
+<rect x="966" y="83" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="980" y="80" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="997.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">0</text>
+<rect x="1004" y="83" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1018" y="80" width="34" height="34" rx="4" fill="#C5050C" stroke="#EF6B70" stroke-width="1.5"/>
+<text x="1035.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#FFFFFF" text-anchor="middle" font-weight="bold" opacity="1.0">63</text>
+<rect x="1056" y="80" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="1073.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">62</text>
+<rect x="790" y="118" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="807.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">4</text>
+<rect x="814" y="121" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="828" y="118" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="845.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">3</text>
+<rect x="852" y="121" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="866" y="118" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="883.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">2</text>
+<rect x="890" y="121" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="904" y="118" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="921.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">1</text>
+<rect x="928" y="121" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="942" y="118" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="959.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">0</text>
+<rect x="966" y="121" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="980" y="118" width="34" height="34" rx="4" fill="#C5050C" stroke="#EF6B70" stroke-width="1.5"/>
+<text x="997.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#FFFFFF" text-anchor="middle" font-weight="bold" opacity="1.0">63</text>
+<rect x="1018" y="118" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="1035.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">62</text>
+<rect x="1056" y="118" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="1073.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">61</text>
+<rect x="790" y="156" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="807.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">3</text>
+<rect x="814" y="159" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="828" y="156" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="845.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">2</text>
+<rect x="852" y="159" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="866" y="156" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="883.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">1</text>
+<rect x="890" y="159" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="904" y="156" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="921.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">0</text>
+<rect x="928" y="159" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="942" y="156" width="34" height="34" rx="4" fill="#C5050C" stroke="#EF6B70" stroke-width="1.5"/>
+<text x="959.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#FFFFFF" text-anchor="middle" font-weight="bold" opacity="1.0">63</text>
+<rect x="980" y="156" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="997.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">62</text>
+<rect x="1018" y="156" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="1035.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">61</text>
+<rect x="1056" y="156" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="1073.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">60</text>
+<rect x="790" y="194" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="807.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">2</text>
+<rect x="814" y="197" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="828" y="194" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="845.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">1</text>
+<rect x="852" y="197" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="866" y="194" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="883.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">0</text>
+<rect x="890" y="197" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="904" y="194" width="34" height="34" rx="4" fill="#C5050C" stroke="#EF6B70" stroke-width="1.5"/>
+<text x="921.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#FFFFFF" text-anchor="middle" font-weight="bold" opacity="1.0">63</text>
+<rect x="942" y="194" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="959.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">62</text>
+<rect x="980" y="194" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="997.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">61</text>
+<rect x="1018" y="194" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="1035.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">60</text>
+<rect x="1056" y="194" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="1073.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">59</text>
+<rect x="790" y="232" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="807.0" y="255" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">1</text>
+<rect x="814" y="235" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="828" y="232" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="845.0" y="255" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">0</text>
+<rect x="852" y="235" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="866" y="232" width="34" height="34" rx="4" fill="#C5050C" stroke="#EF6B70" stroke-width="1.5"/>
+<text x="883.0" y="255" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#FFFFFF" text-anchor="middle" font-weight="bold" opacity="1.0">63</text>
+<rect x="904" y="232" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="921.0" y="255" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">62</text>
+<rect x="942" y="232" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="959.0" y="255" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">61</text>
+<rect x="980" y="232" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="997.0" y="255" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">60</text>
+<rect x="1018" y="232" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="1035.0" y="255" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">59</text>
+<rect x="1056" y="232" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="1073.0" y="255" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">58</text>
+<rect x="790" y="270" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="807.0" y="293" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">0</text>
+<rect x="814" y="273" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="828" y="270" width="34" height="34" rx="4" fill="#C5050C" stroke="#EF6B70" stroke-width="1.5"/>
+<text x="845.0" y="293" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#FFFFFF" text-anchor="middle" font-weight="bold" opacity="1.0">63</text>
+<rect x="866" y="270" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="883.0" y="293" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">62</text>
+<rect x="904" y="270" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="921.0" y="293" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">61</text>
+<rect x="942" y="270" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="959.0" y="293" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">60</text>
+<rect x="980" y="270" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="997.0" y="293" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">59</text>
+<rect x="1018" y="270" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="1035.0" y="293" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">58</text>
+<rect x="1056" y="270" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="1073.0" y="293" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">57</text>
+<rect x="790" y="308" width="34" height="34" rx="4" fill="#C5050C" stroke="#EF6B70" stroke-width="1.5"/>
+<text x="807.0" y="331" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#FFFFFF" text-anchor="middle" font-weight="bold" opacity="1.0">63</text>
+<rect x="828" y="308" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="845.0" y="331" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">62</text>
+<rect x="866" y="308" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="883.0" y="331" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">61</text>
+<rect x="904" y="308" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="921.0" y="331" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">60</text>
+<rect x="942" y="308" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="959.0" y="331" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">59</text>
+<rect x="980" y="308" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="997.0" y="331" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">58</text>
+<rect x="1018" y="308" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="1035.0" y="331" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">57</text>
+<rect x="1056" y="308" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="1073.0" y="331" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">56</text>
+<rect x="790" y="346" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="807.0" y="369" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">62</text>
+<rect x="828" y="346" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="845.0" y="369" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">61</text>
+<rect x="866" y="346" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="883.0" y="369" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">60</text>
+<rect x="904" y="346" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="921.0" y="369" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">59</text>
+<rect x="942" y="346" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="959.0" y="369" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">58</text>
+<rect x="980" y="346" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="997.0" y="369" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">57</text>
+<rect x="1018" y="346" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="1035.0" y="369" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">56</text>
+<rect x="1056" y="346" width="34" height="34" rx="4" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="1073.0" y="369" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="middle" font-weight="bold" opacity="1.0">55</text>
+<text x="790" y="412" font-family="DM Sans, Segoe UI, sans-serif" font-size="20" fill="#F2E6E6" text-anchor="start" font-weight="normal" opacity="1.0">k = 63 carries last: i + j = 6</text>
+<text x="790" y="439" font-family="DM Sans, Segoe UI, sans-serif" font-size="20" fill="#B89A9A" text-anchor="start" font-weight="normal" opacity="1.0">copies C to its shadow now.</text>
+<text x="790" y="466" font-family="DM Sans, Segoe UI, sans-serif" font-size="20" fill="#B89A9A" text-anchor="start" font-weight="normal" opacity="1.0">Up-left PEs run the next tile.</text>
+<circle cx="1187" cy="21" r="12" fill="#C5050C" stroke="none"/>
+<text x="1187" y="27" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#FFFFFF" text-anchor="middle" font-weight="bold" opacity="1.0">4</text>
+<text x="1207" y="28" font-family="DM Sans, Segoe UI, sans-serif" font-size="22" xml:space="preserve"><tspan fill="#EF6B70" font-weight="bold">Cycle 81</tspan><tspan fill="#F2E6E6" font-weight="normal">  ·  drain</tspan></text>
+<rect x="1175" y="80" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1192.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">16</text>
+<rect x="1199" y="83" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1213" y="80" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1230.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">15</text>
+<rect x="1237" y="83" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1251" y="80" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1268.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">14</text>
+<rect x="1275" y="83" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1289" y="80" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1306.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">13</text>
+<rect x="1313" y="83" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1327" y="80" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1344.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">12</text>
+<rect x="1351" y="83" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1365" y="80" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1382.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">11</text>
+<rect x="1389" y="83" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1403" y="80" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1420.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">10</text>
+<rect x="1427" y="83" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1441" y="80" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1458.0" y="103" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">9</text>
+<rect x="1465" y="83" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1175" y="118" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1192.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">15</text>
+<rect x="1199" y="121" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1213" y="118" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1230.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">14</text>
+<rect x="1237" y="121" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1251" y="118" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1268.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">13</text>
+<rect x="1275" y="121" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1289" y="118" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1306.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">12</text>
+<rect x="1313" y="121" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1327" y="118" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1344.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">11</text>
+<rect x="1351" y="121" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1365" y="118" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1382.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">10</text>
+<rect x="1389" y="121" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1403" y="118" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1420.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">9</text>
+<rect x="1427" y="121" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1441" y="118" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1458.0" y="141" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">8</text>
+<rect x="1465" y="121" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1175" y="156" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1192.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">14</text>
+<rect x="1199" y="159" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1213" y="156" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1230.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">13</text>
+<rect x="1237" y="159" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1251" y="156" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1268.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">12</text>
+<rect x="1275" y="159" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1289" y="156" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1306.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">11</text>
+<rect x="1313" y="159" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1327" y="156" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1344.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">10</text>
+<rect x="1351" y="159" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1365" y="156" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1382.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">9</text>
+<rect x="1389" y="159" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1403" y="156" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1420.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">8</text>
+<rect x="1427" y="159" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1441" y="156" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1458.0" y="179" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">7</text>
+<rect x="1465" y="159" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1175" y="194" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1192.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">13</text>
+<rect x="1199" y="197" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1213" y="194" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1230.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">12</text>
+<rect x="1237" y="197" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1251" y="194" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1268.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">11</text>
+<rect x="1275" y="197" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1289" y="194" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1306.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">10</text>
+<rect x="1313" y="197" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1327" y="194" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1344.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">9</text>
+<rect x="1351" y="197" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1365" y="194" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1382.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">8</text>
+<rect x="1389" y="197" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1403" y="194" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1420.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">7</text>
+<rect x="1427" y="197" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1441" y="194" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1458.0" y="217" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">6</text>
+<rect x="1465" y="197" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1175" y="232" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1192.0" y="255" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">12</text>
+<rect x="1199" y="235" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1213" y="232" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1230.0" y="255" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">11</text>
+<rect x="1237" y="235" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1251" y="232" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1268.0" y="255" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">10</text>
+<rect x="1275" y="235" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1289" y="232" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1306.0" y="255" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">9</text>
+<rect x="1313" y="235" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1327" y="232" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1344.0" y="255" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">8</text>
+<rect x="1351" y="235" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1365" y="232" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1382.0" y="255" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">7</text>
+<rect x="1389" y="235" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1403" y="232" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1420.0" y="255" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">6</text>
+<rect x="1427" y="235" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1441" y="232" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1458.0" y="255" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">5</text>
+<rect x="1465" y="235" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1175" y="270" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1192.0" y="293" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">11</text>
+<rect x="1199" y="273" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1213" y="270" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1230.0" y="293" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">10</text>
+<rect x="1237" y="273" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1251" y="270" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1268.0" y="293" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">9</text>
+<rect x="1275" y="273" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1289" y="270" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1306.0" y="293" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">8</text>
+<rect x="1313" y="273" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1327" y="270" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1344.0" y="293" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">7</text>
+<rect x="1351" y="273" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1365" y="270" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1382.0" y="293" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">6</text>
+<rect x="1389" y="273" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1403" y="270" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1420.0" y="293" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">5</text>
+<rect x="1427" y="273" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1441" y="270" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1458.0" y="293" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">4</text>
+<rect x="1465" y="273" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<rect x="1175" y="308" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1192.0" y="331" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">10</text>
+<rect x="1213" y="308" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1230.0" y="331" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">9</text>
+<rect x="1251" y="308" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1268.0" y="331" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">8</text>
+<rect x="1289" y="308" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1306.0" y="331" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">7</text>
+<rect x="1327" y="308" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1344.0" y="331" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">6</text>
+<rect x="1365" y="308" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1382.0" y="331" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">5</text>
+<rect x="1403" y="308" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1420.0" y="331" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">4</text>
+<rect x="1441" y="308" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1458.0" y="331" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">3</text>
+<rect x="1175" y="346" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1192.0" y="369" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">9</text>
+<rect x="1213" y="346" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1230.0" y="369" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">8</text>
+<rect x="1251" y="346" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1268.0" y="369" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">7</text>
+<rect x="1289" y="346" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1306.0" y="369" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">6</text>
+<rect x="1327" y="346" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1344.0" y="369" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">5</text>
+<rect x="1365" y="346" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1382.0" y="369" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">4</text>
+<rect x="1403" y="346" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1420.0" y="369" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">3</text>
+<rect x="1441" y="346" width="34" height="34" rx="4" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1458.0" y="369" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="middle" font-weight="bold" opacity="1.0">2</text>
+<text x="1175" y="412" font-family="DM Sans, Segoe UI, sans-serif" font-size="20" fill="#F2E6E6" text-anchor="start" font-weight="normal" opacity="1.0">Shadows filled at cycle 78 and</text>
+<text x="1175" y="439" font-family="DM Sans, Segoe UI, sans-serif" font-size="20" fill="#B89A9A" text-anchor="start" font-weight="normal" opacity="1.0">move up a row per cycle; row 2</text>
+<text x="1175" y="466" font-family="DM Sans, Segoe UI, sans-serif" font-size="20" fill="#B89A9A" text-anchor="start" font-weight="normal" opacity="1.0">leaves now. Next tile runs on.</text>
+<rect x="1175" y="44" width="300" height="28" rx="4" fill="#241012" stroke="#DCC5C5" stroke-width="1.5"/>
+<text x="1325" y="64" font-family="DM Sans, Segoe UI, sans-serif" font-size="15" fill="#DCC5C5" text-anchor="middle" font-weight="normal" opacity="1.0">8 adders → C row 2 out (0, 1 done)</text>
+<text x="1481" y="76" font-family="DM Sans, Segoe UI, sans-serif" font-size="13" fill="#B89A9A" text-anchor="start" font-weight="normal" opacity="1.0">shadow</text>
+<text x="1485" y="103" font-family="Consolas, monospace" font-size="16" fill="#DCC5C5" text-anchor="start" font-weight="normal" opacity="1.0">C2</text>
+<text x="1485" y="141" font-family="Consolas, monospace" font-size="16" fill="#DCC5C5" text-anchor="start" font-weight="normal" opacity="1.0">C3</text>
+<text x="1485" y="179" font-family="Consolas, monospace" font-size="16" fill="#DCC5C5" text-anchor="start" font-weight="normal" opacity="1.0">C4</text>
+<text x="1485" y="217" font-family="Consolas, monospace" font-size="16" fill="#DCC5C5" text-anchor="start" font-weight="normal" opacity="1.0">C5</text>
+<text x="1485" y="255" font-family="Consolas, monospace" font-size="16" fill="#DCC5C5" text-anchor="start" font-weight="normal" opacity="1.0">C6</text>
+<text x="1485" y="293" font-family="Consolas, monospace" font-size="16" fill="#DCC5C5" text-anchor="start" font-weight="normal" opacity="1.0">C7</text>
+<text x="1485" y="331" font-family="Consolas, monospace" font-size="16" fill="#DCC5C5" text-anchor="start" font-weight="normal" opacity="1.0">0</text>
+<text x="1485" y="369" font-family="Consolas, monospace" font-size="16" fill="#DCC5C5" text-anchor="start" font-weight="normal" opacity="1.0">0</text>
+<rect x="20" y="494" width="20" height="20" rx="3" fill="#120809" stroke="#3A1C1F" stroke-width="1.5"/>
+<text x="48" y="510" font-family="DM Sans, Segoe UI, sans-serif" font-size="18" fill="#B89A9A" text-anchor="start" font-weight="normal" opacity="1.0">idle: adds zeros</text>
+<rect x="250" y="494" width="20" height="20" rx="3" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="278" y="510" font-family="DM Sans, Segoe UI, sans-serif" font-size="18" fill="#B89A9A" text-anchor="start" font-weight="normal" opacity="1.0">tile 0 accumulating</text>
+<rect x="510" y="494" width="20" height="20" rx="3" fill="#C5050C" stroke="#EF6B70" stroke-width="1.5"/>
+<text x="538" y="510" font-family="DM Sans, Segoe UI, sans-serif" font-size="18" fill="#B89A9A" text-anchor="start" font-weight="normal" opacity="1.0">tile 0's last k-step: capture</text>
+<rect x="870" y="494" width="20" height="20" rx="3" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="898" y="510" font-family="DM Sans, Segoe UI, sans-serif" font-size="18" fill="#B89A9A" text-anchor="start" font-weight="normal" opacity="1.0">next tile accumulating</text>
+<rect x="1150" y="494" width="20" height="20" rx="3" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<rect x="1160" y="497" width="7" height="7" rx="1" fill="#DCC5C5" stroke="none" stroke-width="1"/>
+<text x="1178" y="510" font-family="DM Sans, Segoe UI, sans-serif" font-size="18" fill="#B89A9A" text-anchor="start" font-weight="normal" opacity="1.0">shadow holds a finished C</text>
+<line x1="195.8" y1="552" x2="195.8" y2="620" stroke="#DCC5C5" stroke-width="1.5" stroke-dasharray="4 3"/>
+<circle cx="195.8" cy="541" r="11" fill="#C5050C" stroke="none"/>
+<text x="195.8" y="547" font-family="DM Sans, Segoe UI, sans-serif" font-size="15" fill="#FFFFFF" text-anchor="middle" font-weight="bold" opacity="1.0">1</text>
+<line x1="741.8" y1="552" x2="741.8" y2="620" stroke="#DCC5C5" stroke-width="1.5" stroke-dasharray="4 3"/>
+<circle cx="741.8" cy="541" r="11" fill="#C5050C" stroke="none"/>
+<text x="741.8" y="547" font-family="DM Sans, Segoe UI, sans-serif" font-size="15" fill="#FFFFFF" text-anchor="middle" font-weight="bold" opacity="1.0">2</text>
+<line x1="1209.8" y1="552" x2="1209.8" y2="620" stroke="#DCC5C5" stroke-width="1.5" stroke-dasharray="4 3"/>
+<circle cx="1209.8" cy="541" r="11" fill="#C5050C" stroke="none"/>
+<text x="1209.8" y="547" font-family="DM Sans, Segoe UI, sans-serif" font-size="15" fill="#FFFFFF" text-anchor="middle" font-weight="bold" opacity="1.0">3</text>
+<line x1="1381.3999999999999" y1="552" x2="1381.3999999999999" y2="620" stroke="#DCC5C5" stroke-width="1.5" stroke-dasharray="4 3"/>
+<circle cx="1381.3999999999999" cy="541" r="11" fill="#C5050C" stroke="none"/>
+<text x="1381.3999999999999" y="547" font-family="DM Sans, Segoe UI, sans-serif" font-size="15" fill="#FFFFFF" text-anchor="middle" font-weight="bold" opacity="1.0">4</text>
+<text x="20" y="578" font-family="DM Sans, Segoe UI, sans-serif" font-size="17" fill="#B89A9A" text-anchor="start" font-weight="normal" opacity="1.0">tile 0</text>
+<text x="20" y="610" font-family="DM Sans, Segoe UI, sans-serif" font-size="17" fill="#B89A9A" text-anchor="start" font-weight="normal" opacity="1.0">tile 1</text>
+<rect x="110.0" y="560" width="998.4000000000001" height="24" rx="3" fill="#4A1418" stroke="#7F3036" stroke-width="1.5"/>
+<text x="223.2" y="578" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#F2E6E6" text-anchor="start" font-weight="normal" opacity="1.0">k-steps 0–63 enter, one per cycle</text>
+<rect x="1108.4" y="560" width="233.99999999999977" height="24" rx="3" fill="#C5050C" stroke="#EF6B70" stroke-width="1.5"/>
+<text x="1116.4" y="578" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#FFFFFF" text-anchor="start" font-weight="normal" opacity="1.0">last → PE(7,7)</text>
+<rect x="1342.3999999999999" y="560" width="124.80000000000018" height="24" rx="3" fill="#DCC5C5" stroke="#DCC5C5" stroke-width="1.5"/>
+<text x="1350.3999999999999" y="578" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#1A0506" text-anchor="start" font-weight="bold" opacity="1.0">drain</text>
+<rect x="1108.4" y="592" width="405.5999999999999" height="24" rx="3" fill="#103842" stroke="#2E7F91" stroke-width="1.5"/>
+<text x="1116.4" y="610" font-family="DM Sans, Segoe UI, sans-serif" font-size="16" fill="#BFE3EA" text-anchor="start" font-weight="normal" opacity="1.0">next tile, back-to-back →</text>
+<line x1="110.0" y1="626" x2="1514.0" y2="626" stroke="#7F3036" stroke-width="1.5"/>
+<line x1="110.0" y1="626" x2="110.0" y2="632" stroke="#7F3036" stroke-width="1.5"/>
+<text x="110.0" y="650" font-family="DM Sans, Segoe UI, sans-serif" font-size="15" fill="#B89A9A" text-anchor="middle" font-weight="normal" opacity="1.0">0</text>
+<line x1="266.0" y1="626" x2="266.0" y2="632" stroke="#7F3036" stroke-width="1.5"/>
+<text x="266.0" y="650" font-family="DM Sans, Segoe UI, sans-serif" font-size="15" fill="#B89A9A" text-anchor="middle" font-weight="normal" opacity="1.0">10</text>
+<line x1="422.0" y1="626" x2="422.0" y2="632" stroke="#7F3036" stroke-width="1.5"/>
+<text x="422.0" y="650" font-family="DM Sans, Segoe UI, sans-serif" font-size="15" fill="#B89A9A" text-anchor="middle" font-weight="normal" opacity="1.0">20</text>
+<line x1="578.0" y1="626" x2="578.0" y2="632" stroke="#7F3036" stroke-width="1.5"/>
+<text x="578.0" y="650" font-family="DM Sans, Segoe UI, sans-serif" font-size="15" fill="#B89A9A" text-anchor="middle" font-weight="normal" opacity="1.0">30</text>
+<line x1="734.0" y1="626" x2="734.0" y2="632" stroke="#7F3036" stroke-width="1.5"/>
+<text x="734.0" y="650" font-family="DM Sans, Segoe UI, sans-serif" font-size="15" fill="#B89A9A" text-anchor="middle" font-weight="normal" opacity="1.0">40</text>
+<line x1="890.0" y1="626" x2="890.0" y2="632" stroke="#7F3036" stroke-width="1.5"/>
+<text x="890.0" y="650" font-family="DM Sans, Segoe UI, sans-serif" font-size="15" fill="#B89A9A" text-anchor="middle" font-weight="normal" opacity="1.0">50</text>
+<line x1="1046.0" y1="626" x2="1046.0" y2="632" stroke="#7F3036" stroke-width="1.5"/>
+<text x="1046.0" y="650" font-family="DM Sans, Segoe UI, sans-serif" font-size="15" fill="#B89A9A" text-anchor="middle" font-weight="normal" opacity="1.0">60</text>
+<line x1="1202.0" y1="626" x2="1202.0" y2="632" stroke="#7F3036" stroke-width="1.5"/>
+<text x="1202.0" y="650" font-family="DM Sans, Segoe UI, sans-serif" font-size="15" fill="#B89A9A" text-anchor="middle" font-weight="normal" opacity="1.0">70</text>
+<line x1="1358.0" y1="626" x2="1358.0" y2="632" stroke="#7F3036" stroke-width="1.5"/>
+<text x="1358.0" y="650" font-family="DM Sans, Segoe UI, sans-serif" font-size="15" fill="#B89A9A" text-anchor="middle" font-weight="normal" opacity="1.0">80</text>
+<line x1="1514.0" y1="626" x2="1514.0" y2="632" stroke="#7F3036" stroke-width="1.5"/>
+<text x="1514.0" y="650" font-family="DM Sans, Segoe UI, sans-serif" font-size="15" fill="#B89A9A" text-anchor="middle" font-weight="normal" opacity="1.0">90</text>
+<text x="20" y="650" font-family="DM Sans, Segoe UI, sans-serif" font-size="15" fill="#B89A9A" text-anchor="start" font-weight="normal" opacity="1.0">cycle</text>
+</svg>
