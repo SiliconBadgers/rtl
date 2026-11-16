@@ -224,7 +224,8 @@ module command_queues_tb #(
           push_valid[q] = ($urandom_range(0, 3) != 0);
           push_payload[q] = 16'($urandom);
           target_0[q] = 3'($urandom_range(0, 7));
-          target_1[q] = 3'($urandom_range(0, 7));
+          // Duplicate slots must have a common reachable counter value.
+          target_1[q] = (MAP_0[q] == MAP_1[q]) ? target_0[q] : 3'($urandom_range(0, 7));
         end
         issue_ready[q] = ($urandom_range(0, 2) != 0);
       end
@@ -233,20 +234,34 @@ module command_queues_tb #(
       end
       step();
     end
-    // Finish any pending producer transfer before stopping injection.
-    issue_ready = '{default: 1};
-    for (int cycle = 0; cycle < 32; cycle++) begin
-      for (int q = 0; q < NUM_QUEUES; q++) begin
-        if (!push_valid[q] || pushed[q]) begin
-          push_valid[q] = 1'b0;
+    // Complete pending pushes and steer each head's counters independently.
+    // Lockstep increments can preserve an offset that never meets both waits.
+    for (int draining_queue = 0; draining_queue < NUM_QUEUES; draining_queue++) begin
+      issue_ready = '{default: 0};
+      issue_ready[draining_queue] = 1'b1;
+      for (int cycle = 0; cycle < 64; cycle++) begin
+        for (int q = 0; q < NUM_QUEUES; q++) begin
+          if (!push_valid[q] || pushed[q]) begin
+            push_valid[q] = 1'b0;
+          end
         end
+        increment = '{default: '0};
+        if (count[draining_queue] != 0) begin
+          if (expected[draining_queue][0].target_0 != 0 &&
+              expected_progress[MAP_0[draining_queue]] !=
+              int'(expected[draining_queue][0].target_0)) begin
+            increment[MAP_0[draining_queue]] = 2'b01;
+          end
+          if (expected[draining_queue][0].target_1 != 0 &&
+              expected_progress[MAP_1[draining_queue]] !=
+              int'(expected[draining_queue][0].target_1)) begin
+            increment[MAP_1[draining_queue]] = 2'b01;
+          end
+        end
+        step();
       end
-      increment = '{default: 2'b01};
-      step();
-    end
-    for (int q = 0; q < NUM_QUEUES; q++) begin
-      if (count[q] != 0) begin
-        $fatal(1, "Wrapper did not drain");
+      if (count[draining_queue] != 0 || push_valid[draining_queue]) begin
+        $fatal(1, "Wrapper did not drain queue %0d", draining_queue);
       end
     end
     if (reset_pending == 0 || stalls == 0 || accepted != issued + reset_pending) begin
