@@ -166,16 +166,8 @@ Both specification documents were still on proposal branches at implementation
 time. The two-bit increment contract incorporates the subsequent implementation
 requirement; the per-engine interpretation remains an assumption.
 
-No SystemVerilog compile,
-RTL simulation, formal, synthesis, timing, CDC/reset analysis, or pinned style
-check has passed for these new modules in this workspace. VCS and the pinned
-Verible/Ruff tools are absent. Repository policy requires VCS Y-2026.03_Full64 for
-RTL simulation; no alternate simulator was used. See `SETUP.md` for tool setup.
-
-For this parameterization revision, `make style` was attempted and blocked by
-missing `verible-verilog-format`. `python3 scripts/vcs.py check` was attempted
-and correctly failed because VCS is unavailable. No software was installed.
-Source-level checks confirmed the FIFO and scoreboard arithmetic helper functions
-are unchanged, the original default mapping is retained, and invalid mapping
-branches avoid out-of-range counter references. These checks are not HDL
-compilation, elaboration or simulation. No functional pass or coverage is claimed.
+The [control regression](../../tb/control/README.md) checks the queue, scoreboard,
+and wrapper with VCS. It includes FIFO ordering and capacity, both dependency
+slots, modular counter comparisons, stalled output retention, active reset,
+and rejected inputs and configurations. Run it with `make test-command-queues`.
+Simulation does not establish formal correctness, synthesis, timing, or CDC safety.

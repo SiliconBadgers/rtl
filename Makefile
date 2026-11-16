@@ -38,3 +38,8 @@ test-f2-hbm:
 
 test-f2-hbm-cae:
 	$(RUN_PYTHON) scripts/f2_hbm.py remote $(F2_HBM_ARGS)
+
+.PHONY: test-command-queues
+COMMAND_QUEUES_ARGS ?=
+test-command-queues:
+	$(RUN_PYTHON) scripts/command_queues.py $(COMMAND_QUEUES_ARGS)
