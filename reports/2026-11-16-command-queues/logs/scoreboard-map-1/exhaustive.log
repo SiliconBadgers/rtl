@@ -1,0 +1,15 @@
+$ /usr/bin/python3 /tmp/rtl-pr29.k6BXOeL0/scripts/vcs.py --timeout 120 run /tmp/rtl-pr29.k6BXOeL0/build/command_queues-final/scoreboard-map-1/simv
+$ synopsys-run /tmp/rtl-pr29.k6BXOeL0/build/command_queues-final/scoreboard-map-1/simv -exitstatus
+Info: [VCS_SAVE_RESTORE_INFO] ASLR (Address Space Layout Randomization) is detected on the machine. To enable $save functionality, ASLR will be switched off and simv re-executed.
+Please use '-no_save' simv switch to avoid re-execution or '-suppress=ASLR_DETECTED_INFO' to suppress this message.
+Chronologic VCS simulator copyright 1991-2026
+Contains Synopsys proprietary information.
+Compiler version Y-2026.03_Full64; Runtime version Y-2026.03_Full64;  Nov 16 12:16 2026
+SUMMARY scoreboard comparisons=4396 counter_checks=2198 wraps=8 inc0=1045 inc1=35 inc2=18
+PASS shared_scoreboard_tb
+$finish called from file "/tmp/rtl-pr29.k6BXOeL0/tb/control/shared_scoreboard_tb.sv", line 164.
+$finish at simulation time              5520000
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 5520000 ps
+CPU Time:      0.160 seconds;       Data structure size:   0.0Mb
+Mon Nov 16 12:17:00 2026
