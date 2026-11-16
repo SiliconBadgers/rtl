@@ -1,5 +1,5 @@
-// Shift-register delay line used by bpu_sa_array for the B skew, the C deskew and
-// the output-valid timing.
+// Shift-register delay line used by bpu_sa_array for the A, tile-flag and B skews
+// and the capture timing.
 //
 // A value presented on d_i in cycle t appears on q_o in cycle t + Depth.
 // Depth = 0 is a plain wire with no registers.
