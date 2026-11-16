@@ -1,0 +1,91 @@
+reports/2026-11-16-command-queues/README.md
+  s_ae1b441918830d::t_4020b75a149a92 1-67
+reports/2026-11-16-command-queues/logs/queue-depth-1/compile.log
+  s_ae1b441918830d::t_01083ec443ebed 1-36
+reports/2026-11-16-command-queues/logs/queue-depth-1/seed-1.log
+  s_ae1b441918830d::t_55595a51d81882 1-14
+reports/2026-11-16-command-queues/logs/queue-depth-1/seed-42.log
+  s_ae1b441918830d::t_8b4ddbda8df981 1-14
+reports/2026-11-16-command-queues/logs/queue-depth-1/seed-7.log
+  s_ae1b441918830d::t_a929c929ff1403 1-14
+reports/2026-11-16-command-queues/logs/queue-depth-3/compile.log
+  s_ae1b441918830d::t_f5ea8ca940eb25 1-36
+reports/2026-11-16-command-queues/logs/queue-depth-3/missing-backpressure.log
+  s_ae1b441918830d::t_dbb9894808c864 1-13
+reports/2026-11-16-command-queues/logs/queue-depth-3/missing-reset.log
+  s_ae1b441918830d::t_ee772291c6de6e 1-13
+reports/2026-11-16-command-queues/logs/queue-depth-3/seed-1.log
+  s_ae1b441918830d::t_ca078853e993b7 1-14
+reports/2026-11-16-command-queues/logs/queue-depth-3/seed-42.log
+  s_ae1b441918830d::t_f1f8cda000a79f 1-14
+reports/2026-11-16-command-queues/logs/queue-depth-3/seed-7.log
+  s_ae1b441918830d::t_021a559c3ab567 1-14
+reports/2026-11-16-command-queues/logs/queue-depth-3/timeout.log
+  s_ae1b441918830d::t_7670f069a59aad 1-9
+reports/2026-11-16-command-queues/logs/queue-depth-3/wrong-result.log
+  s_ae1b441918830d::t_ccdd1ce7b9ca6f 1-13
+reports/2026-11-16-command-queues/logs/queue-depth-4/compile.log
+  s_ae1b441918830d::t_2b7f7377b807f3 1-36
+reports/2026-11-16-command-queues/logs/queue-depth-4/seed-1.log
+  s_ae1b441918830d::t_92d10784f3cbd5 1-14
+reports/2026-11-16-command-queues/logs/queue-depth-4/seed-42.log
+  s_ae1b441918830d::t_2589c043850df2 1-14
+reports/2026-11-16-command-queues/logs/queue-depth-4/seed-7.log
+  s_ae1b441918830d::t_5d9ee9ac558119 1-14
+reports/2026-11-16-command-queues/logs/scoreboard-invalid-map/compile.log
+  s_ae1b441918830d::t_514410f2ead1d2 1-38
+reports/2026-11-16-command-queues/logs/scoreboard-invalid-map/invalid-map.log
+  s_ae1b441918830d::t_1e157a8314f26a 1-15
+reports/2026-11-16-command-queues/logs/scoreboard-map-0/compile.log
+  s_ae1b441918830d::t_8bc424e7e9d26d 1-38
+reports/2026-11-16-command-queues/logs/scoreboard-map-0/exhaustive.log
+  s_ae1b441918830d::t_eadb3371846980 1-15
+reports/2026-11-16-command-queues/logs/scoreboard-map-0/illegal-increment.log
+  s_ae1b441918830d::t_7e616c2705dff5 1-15
+reports/2026-11-16-command-queues/logs/scoreboard-map-0/unknown-increment.log
+  s_ae1b441918830d::t_d1a80bd35e534a 1-15
+reports/2026-11-16-command-queues/logs/scoreboard-map-1/compile.log
+  s_ae1b441918830d::t_26f05194e550f2 1-38
+reports/2026-11-16-command-queues/logs/scoreboard-map-1/exhaustive.log
+  s_ae1b441918830d::t_85b804168cd2c9 1-15
+reports/2026-11-16-command-queues/logs/summary.json
+  s_ae1b441918830d::t_908bb4c1e4b3c6 1-923
+reports/2026-11-16-command-queues/logs/version.log
+  s_ae1b441918830d::t_816b384c3d7704 1-2
+reports/2026-11-16-command-queues/logs/wrapper-map-0/compile.log
+  s_ae1b441918830d::t_034b32235a7385 1-40
+reports/2026-11-16-command-queues/logs/wrapper-map-0/seed-1.log
+  s_ae1b441918830d::t_d4e5d8f20b9209 1-15
+reports/2026-11-16-command-queues/logs/wrapper-map-0/seed-42.log
+  s_ae1b441918830d::t_ac02b4877050f1 1-15
+reports/2026-11-16-command-queues/logs/wrapper-map-0/seed-7.log
+  s_ae1b441918830d::t_8ade493eb08c2e 1-15
+reports/2026-11-16-command-queues/logs/wrapper-map-1/compile.log
+  s_ae1b441918830d::t_c69aa44b1a23cc 1-40
+reports/2026-11-16-command-queues/logs/wrapper-map-1/seed-1.log
+  s_ae1b441918830d::t_22e91978141250 1-15
+reports/2026-11-16-command-queues/logs/wrapper-map-1/seed-42.log
+  s_ae1b441918830d::t_1acc6c0b7026f7 1-15
+reports/2026-11-16-command-queues/logs/wrapper-map-1/seed-7.log
+  s_ae1b441918830d::t_31ec3318e776b9 1-15
+reports/2026-11-16-command-queues/style.log
+  s_ae1b441918830d::t_d18821231d2e01 1-4
+reports/2026-11-16-command-queues/tooling.log
+  s_ae1b441918830d::t_feff9019a4ca11 1-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1f0f9bbf306e58ce4b3ab91a96a96ba0457db3f0",
+  "prompts": {},
+  "sessions": {
+    "s_ae1b441918830d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e58e-02f7-76c0-935b-3fabe6ca54c5",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zeb Taylor <zceboys@gmail.com>"
+    }
+  }
+}
