@@ -1,0 +1,19 @@
+tb/control/command_queues_tb.sv
+  s_ae1b441918830d::t_6d2ab282f9d408 227-228,237-259,261,263-264
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1086b0ba0b79faa6849c63a9a50a715d6fe1ac16",
+  "prompts": {},
+  "sessions": {
+    "s_ae1b441918830d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e58e-02f7-76c0-935b-3fabe6ca54c5",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zeb Taylor <zceboys@gmail.com>"
+    }
+  }
+}
