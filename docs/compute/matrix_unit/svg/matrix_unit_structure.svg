@@ -1,10 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="640" viewBox="0 0 1180 640" role="img">
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="770" viewBox="0 0 1180 770" role="img">
 <title>Matrix unit structure and assertion map</title><desc>Internal blocks of bpu_sa_sram_wrapper, data flow, and labelled assertions.</desc>
 <defs><marker id="ain" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0f6e8c"/></marker><marker id="aout" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b4531b"/></marker><marker id="aink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10z" fill="#1b2430"/></marker></defs>
-<rect width="1180" height="640" fill="#ffffff"/>
+<rect width="1180" height="770" fill="#ffffff"/>
 <text x="40" y="42" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="21" fill="#1b2430" font-weight="bold" text-anchor="start">Matrix unit: inside bpu_sa_sram_wrapper, data flow and assertion map</text>
 <text x="40" y="66" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13" fill="#5a6573" font-weight="normal" text-anchor="start">Red: labelled assertion checked in every simulation. Shaded: blocks added for INT4 and block scaling (10/17).</text>
-<rect x="25" y="85" width="880" height="495" rx="12" fill="#f6f8fb" stroke="#1b2430" stroke-width="1.5"/>
+<rect x="25" y="85" width="880" height="620" rx="12" fill="#f6f8fb" stroke="#1b2430" stroke-width="1.5"/>
 <text x="40" y="106" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="13" fill="#5a6573" font-weight="bold" text-anchor="start">bpu_sa_sram_wrapper</text>
 <rect x="945" y="120" width="210" height="300" rx="8" fill="#f6f8fb" stroke="#c9d0d9" stroke-width="1.2" stroke-dasharray="6 5"/>
 <text x="1050" y="148" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" fill="#1b2430" font-weight="bold" text-anchor="middle">sram_arbiter</text>
@@ -76,6 +76,16 @@
 <polyline points="825,410 825,374" fill="none" stroke="#1b2430" stroke-width="1.5" marker-end="url(#aink)"/>
 <polyline points="825,265 825,229" fill="none" stroke="#1b2430" stroke-width="1.5" marker-end="url(#aink)"/>
 <text x="831" y="257" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="11" fill="#5a6573" font-weight="normal" text-anchor="start">writes</text>
-<text x="40" y="606" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" fill="#5a6573" font-weight="normal" text-anchor="start">Also in every FIFO: NoOverflow_A / NoUnderflow_A (the read streams' row buffers included). Credits make overflow impossible; the assertions prove it in simulation.</text>
-<text x="40" y="624" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" fill="#5a6573" font-weight="normal" text-anchor="start">Invariants a checker can rely on: replies arrive in request order; no C write while reads are in flight; done_o only after the last write is accepted (writes get no reply).</text>
+<rect x="45" y="580" width="840" height="110" rx="8" fill="#ffffff" stroke="#8a96a6" stroke-width="1.4"/>
+<text x="57" y="602" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="13.5" fill="#1b2430" font-weight="bold" text-anchor="start">write completion tracking (inline)</text>
+<text x="57" y="622" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="start">Default: matrix_wr_done_i = sb_wr_done_o qualified by sb_wr_tag_o == TagMatrix</text>
+<text x="57" y="639" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="start">WriteAcks = 1: matrix_rsp_valid_i; acks_left_q counts accepted minus completed writes</text>
+<text x="57" y="656" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#5a6573" font-weight="normal" text-anchor="start">done_o and the next command wait until every accepted C write completes</text>
+<text x="57" y="680" font-family="Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="11.5" fill="#b42318" font-weight="normal" text-anchor="start">ExpectedWriteCompletion_A    WriteCompletionCapacity_A</text>
+<polyline points="945,390 920,390 920,630 889,630" fill="none" stroke="#0f6e8c" stroke-width="1.5" marker-end="url(#ain)"/>
+<text x="930" y="440" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10.5" fill="#0f6e8c" font-weight="normal" text-anchor="start">write</text>
+<text x="930" y="455" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10.5" fill="#0f6e8c" font-weight="normal" text-anchor="start">done</text>
+<polyline points="45,630 35,630 35,170 41,170" fill="none" stroke="#1b2430" stroke-width="1.5" marker-end="url(#aink)"/>
+<text x="40" y="730" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" fill="#5a6573" font-weight="normal" text-anchor="start">Also in every FIFO: NoOverflow_A / NoUnderflow_A (the read streams' row buffers included). Credits make overflow impossible; the assertions prove it in simulation.</text>
+<text x="40" y="748" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" fill="#5a6573" font-weight="normal" text-anchor="start">Invariants a checker can rely on: replies arrive in request order; no C write while reads are in flight; done_o only after every accepted write completes.</text>
 </svg>
