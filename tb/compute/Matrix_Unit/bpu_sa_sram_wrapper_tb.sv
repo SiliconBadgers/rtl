@@ -407,8 +407,9 @@ module bpu_sa_sram_wrapper_tb;
   // idle_o, every cycle: high exactly when no command is running and every
   // completed command's three milestones have been counted. busy_o alone falls
   // while the last two are still on milestone_inc_o; idle_gaps counts those cycles.
+  // Not at time 0: clk's first assignment is a falling edge before any register is reset.
   always @(negedge clk) begin
-    if (rst_n !== 1'bx) begin
+    if ($time > 0 && rst_n !== 1'bx) begin
       if (idle !== (busy === 1'b0 && progress == 3 * legal_seen)) begin
         errors++;
         $display("bpu_sa_sram_wrapper_tb: idle_o = %b with busy_o = %b, %0d milestones, %0d %s",

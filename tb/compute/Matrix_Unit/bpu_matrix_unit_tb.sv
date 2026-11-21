@@ -239,10 +239,11 @@ module bpu_matrix_unit_tb;
     end
   end
 
-  // Every-cycle checks. Everything compared here changes only on rising edges.
+  // Every-cycle checks. Everything compared here changes only on rising edges. Not at time
+  // 0: clk's first assignment is a falling edge before any register is reset.
   always @(negedge clk) begin
     cycle++;
-    if (rst_n !== 1'bx) begin
+    if ($time > 0 && rst_n !== 1'bx) begin
       if (idle !== (progress == 3 * legal_accepted)) begin
         errors++;
         $display("bpu_matrix_unit_tb: idle_o = %b with %0d milestones for %0d %s at cycle %0d",
