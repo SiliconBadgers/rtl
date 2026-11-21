@@ -11,10 +11,14 @@ systolic array:
 It implements the proposed Matrix specification (`docs/compute/matrix_unit_spec.md`,
 [rtl PR #32](https://github.com/SiliconBadgers/rtl/pull/32)) with `CmdDepth = 1`:
 logical M/N masks, a short final scale block, the output encodings, the 2-bit milestone
-increment and the version-1 record decoder (`bpu_sa_command_decoder`, which the parent
-instantiates). Early command overlap is not built yet.
+increment and the version-1 record decoder (`bpu_sa_command_decoder`). Early command overlap is
+not built yet.
 
-The top level is `bpu_sa_sram_wrapper`. It takes one command at a time and works through the
+The top level is `bpu_matrix_unit`. It feeds the version-1 record from the Matrix command
+queue through the decoder into `bpu_sa_sram_wrapper`, and adds the controller's idle and a
+sticky fault. The [integration contract](matrix_unit_integration.md) gives its ports and how
+it connects to the controller and the arbiter. This document describes the wrapper, which takes
+one command at a time and works through the
 [SRAM arbiter](../memory/sram_arbiter_io_scheme.md)'s matrix port:
 1. reads A, B and (if block-scaled) two scale tables;
 2. runs the array;
@@ -26,7 +30,11 @@ this document alongside RTL changes.** The RTL header comments are the detailed 
 [bpu_sa_array.sv](../../rtl/compute/Matrix_Unit/bpu_sa_array.sv) for the array. Diagrams are in
 [matrix_unit/](matrix_unit/README.md).
 
-## 1. Top-level ports
+## 1. Wrapper ports
+
+These are `bpu_sa_sram_wrapper`'s ports. `bpu_matrix_unit` drives the command fields from the
+record, keeps `busy_o` and `done_o` inside, turns `err_o` into its sticky `fault_o`, and passes
+`milestone_inc_o`, `idle_o` and the matrix port through.
 
 ![Top-level ports of bpu_sa_sram_wrapper](matrix_unit/svg/matrix_unit_ports.svg)
 
@@ -52,8 +60,9 @@ All ports are in the single `clk_i` domain. Widths are at the default parameters
 | `cmd_decode_error_i` | in | 1 | The record was malformed (`bpu_sa_command_decoder`): reject the command. |
 | `busy_o` | out | 1 | High from the cycle after a command is accepted until it completes. |
 | `done_o` | out | 1 | One-cycle pulse when the command completes, in the first cycle `busy_o` is low again. |
-| `err_o` | out | 1 | One-cycle pulse with `done_o` for an illegal command. It is never high without `done_o`. Connect it to the controller's engine fault: correct software never issues an illegal command. |
+| `err_o` | out | 1 | One-cycle pulse with `done_o` for an illegal command. It is never high without `done_o`. `bpu_matrix_unit` turns it into its sticky `fault_o`, the controller's engine fault: correct software never issues an illegal command. |
 | `milestone_inc_o` | out | 2 | Milestones this cycle for the Matrix progress counter: `00`, `01` or `10` (never `11`). Three per legal command: inputs released, then next contribution ready and complete together with `done_o`. None for an illegal command. |
+| `idle_o` | out | 1 | No command running and no milestone held or on `milestone_inc_o`: the controller's engine idle. Low from the cycle after a legal command is accepted until the cycle after its last milestone is on `milestone_inc_o`. |
 | `matrix_req_valid_o` | out | 1 | A request to the arbiter. |
 | `matrix_req_ready_i` | in | 1 | The arbiter accepts the request. |
 | `matrix_req_is_write_o` | out | 1 | 1: write, 0: read. |
@@ -262,11 +271,13 @@ L below is the arbiter's round trip, from request to response.
 
 ### Module hierarchy
 
-The unit is six modules and one package (`bpu_sa_pkg`, the block-scaled numerics constants) in
-`rtl/compute/Matrix_Unit`:
-- **`bpu_sa_sram_wrapper`**, the top level, instantiates:
+The unit is nine modules and one package (`bpu_sa_pkg`: numerics constants, encodings, the
+record type and the conversion functions) in `rtl/compute/Matrix_Unit`:
+- **`bpu_matrix_unit`**, the top level, instantiates `bpu_sa_command_decoder` and:
+- **`bpu_sa_sram_wrapper`**, which instantiates:
   - four `bpu_sa_read_stream`s, each holding a `bpu_sa_fifo` row buffer;
   - the order FIFO and the output queue (both `bpu_sa_fifo`);
+  - `bpu_sa_output_convert`, one lane per column;
   - `bpu_sa_array`.
 - **`bpu_sa_array`** instantiates `Rows × Cols` `bpu_sa_pe`s and the `bpu_sa_delay` input delays.
 
@@ -376,11 +387,14 @@ the compile order.
 
 | File | Contents |
 | --- | --- |
-| `bpu_sa_sram_wrapper.sv` | The top level: command, read arbitration, feed, drain, C write-back. |
+| `bpu_matrix_unit.sv` | The top level: the record decoder and the wrapper, with idle and a sticky fault. |
+| `bpu_sa_command_decoder.sv` | The version-1 record decoder. |
+| `bpu_sa_sram_wrapper.sv` | One command at a time: command checks, read arbitration, feed, drain, C write-back, milestones. |
+| `bpu_sa_output_convert.sv` | The output encodings. |
 | `bpu_sa_read_stream.sv` | One read stream (A, B or a scale table). |
 | `bpu_sa_fifo.sv` | Buffers and queues. |
 | `bpu_sa_array.sv`, `bpu_sa_pe.sv`, `bpu_sa_delay.sv` | The systolic array, with block scaling in every PE. |
-| `bpu_sa_pkg.sv` | The block-scaled numerics constants. |
+| `bpu_sa_pkg.sv` | Numerics constants, encodings, the record type and the conversion functions. |
 
 Run `make test-matrix-unit` from the repository root. The
 [test guide](../../tb/compute/Matrix_Unit/README.md) covers VCS setup, the testbenches, the
@@ -408,9 +422,10 @@ yet.
   per-tensor scales are folded into `sB`.
 - **Requantization to INT8**, which the compute-team decisions ask for, needs a specification of
   the scale, rounding and saturation.
-- **Arbiter integration:** the actual arbiter and Matrix wrapper must share a reset boundary
-  that discards pre-reset read responses and cancels uncommitted writes. The fixed next-edge
-  write commit is the proposed arbiter contract; the arbiter RTL in rtl PR #35 still drives a
-  separate `sb_wr_done_o`, so the two need reconciling before integration.
-- **Command source:** a sequencer or RISC-V command issuer will drive the command port. Its
-  encoding of these fields is defined outside this unit.
+- **Arbiter integration:** the actual arbiter and the unit must share a reset boundary that
+  discards pre-reset read responses and cancels uncommitted writes. The arbiter RTL in rtl PR
+  #35 lacks the Matrix transpose and element-width inputs and the sticky `fault_o`, and still
+  drives the `sb_wr_done_o` the specification removed. Until it matches, the integration bench
+  uses a specification model (`sram_arbiter_spec_model`).
+- **Command source:** settled. The Matrix command queue drives `bpu_matrix_unit` with the
+  version-1 record; see the [integration contract](matrix_unit_integration.md).

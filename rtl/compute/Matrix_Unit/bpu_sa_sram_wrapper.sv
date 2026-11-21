@@ -10,13 +10,15 @@
 // (docs/compute/matrix_unit_spec.md) with CmdDepth = 1: no early overlap.
 //
 // Sources (one module per file; rtl/compute/Matrix_Unit/bpu_sa_array.f lists them):
+//   bpu_matrix_unit.sv         the top level the controller instantiates: the record
+//                              decoder and this module, with idle and a sticky fault
 //   bpu_sa_sram_wrapper.sv     this module: command, read arbitration, feed, drain,
 //                              C write-back, milestones
 //   bpu_sa_read_stream.sv      one read stream (A, B, and the two scale tables)
 //   bpu_sa_fifo.sv             buffers and queues
 //   bpu_sa_array.sv            the systolic array (with bpu_sa_pe.sv, bpu_sa_delay.sv)
 //   bpu_sa_output_convert.sv   the output encodings
-//   bpu_sa_command_decoder.sv  the version-1 command record (the parent's)
+//   bpu_sa_command_decoder.sv  the version-1 command record (bpu_matrix_unit's)
 //   bpu_sa_pkg.sv              numerics constants, encodings, the record type and
 //                              the conversion functions
 //
@@ -115,8 +117,9 @@
 //            cmd_out_frac_i above 31; cmd_clear_acc_i = 0 with no kept sums, with
 //            kept sums of the other kind (unscaled vs block-scaled), or with
 //            another M or N than the kept sums'. An illegal command leaves kept
-//            sums as they were; reset discards them. The parent connects err_o to
-//            the controller's engine fault: correct software never issues one.
+//            sums as they were; reset discards them. bpu_matrix_unit turns err_o
+//            into its sticky fault_o, the controller's engine fault, and accepts
+//            nothing more until reset: correct software never issues one.
 //            Output encoding (writing commands): cmd_out_format_i, with
 //            cmd_out_frac_i (INT32), cmd_requant_mul_i and cmd_requant_shift_i
 //            (INT8); see bpu_sa_output_convert.
@@ -126,6 +129,15 @@
 //            step fed, so every operand read is back), then next contribution
 //            ready and complete, both at completion (with done_o). Illegal
 //            commands publish none. Registered; reset drops any held.
+//            idle_o: no command running and no milestone held or on
+//            milestone_inc_o, so every accepted command's output writes have
+//            committed and its milestones have all been counted. It is the
+//            controller's engine idle (docs/control/top_level_control_spec.md,
+//            "Progress, waits, and completion"). Low from the cycle after a legal
+//            command is accepted until the cycle after its last milestone is on
+//            milestone_inc_o; an illegal command never lowers it. busy_o alone is
+//            not enough: it falls while the last two milestones are still on
+//            milestone_inc_o. Depends only on registers; high in reset.
 //   SRAM     matrix_req_* drive the sram_arbiter matrix request port
 //            (ready/valid). A request and its payload stay unchanged from the
 //            cycle valid rises until the cycle ready is 1. All of them depend
@@ -208,6 +220,7 @@ module bpu_sa_sram_wrapper
   output logic             done_o,
   output logic             err_o,
   output logic [      1:0] milestone_inc_o,
+  output logic             idle_o,
 
   // sram_arbiter matrix port
   output logic             matrix_req_valid_o,
@@ -570,6 +583,7 @@ module bpu_sa_sram_wrapper
   assign ms_inputs = feed_fire && feed_final;
   assign ms_total = 3'(ms_held_q) + (finish ? 3'd2 : 3'd0) + 3'(ms_inputs);
   assign milestone_inc_o = ms_inc_q;
+  assign idle_o = !busy_q && (ms_held_q == '0) && (ms_inc_q == '0);
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin

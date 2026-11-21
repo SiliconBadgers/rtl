@@ -56,6 +56,7 @@ module bpu_sa_sram_wrapper_golden_tb;
   logic done;
   logic err;
   logic [1:0] milestone_inc;  // not checked here: bpu_sa_sram_wrapper_tb does
+  logic idle;  // likewise
 
   logic req_valid;
   logic req_ready;
@@ -130,6 +131,7 @@ module bpu_sa_sram_wrapper_golden_tb;
     .done_o                 (done),
     .err_o                  (err),
     .milestone_inc_o        (milestone_inc),
+    .idle_o                 (idle),
     .matrix_req_valid_o     (req_valid),
     .matrix_req_ready_i     (req_ready),
     .matrix_req_is_write_o  (req_is_write),

@@ -14,8 +14,9 @@
 // (transpose is not in version 1). The wrapper rejects such a record like any other
 // illegal command: done_o and err_o, no memory traffic, kept sums preserved. Checks
 // against the array's build (M, N, K, alignment, supported formats) are the
-// wrapper's. The decoder neither tracks dependencies nor transposes: the wait
-// targets are passed on for the controller.
+// wrapper's. The decoder neither tracks dependencies nor transposes. It passes the
+// wait targets on, and bpu_matrix_unit ignores them: the controller checks its own
+// sideband copies before the record reaches the unit.
 module bpu_sa_command_decoder
   import bpu_sa_pkg::*;
 (
