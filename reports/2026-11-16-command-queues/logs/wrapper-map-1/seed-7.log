@@ -1,0 +1,15 @@
+$ /usr/bin/python3 /tmp/rtl-pr29.k6BXOeL0/scripts/vcs.py --timeout 120 run /tmp/rtl-pr29.k6BXOeL0/build/command_queues-final/wrapper-map-1/simv +seed=7
+$ synopsys-run /tmp/rtl-pr29.k6BXOeL0/build/command_queues-final/wrapper-map-1/simv -exitstatus +seed=7
+Info: [VCS_SAVE_RESTORE_INFO] ASLR (Address Space Layout Randomization) is detected on the machine. To enable $save functionality, ASLR will be switched off and simv re-executed.
+Please use '-no_save' simv switch to avoid re-execution or '-suppress=ASLR_DETECTED_INFO' to suppress this message.
+Chronologic VCS simulator copyright 1991-2026
+Contains Synopsys proprietary information.
+Compiler version Y-2026.03_Full64; Runtime version Y-2026.03_Full64;  Nov 16 12:17 2026
+SUMMARY wrapper checks=9234 accepted=590 issued=586 stalls=614 reset_pending=4
+PASS command_queues_tb
+$finish called from file "/tmp/rtl-pr29.k6BXOeL0/tb/control/command_queues_tb.sv", line 273.
+$finish at simulation time              7720000
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 7720000 ps
+CPU Time:      0.180 seconds;       Data structure size:   0.0Mb
+Mon Nov 16 12:17:06 2026

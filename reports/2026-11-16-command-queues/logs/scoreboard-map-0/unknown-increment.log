@@ -1,0 +1,15 @@
+$ /usr/bin/python3 /tmp/rtl-pr29.k6BXOeL0/scripts/vcs.py --timeout 120 run /tmp/rtl-pr29.k6BXOeL0/build/command_queues-final/scoreboard-map-0/simv +unknown_increment=1
+$ synopsys-run /tmp/rtl-pr29.k6BXOeL0/build/command_queues-final/scoreboard-map-0/simv -exitstatus +unknown_increment=1
+Info: [VCS_SAVE_RESTORE_INFO] ASLR (Address Space Layout Randomization) is detected on the machine. To enable $save functionality, ASLR will be switched off and simv re-executed.
+Please use '-no_save' simv switch to avoid re-execution or '-suppress=ASLR_DETECTED_INFO' to suppress this message.
+Chronologic VCS simulator copyright 1991-2026
+Contains Synopsys proprietary information.
+Compiler version Y-2026.03_Full64; Runtime version Y-2026.03_Full64;  Nov 16 12:16 2026
+"/tmp/rtl-pr29.k6BXOeL0/rtl/control/shared_scoreboard.sv", 70: shared_scoreboard_tb.u_scoreboard.gen_counters[0].IncrementLegal_A: started at 25000ps failed at 25000ps
+	Offending '(increment_i[0] inside {INCREMENT_NONE, INCREMENT_ONE, INCREMENT_TWO})'
+Fatal: "/tmp/rtl-pr29.k6BXOeL0/rtl/control/shared_scoreboard.sv", 70: shared_scoreboard_tb.u_scoreboard.gen_counters[0].IncrementLegal_A: at time 25000 ps
+Illegal milestone increment for counter 0
+$finish called from file "/tmp/rtl-pr29.k6BXOeL0/rtl/control/shared_scoreboard.sv", line 70.
+$finish at simulation time                25000
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 25000 ps
