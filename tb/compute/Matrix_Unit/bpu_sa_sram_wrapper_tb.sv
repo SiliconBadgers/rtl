@@ -76,8 +76,8 @@
 //   expects zero C elements there.
 //
 // Reference model: unscaled C is the exact integer sum, wrapped to AccW bits and
-// sign-extended. Block-scaled C follows the numerics contract in
-// bpu_sa_sram_wrapper and bpu_sa_pe, computed independently here: each block's
+// sign-extended. Block-scaled C follows the I/O scheme's "Arithmetic"
+// (docs/compute/matrix_unit_io_scheme.md), computed independently here: each block's
 // contribution isum * sA * sB * 2^24 in double precision (exact: at most 35
 // significant bits), rounded to nearest even, added into a saturating 48-bit
 // fixed-point sum with sticky NaN and overflow flags; the result is NaN, +-infinity
@@ -90,27 +90,28 @@
 // negative limit and 2^16 scales (every element saturates: +infinity), and one with
 // the B scales negated (every element saturates: -infinity).
 //
-// Checks: every C element in memory against the model, for every command that
-// writes; no write at all from a command that keeps its sums; the number of reads
-// and writes and their bytes for each command (exact sizes, all four streams); done_o
-// once per command, with err_o only for an illegal one, one cycle after it is
-// accepted, with no memory traffic; no SRAM response (read data or write
-// completion) still in flight when done_o rises; busy_o from the cycle after
-// acceptance until done_o; cmd_ready_o = !busy_o; err_o never without done_o; after
-// reset, busy_o, done_o and matrix_req_valid_o low at once. Milestones, counted as
-// the command queue would: each legal command publishes exactly one before done_o
-// (inputs released) and two with it; an illegal one none; milestone_inc_o is never
-// 11 or unknown. idle_o every cycle: high exactly when busy_o is low and every
-// completed legal command's three milestones have been counted, so it is low in each
-// cycle the last two are still on milestone_inc_o. C is checked at its packed size (4, 2 or 1 bytes per element), and
-// the window allows exactly those bytes. Legacy and FP32 expectations come from the
-// independent reference above; INT32, FP16 and INT8 from bpu_sa_pkg's conversion
-// functions, which bpu_sa_output_convert_tb checks against the golden model, so here
-// they check plumbing and packing. The model checks the
-// port protocol (stable stalled requests, alignment, sizes, reads only inside the
-// command's operands and scale tables, writes only inside C). The run ends with
-// $fatal(1, ...) on any error, on a count mismatch or on timeout, and prints one
-// RESULT line for the runner.
+// Checks
+//   - Every C element in memory against the model, for every writing command, at its
+//     packed size (4, 2 or 1 bytes), with the write window allowing exactly those bytes.
+//     Legacy and FP32 expectations come from the independent reference above; INT32,
+//     FP16 and INT8 from bpu_sa_pkg's conversion functions, which
+//     bpu_sa_output_convert_tb checks against the golden model, so here they check
+//     plumbing and packing.
+//   - No write from a command that keeps its sums; exact read and write counts and
+//     bytes per command, for all four streams.
+//   - done_o once per command, with err_o only for an illegal one, one cycle after
+//     acceptance and with no memory traffic; err_o never without done_o; no read
+//     response or uncommitted write in flight when done_o rises.
+//   - busy_o from the cycle after acceptance until done_o; cmd_ready_o = !busy_o; after
+//     reset, busy_o, done_o and matrix_req_valid_o low at once.
+//   - Milestones, counted as the command queue would: one before done_o and two with it
+//     per legal command, none for an illegal one; milestone_inc_o never 11 or unknown.
+//   - idle_o every cycle: high exactly when busy_o is low and every completed legal
+//     command's three milestones have been counted.
+//   - The model checks the port protocol: stable stalled requests, alignment, sizes,
+//     reads only inside the command's operands and scale tables, writes only inside C.
+// The run ends with $fatal(1, ...) on any error, count mismatch or timeout, and prints
+// one RESULT line for the runner.
 //
 // Scheduling: stimulus is driven and outputs are checked on the falling clock edge;
 // the design and the model act on the rising edge.

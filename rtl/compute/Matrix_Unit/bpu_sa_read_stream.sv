@@ -1,28 +1,17 @@
-// One SRAM read stream of bpu_sa_sram_wrapper: walks one operand (A, B, or a
-// scale table) one SRAM row at a time and buffers the rows that come back.
+// One read stream of bpu_sa_sram_wrapper: walks one operand (A, B or a scale table) an
+// SRAM row at a time and buffers the rows that come back.
 //
-// start_i loads the operand's base address and length in bytes. The stream then
-// wants a read (want_o) while bytes remain and fewer than BufRows rows are
-// reserved. A row is reserved when the wrapper loads this stream's read into its
-// request register (grant_i), and released when the consumer pops it (pop_i), so
-// a response always has a buffer entry waiting: the arbiter's responses cannot be
-// stalled. req_addr_o / req_size_o give the next read: one whole row
-// (DataW/8 bytes), or exactly the bytes that remain for the last one.
-// Responses for this stream (push_i, data_i) arrive in request order; head_o is
-// the oldest buffered row while empty_o is 0.
+// start_i loads the base address and the length in bytes. want_o is high while bytes
+// remain and fewer than BufRows rows are reserved. A row is reserved when the wrapper
+// loads this stream's read (grant_i) and released when the consumer pops it (pop_i), so
+// every response has a buffer entry waiting: the arbiter cannot stall responses. Each read
+// is one row (DataW/8 bytes), or the bytes left for the last. Responses (push_i, data_i)
+// arrive in request order; head_o is the oldest row while empty_o is 0.
 //
-// Clock and reset
-//   clk_i   Rising-edge clock. The only clock domain.
-//   rst_ni  Active-low reset. Assertion may be asynchronous; deassertion must be
-//           synchronous to clk_i and meet recovery and removal timing. The
-//           instantiating design owns that guarantee. Reset clears the address,
-//           byte count, reservations and buffer pointers; the buffered rows are
-//           data storage and are not reset.
-//
-// Parameters
-//   AddrW, DataW, SizeW  the sram_arbiter port widths (DataW = one SRAM row)
-//   BytesW               width of the byte count, enough for the longest operand
-//   BufRows              rows buffered (and reads in flight) at most, >= 1
+// Parameters: AddrW, DataW, SizeW, the arbiter port; BytesW, the byte-count width (enough
+// for the longest operand); BufRows, rows buffered and reads in flight (>= 1). Reset clears
+// the address, byte count, reservations and buffer pointers; buffered rows are data storage
+// and are not reset.
 module bpu_sa_read_stream #(
   parameter int unsigned AddrW   = 32,
   parameter int unsigned DataW   = 4096,

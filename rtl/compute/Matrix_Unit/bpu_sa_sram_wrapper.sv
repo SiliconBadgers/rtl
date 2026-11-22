@@ -1,182 +1,20 @@
-// SRAM wrapper for bpu_sa_array: runs one matrix-multiply command at a time,
-//   unscaled      C = A * B, exact INT32 (BYTE_DOT in the 10-03 slides), or
-//   block-scaled  C = sum over blocks g of (A_g * B_g) scaled by bf16 block scales,
-//                 accumulated in fixed point inside the PEs and written as FP32,
-// with INT8 activations A and INT8 or packed INT4 weights B. It reads the
-// operands from the on-chip SRAM through the sram_arbiter matrix port, feeds the
-// output-stationary array, and writes the finished C tile back through the same
-// port in the command's output encoding (INT32 fixed point, FP32, FP16 or INT8
-// besides the legacy INT32 / FP32). It implements the proposed specification
-// (docs/compute/matrix_unit_spec.md) with CmdDepth = 1: no early overlap.
+// Runs one matrix command at a time on bpu_sa_array. It reads A, B and the two scale
+// tables through the sram_arbiter Matrix port, feeds the array, converts the finished C
+// tile to the command's output encoding and writes it back through the same port. Ports,
+// layouts and arithmetic: docs/compute/matrix_unit_io_scheme.md.
 //
-// Sources (one module per file; rtl/compute/Matrix_Unit/bpu_sa_array.f lists them):
-//   bpu_matrix_unit.sv         the top level the controller instantiates: the record
-//                              decoder and this module, with idle and a sticky fault
-//   bpu_sa_sram_wrapper.sv     this module: command, read arbitration, feed, drain,
-//                              C write-back, milestones
-//   bpu_sa_read_stream.sv      one read stream (A, B, and the two scale tables)
-//   bpu_sa_fifo.sv             buffers and queues
-//   bpu_sa_array.sv            the systolic array (with bpu_sa_pe.sv, bpu_sa_delay.sv)
-//   bpu_sa_output_convert.sv   the output encodings
-//   bpu_sa_command_decoder.sv  the version-1 command record (bpu_matrix_unit's)
-//   bpu_sa_pkg.sv              numerics constants, encodings, the record type and
-//                              the conversion functions
-//
-// ---------------------------------------------------------------------------------
-// Memory layout (byte addresses; one SRAM row = DataW/8 bytes, 512 by default)
-//
-//   A   Rows x K int8, k-major: A[i][k] at a_addr + k*Rows + i. Column k of A, the
-//       Rows values one k-step needs, is Rows consecutive bytes.
-//   B   K x Cols, row-major. INT8: B[k][j] at b_addr + k*Cols + j.
-//       INT4 (cmd_int4_i = 1): two signed codes per byte, low nibble first:
-//       B[k][j] is nibble n = k*Cols + j, in byte b_addr + n/2, low nibble when n
-//       is even (the W4 format).
-//   SA  activation scales (block-scaled only), bf16, block-major:
-//       sA[i][g] at sa_addr + 2*(g*Rows + i), little-endian.
-//   SB  weight scales (block-scaled only), bf16, block-major:
-//       sB[g][j] at sb_addr + 2*(g*Cols + j), little-endian.
-//   C   Rows x Cols, row-major, eb bytes little-endian each, packed: C[r][j] at
-//       c_addr + eb*(r*Cols + j). eb = 4 for encodings 0 to 2, 2 for FP16 (3), 1
-//       for INT8 (4); see bpu_sa_output_convert. Legacy (0): unscaled int32,
-//       sign-extended from AccW; block-scaled IEEE binary32 (see Arithmetic).
-//   Every base address must be row aligned. The wrapper writes exactly the
-//   Rows*Cols*eb bytes of C and nothing else.
-//   Logical shape: a command uses the top-left cmd_m_i x cmd_n_i of the physical
-//   Rows x Cols tile. The layouts above keep their physical strides; lanes outside
-//   M or N read as zero (operands and scales, whatever the SRAM holds there), and
-//   their C elements are written as zero.
-//
-// ---------------------------------------------------------------------------------
-// Arithmetic
-//
-//   Unscaled: as bpu_sa_array; exact while K < 2^(AccW-15) for INT8 B.
-//   Block-scaled: K splits into G = ceil(K / BlockK) blocks, and
-//     acc[i][j] = sum over g of round(isum[i][j][g] * sA[i][g] * sB[g][j] * 2^24)
-//   where isum is the exact integer sum over block g (a short final block counts
-//   only its actual K values, as if zero-padded), each term is rounded to
-//   nearest even, and acc is a 48-bit signed fixed-point value with 24 fractional
-//   bits (Q23.24), saturating (bpu_sa_pe has the details: zero and subnormal scales
-//   count as zero, inf and NaN scales make the element NaN). Each PE scales its
-//   block sums as they finish, so C stays in the PEs for the whole command and
-//   drains once. C[i][j] is then acc[i][j] / 2^24 as IEEE binary32, rounded to
-//   nearest even (a normal number or +0); NaN (0x7FC00000) if a scale was inf or
-//   NaN; +-infinity (acc's sign) if acc saturated.
-//   INT4 B runs the array in its INT4-pair mode: two k-steps per array step, so
-//   twice the MACs per cycle. With an odd K the last pair's second half is zeroed.
-//
-// ---------------------------------------------------------------------------------
-// Clock and reset
-//
-//   clk_i    Rising-edge clock. Every port is in this single clock domain.
-//   rst_ni   Active-low reset. Assertion may be asynchronous; deassertion must be
-//            synchronous to clk_i and meet recovery and removal timing. The
-//            instantiating design owns that guarantee. The same reset goes to every
-//            submodule.
-//
-//   Reset cancels the command in progress: no done_o pulse is sent for it, and the
-//   SRAM may hold a partly written C. The sram_arbiter must be reset with it and
-//   must drop any response still in flight (its proposed reset contract); a
-//   response that arrived after reset would be taken as data for the next
-//   command. Reset clears the control state (command, counters, credits, request
-//   valid, FIFO pointers, pipeline valids); row buffers, staging rows, accumulators
-//   and request payload registers are data storage.
-//
-// ---------------------------------------------------------------------------------
-// Interface (all latencies in clk_i cycles)
-//
-//   Command  cmd_valid_i / cmd_ready_o: ready/valid. cmd_ready_o = !busy_o, so one
-//            command runs at a time; it depends only on registers.
-//            cmd_k_i is K, 1 .. 2^KW - 1. cmd_m_i and cmd_n_i are the logical
-//            M (1 .. Rows) and N (1 .. Cols). cmd_int4_i: B is packed INT4.
-//            cmd_scaled_i: block-scaled, FP32 C; cmd_sa_addr_i and cmd_sb_addr_i
-//            are then the scale tables (ignored otherwise).
-//            cmd_clear_acc_i and cmd_write_output_i (clear_acc and write_output
-//            in the draft command format) chain commands along K:
-//              cmd_clear_acc_i = 1 starts the command's sums from zero; 0 adds
-//              them to the sums the previous command kept.
-//              cmd_write_output_i = 1 writes the finished C tile to
-//              cmd_c_addr_i; 0 keeps the sums in the unit instead (no C write,
-//              cmd_c_addr_i ignored) for a following command with
-//              cmd_clear_acc_i = 0.
-//            Unscaled sums stay in the PEs' integer accumulators, block-scaled sums
-//            in their fixed-point accumulators, continuing in block order. A
-//            standalone command sets both to 1.
-//            busy_o is high from the cycle after the command is accepted until
-//            the command completes. done_o pulses for one cycle when it has, in
-//            the first cycle busy_o is low again. With cmd_write_output_i = 0
-//            the command completes once its last contribution has settled:
-//            Rows + Cols cycles after its last array step (+ SCALE_PIPE
-//            block-scaled), so the next command may change mode at once.
-//            An illegal command is accepted, touches no memory, and gets done_o
-//            and err_o together one cycle later. err_o is never high without
-//            done_o. Illegal: cmd_decode_error_i (a malformed record, from
-//            bpu_sa_command_decoder); K = 0; M or N zero or above Rows or Cols; a
-//            base address in use that is not row aligned; cmd_int4_i in a build
-//            without Int4; cmd_scaled_i in a build without Scale; a writing
-//            command with cmd_out_format_i above 4, or INT32 (1) with
-//            cmd_out_frac_i above 31; cmd_clear_acc_i = 0 with no kept sums, with
-//            kept sums of the other kind (unscaled vs block-scaled), or with
-//            another M or N than the kept sums'. An illegal command leaves kept
-//            sums as they were; reset discards them. bpu_matrix_unit turns err_o
-//            into its sticky fault_o, the controller's engine fault, and accepts
-//            nothing more until reset: correct software never issues one.
-//            Output encoding (writing commands): cmd_out_format_i, with
-//            cmd_out_frac_i (INT32), cmd_requant_mul_i and cmd_requant_shift_i
-//            (INT8); see bpu_sa_output_convert.
-//   Progress milestone_inc_o: the command queues' milestone increment, 00 / 01 / 10
-//            for zero, one or two milestones this cycle (never 11). Each legal
-//            command publishes three, in order: inputs released (its last array
-//            step fed, so every operand read is back), then next contribution
-//            ready and complete, both at completion (with done_o). Illegal
-//            commands publish none. Registered; reset drops any held.
-//            idle_o: no command running and no milestone held or on
-//            milestone_inc_o, so every accepted command's output writes have
-//            committed and its milestones have all been counted. It is the
-//            controller's engine idle (docs/control/top_level_control_spec.md,
-//            "Progress, waits, and completion"). Low from the cycle after a legal
-//            command is accepted until the cycle after its last milestone is on
-//            milestone_inc_o; an illegal command never lowers it. busy_o alone is
-//            not enough: it falls while the last two milestones are still on
-//            milestone_inc_o. Depends only on registers; high in reset.
-//   SRAM     matrix_req_* drive the sram_arbiter matrix request port
-//            (ready/valid). A request and its payload stay unchanged from the
-//            cycle valid rises until the cycle ready is 1. All of them depend
-//            only on registers.
-//            Reads: one SRAM row per request, size_bytes = DataW/8, except an
-//            operand's last read, which asks for exactly the bytes that remain.
-//            Byte n of matrix_rsp_rdata_i (bits [8n+7:8n]) must be the byte at the
-//            request address + n. Of the streams that can take a read, the one
-//            with the fewest rows reserved goes first (A, B, SA, SB on a tie).
-//            Writes: up to one SRAM row of C per request; byte n of
-//            matrix_req_wdata_o is written to the request address + n, and
-//            size_bytes covers exactly the C bytes in the request.
-//            matrix_rsp_valid_i: a one-cycle pulse per read, in request order,
-//            carrying matrix_rsp_rdata_i, with no backpressure; it carries reads
-//            only. The wrapper only issues a read when its buffer has room for
-//            the response.
-//            Write completion is fixed (docs/memory/sram_arbiter_spec.md,
-//            "Completion and visibility"): a write accepted on rising edge n has
-//            committed, and is visible to later reads, by edge n + 1. There is no
-//            write-acknowledgment input. Stalls delay acceptance only. The last
-//            write is accepted no later than the edge before the command can
-//            finish, so done_o (registered) rises no earlier than that write's
-//            commit edge. Write data may be reused immediately after acceptance.
-//            Reset cancels writes that have not reached their commit edge (the
-//            arbiter's side of the shared reset boundary).
-//
-// Timing, from accepting the command (L = SRAM round trip, request to response):
-//   the first k-step enters the array about L + 2 cycles later, once the first A
-//   and B rows are back; array steps then stream one per cycle while the buffers
-//   keep up. C rows start Rows + Cols - 1 cycles after the last array step
-//   (+ SCALE_PIPE block-scaled), and are written one SRAM row at a time. Block
-//   ends never stall the array: the scaling runs in the PEs alongside the next
-//   block, at any BlockK.
-//
-// Knobs: Rows, Cols, AccW (the array); Int4 (INT4-pair PEs) and Scale (block
-//   scaling in every PE), each removable to save area; BlockK; DataW, SizeW, AddrW (the
-//   arbiter port: sram_arbiter_pkg DATA_WIDTH, SIZE_WIDTH, ADDR_WIDTH); BufRows
-//   (read-ahead per stream); OutDepth (finished rows queued for write-back).
-// ---------------------------------------------------------------------------------
+// - One command at a time: cmd_ready_o = !busy_q.
+// - The read streams (A, B, sA, sB) are granted fewest-rows-reserved first, in that
+//   order on a tie. A read is issued only when its buffer has room for the response.
+// - Milestones: inputs released when the command's last array step is fed, which needs
+//   every operand read back; next contribution ready and complete together at the
+//   finish. At most two are published per cycle; any excess is held for the next.
+// - A writing command finishes once its last C write is accepted and nothing is pending,
+//   so done_o follows that write's commit edge (the arbiter commits by the next edge). A
+//   keeping command finishes when its last contribution has settled.
+// - Reset clears control state: the command, counters, credits, request valid, FIFO
+//   pointers and pipeline valids. Buffers, staging rows, accumulators and request payloads
+//   are data storage and are not reset.
 module bpu_sa_sram_wrapper
   import bpu_sa_pkg::*;
 #(
@@ -573,13 +411,10 @@ module bpu_sa_sram_wrapper
     end
   end
 
-  // Milestones, three per accepted legal command, in order: inputs released when its
-  // last array step is fed (every operand read is back by then: the step needs the
-  // last row of each stream); next contribution ready and complete together at the
-  // finish (one command at a time, so a continuation can only follow completion).
-  // Published on milestone_inc_o as the command queues' increment, at most two per
-  // cycle, with any excess held for the next cycle; complete appears with done_o.
-  // An illegal command publishes none: its err_o faults the job.
+  // Milestones. Inputs released: the last array step needs the last row of every stream,
+  // so every operand read is back. Next contribution ready and complete: together at the
+  // finish, since a continuation can only follow completion. At most two per cycle, the
+  // excess held for the next; an illegal command publishes none.
   assign ms_inputs = feed_fire && feed_final;
   assign ms_total = 3'(ms_held_q) + (finish ? 3'd2 : 3'd0) + 3'(ms_inputs);
   assign milestone_inc_o = ms_inc_q;
@@ -925,12 +760,10 @@ module bpu_sa_sram_wrapper
     end
   end
 
-  // Finished rows go to the write-back queue one cycle after the array hands them over
-  // (conversion stage 2). Only one command runs at a time, so its kind and format
-  // still describe the row in the conversion register. Elements outside M or N are
-  // written as zero. Their inputs were zero too, so they already hold +0; forcing it
-  // keeps the rule independent of the arithmetic. The row is then packed: element j
-  // at byte eb * j (eb = 4, 2 or 1 bytes), the rest of the entry unused.
+  // Finished rows enter the write-back queue one cycle after the array hands them over
+  // (conversion stage 2); with one command at a time, its kind and format still describe
+  // the row. Elements outside M or N are forced to zero, which keeps that rule independent
+  // of the arithmetic. Packing puts element j at byte eb * j.
   for (genvar j = 0; j < Cols; j++) begin : g_c_out
     assign c_out_row[32*j+:32] = (cv_row_on_q && col_on_q[j]) ? cv_row[32*j+:32] : 32'h0;
     assign c_pack16[16*j+:16] = c_out_row[32*j+:16];

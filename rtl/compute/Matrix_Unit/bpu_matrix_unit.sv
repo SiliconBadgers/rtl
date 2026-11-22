@@ -1,58 +1,11 @@
-// The Matrix unit as the top-level controller instantiates it: one port for the
-// Matrix command queue, one for the sram_arbiter Matrix channel, and the three
-// signals the controller reads (progress, idle, fault). Inside, the version-1 record
-// decoder feeds the SRAM wrapper, which runs one command at a time (CmdDepth = 1).
-// The contract is docs/compute/matrix_unit_integration.md.
-//
-// Sources: rtl/compute/Matrix_Unit/bpu_sa_array.f (this module is listed last).
-//
-// ---------------------------------------------------------------------------------
-// Connections
-//
-//   Command  cmd_valid_i / cmd_ready_o / cmd_payload_i connect to the command queues'
-//            Matrix issue port (issue_valid_o[1], issue_ready_i[1],
-//            issue_payload_o[1]). The payload is the 512-bit version-1 record
-//            (docs/compute/matrix_unit_spec.md, "Command record") in bits 511:0;
-//            any bit above 511 of a wider system payload must be zero.
-//            cmd_ready_o depends only on registers, so the queue may hold valid
-//            and the payload stable for as long as it likes. The record's two
-//            wait-target words are ignored: the controller checks its own sideband
-//            copies before the command reaches this port.
-//   Progress milestone_inc_o connects to increment_i[1]: three milestones per
-//            accepted legal command, in order (inputs released; next contribution
-//            ready; complete), 00 / 01 / 10 per cycle, never 11.
-//   Idle     idle_o connects to engine_idle_i[1]. High when no command is running
-//            and no milestone is held or on milestone_inc_o, so every accepted
-//            command's C writes have committed and its milestones have all been
-//            counted. Depends only on registers; high in reset.
-//   Fault    fault_o connects to engine_fault_i[1]. It rises in the cycle after an
-//            illegal command is accepted and stays high until reset; from then on
-//            cmd_ready_o is low, so a command the queue is still offering is never
-//            accepted. An illegal command touches no memory and publishes no
-//            milestones. Illegal: a malformed record (bpu_sa_command_decoder), a
-//            nonzero bit above 511, or anything bpu_sa_sram_wrapper rejects (shape,
-//            alignment, a feature the build lacks, a continuation that does not
-//            match the kept sums). Faults from the arbiter are the arbiter's own
-//            fault_o, not this one.
-//   SRAM     matrix_req_* / matrix_rsp_* connect to the sram_arbiter Matrix channel
-//            (docs/memory/sram_arbiter_spec.md). Ordinary reads and writes only:
-//            matrix_req_transpose_o and matrix_req_element_width_o are always zero
-//            (transpose is not in version 1). Reads may complete any number of
-//            cycles after acceptance, in order; a write accepted on edge n must be
-//            committed by edge n + 1, which bpu_sa_sram_wrapper relies on for
-//            idle_o.
-//
-// Clock and reset: one rising-edge clock. rst_ni asserts asynchronously and must be
-// released synchronously. Reset the command queues, the scoreboard counter and the
-// arbiter with this unit (the controller's coordinated reset): reset cancels a running
-// command, discards kept sums and clears the fault, and a read response still in
-// flight must be dropped by the arbiter.
-// ---------------------------------------------------------------------------------
+// Matrix unit top level, as the controller instantiates it: the version-1 record decoder
+// in front of bpu_sa_sram_wrapper, with the controller's idle and a sticky fault.
+// Specification: docs/compute/bpu_matrix_unit_spec.md.
 module bpu_matrix_unit
   import bpu_sa_pkg::*;
 #(
   parameter int unsigned PayloadWidth = RECORD_W,  // queue payload, >= 512, whole 32-bit words
-  parameter int unsigned Rows         = 8,         // the array and wrapper; see bpu_sa_sram_wrapper
+  parameter int unsigned Rows         = 8,
   parameter int unsigned Cols         = 8,
   parameter int unsigned AccW         = 32,
   parameter int unsigned DataW        = 4096,      // sram_arbiter_pkg DATA_WIDTH
@@ -116,7 +69,7 @@ module bpu_matrix_unit
     end
   end
 
-  // The controller contract. All of these are 0 or 1 from reset on.
+  // Specification R09, R11 and P9. Each signal is 0 or 1 from reset on.
   always @(posedge clk_i) begin
     FaultBlocksAccept_A :
     assert (!(fault === 1'b1 && cmd_ready_o === 1'b1))

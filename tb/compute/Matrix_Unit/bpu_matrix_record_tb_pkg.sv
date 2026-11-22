@@ -1,5 +1,5 @@
 // The Matrix version-1 command record for the testbenches, from the specification's
-// table (docs/compute/matrix_unit_spec.md, "Command record"). It is written from the
+// table (docs/compute/bpu_matrix_unit_spec.md, section 7.2). It is written from the
 // table, not from bpu_sa_command_decoder, so a decoder that misplaces a field fails.
 package bpu_matrix_record_tb_pkg;
   import bpu_sa_golden_vectors_pkg::*;

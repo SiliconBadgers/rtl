@@ -1,7 +1,7 @@
-// Constants of the Matrix Unit shared by bpu_sa_pe, bpu_sa_array, bpu_sa_sram_wrapper
-// and bpu_sa_command_decoder: the block-scaled numerics (the full contract is in
-// docs/compute/matrix_unit_io_scheme.md, Arithmetic), the output encodings and the
-// version-1 command record (docs/compute/matrix_unit_spec.md).
+// Matrix unit constants and functions: the block-scaled numerics
+// (docs/compute/matrix_unit_io_scheme.md, "Arithmetic"), the output encodings and their
+// conversion functions, and the version-1 record type (docs/compute/bpu_matrix_unit_spec.md,
+// section 7.2).
 package bpu_sa_pkg;
 
   // Not every importer uses every constant.
@@ -23,8 +23,8 @@ package bpu_sa_pkg;
   //   isum * sa * sb * 2^FX_FRAC = isum * ma * mb * 2^(ea + eb - SCALE_SHIFT_BIAS).
   localparam int unsigned SCALE_SHIFT_BIAS = 2 * (127 + 7) - FX_FRAC;
 
-  // The version-1 Matrix command record (docs/compute/matrix_unit_spec.md,
-  // "Command record"): 16 little-endian 32-bit words, word w in bits [32w+31:32w].
+  // The version-1 Matrix command record (docs/compute/bpu_matrix_unit_spec.md, section
+  // 7.2): 16 little-endian 32-bit words, word w in bits [32w+31:32w].
   localparam int unsigned RECORD_W = 512;
   localparam logic [1:0] RECORD_KIND_MATRIX = 2'd1;
   localparam logic [7:0] RECORD_VERSION = 8'd1;

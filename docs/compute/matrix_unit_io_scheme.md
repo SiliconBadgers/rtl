@@ -8,15 +8,14 @@ systolic array:
   written in the command's output encoding: legacy (INT32, or FP32 when block-scaled), INT32
   fixed point, FP32, FP16 or INT8.
 
-It implements the proposed Matrix specification (`docs/compute/matrix_unit_spec.md`,
-[rtl PR #32](https://github.com/SiliconBadgers/rtl/pull/32)) with `CmdDepth = 1`:
-logical M/N masks, a short final scale block, the output encodings, the 2-bit milestone
-increment and the version-1 record decoder (`bpu_sa_command_decoder`). Early command overlap is
-not built yet.
+It implements the Matrix specification proposed in
+[rtl #32](https://github.com/SiliconBadgers/rtl/pull/32) with `CmdDepth = 1` (no command
+overlap): logical M/N masks, a short final scale block, the output encodings, the 2-bit
+milestone increment and the version-1 record decoder (`bpu_sa_command_decoder`).
 
 The top level is `bpu_matrix_unit`. It feeds the version-1 record from the Matrix command
 queue through the decoder into `bpu_sa_sram_wrapper`, and adds the controller's idle and a
-sticky fault. The [integration contract](matrix_unit_integration.md) gives its ports and how
+sticky fault. The [block specification](bpu_matrix_unit_spec.md) gives its ports and how
 it connects to the controller and the arbiter. This document describes the wrapper, which takes
 one command at a time and works through the
 [SRAM arbiter](../memory/sram_arbiter_io_scheme.md)'s matrix port:
@@ -35,8 +34,6 @@ this document alongside RTL changes.** The RTL header comments are the detailed 
 These are `bpu_sa_sram_wrapper`'s ports. `bpu_matrix_unit` drives the command fields from the
 record, keeps `busy_o` and `done_o` inside, turns `err_o` into its sticky `fault_o`, and passes
 `milestone_inc_o`, `idle_o` and the matrix port through.
-
-![Top-level ports of bpu_sa_sram_wrapper](matrix_unit/svg/matrix_unit_ports.svg)
 
 All ports are in the single `clk_i` domain. Widths are at the default parameters.
 
@@ -112,10 +109,8 @@ accumulators are data storage and are not cleared.
 
 ### Chaining commands along K
 
-`cmd_clear_acc_i` and `cmd_write_output_i` split one long dot product across several commands. They
-are `clear_acc` and `write_output` in the draft command format (`docs/command-format.md` on
-`codex/command-format-spec`), which records this as a compute-team decision: the unit has "an input
-controlling whether to write the output or to keep it in the accumulators".
+`cmd_clear_acc_i` and `cmd_write_output_i` (the record's `clear_acc` and `write_output`) split
+one long dot product across several commands.
 
 | Use | `cmd_clear_acc_i` | `cmd_write_output_i` |
 | --- | --- | --- |
@@ -174,7 +169,8 @@ flag gives signed infinity or the integer endpoint; a zero sum gives +0.
 
 **Unscaled:** `C[i][j] = Σ_k A[i][k] · B[k][j]`, exact, wrapping at `AccW` bits.
 
-**Block-scaled:** K splits into G = K / `BlockK` blocks (16 k-steps by default). For each element
+**Block-scaled:** K splits into G = ⌈K / `BlockK`⌉ blocks (16 k-steps by default); a short final
+block counts only its actual K values. For each element
 and each block g, in increasing g:
 
 1. `isum[i][j][g]` = Σ over the block's k of `A[i][k] · B[k][j]`, exact;
@@ -205,19 +201,11 @@ largest values come from two negative limits multiplied together:
 | Unscaled sum over K | at most `K · 2^14` | exact while K < 2^(AccW − 15) |
 | Block-scaled sum (Q23.24) | below 2^23 ≈ 8.4 million, in steps of 2^−24 ≈ 6·10^−8 | 48 |
 
-**What is decided and what is assumed.** No written specification fixes the block-scaled
-numerics yet, so this implementation marks its choices:
-
-| Choice | Status |
-| --- | --- |
-| INT8 activations; INT4 or INT8 weights with block scales | Compute-team decision (architecture `decisions/compute-team-decisions.md`) |
-| Block contributions scaled before they are combined | Draft command format |
-| `BlockK` = 16 | From the 10/17 compute meeting; not yet in a written spec |
-| bf16 scales | Assumption (discussed 10/17) |
-| Q23.24 in 48 bits, saturating | Assumption (the meeting discussed 24 fractional bits and 32/48-bit accumulators) |
-| binary32 output | Assumption (FP16 was discussed; INT8 requantization needs a spec) |
-| Exponent-0 scales as zero; inf/NaN scales give NaN | Assumption |
-| K a multiple of `BlockK` | Assumption (the command format is silent on partial blocks) |
+**Status.** INT8 activations with INT8 or INT4 weights is a compute-team decision (architecture
+`decisions/compute-team-decisions.md`). The block-scaled numerics above are those of the Matrix
+specification proposed in rtl #32: bf16 scales, `BlockK` = 16 by default, a short final block,
+the saturating Q23.24 accumulator, the special-scale rules and the output encodings. They are
+decided once #32 merges.
 
 **INT4 weights** run the array two k-steps per cycle. With an odd K, the second half of the last pair
 is zeroed.
@@ -260,8 +248,9 @@ L below is the arbiter's round trip, from request to response.
 - **C rows:** they leave the array `Rows + Cols − 1` cycles after the last array step, plus 4
   when block-scaled. They reach the write-back queue one cycle later, after the wrapper's
   conversion register, and are written one SRAM row at a time.
-- **Writing command completion:** `done_o` follows completion of every C write, including a
-  delayed final completion. Write-completion latency is separate from read round-trip L.
+- **Writing command completion:** `done_o` rises no earlier than the commit edge of the last C
+  write. Measured cycle counts per command are in the
+  [block specification](bpu_matrix_unit_spec.md), section 7.3.
 - **Block-scaled commands:** block ends never stall the array, at any `BlockK`: each PE scales a
   finished block while the next one accumulates.
 
@@ -281,8 +270,8 @@ record type and the conversion functions) in `rtl/compute/Matrix_Unit`:
   - `bpu_sa_array`.
 - **`bpu_sa_array`** instantiates `Rows × Cols` `bpu_sa_pe`s and the `bpu_sa_delay` input delays.
 
-Command decode, arbitration, the request register, the response demux, the feed, the conversion
-of block-scaled results to binary32, and C staging are written inline in the wrapper.
+Command checks, arbitration, the request register, the response demux, the feed, packing and C
+staging are written inline in the wrapper.
 
 ![Module hierarchy and wiring](matrix_unit/svg/matrix_unit_hierarchy.svg)
 
@@ -290,7 +279,7 @@ of block-scaled results to binary32, and C staging are written inline in the wra
 
 ### Blocks and assertions
 
-![Blocks inside the wrapper and where each assertion lives](matrix_unit/svg/matrix_unit_structure.svg)
+![Blocks, data flow and where each assertion lives](matrix_unit/svg/matrix_unit_structure.svg)
 
 ### The array (`bpu_sa_array`)
 
@@ -342,19 +331,18 @@ These are four pipeline stages, so the next block accumulates meanwhile. Two mor
 - `slast` copies the result into the shadow register for the drain (the last block, with
   `cmd_write_output_i`).
 
-The whole command is one tile and drains once. The wrapper converts each drained value to
-binary32 in two cycles:
-1. **Registered:** the magnitude and the position of its leading 1, found with a log-depth prefix
-   OR.
-2. **On the way into the write-back queue:** normalize, round and pack.
+The whole command is one tile and drains once. `bpu_sa_output_convert` turns each drained value
+into the command's encoding in two cycles:
+1. **Registered:** the sign and magnitude, the position of its leading 1 (a log-depth prefix
+   OR) and its product with the INT8 multiplier (2^frac for INT32).
+2. **On the way into the write-back queue:** round and saturate; the wrapper then packs the row.
 
 **Why inside the PEs.** The alternative is to drain every block's integer sums to a shared
 scaling stage at the array edge. Draining a tile takes about `2·Rows + Cols` cycles (about 24 on
 8 × 8), but a 16-element block takes only 16 cycles in INT8, or 8 in INT4. The array would stall
 on every block, reaching about two-thirds of its peak in INT8 and one-third in INT4. Scaling in
 place keeps C stationary across all the blocks and costs no throughput. Its cost is area: each PE
-gets the scale lanes, the scaling pipeline and a 48-bit accumulator. It also removes the earlier
-FP32 edge stage.
+gets the scale lanes, the scaling pipeline and a 48-bit accumulator.
 
 ## 4. Small example
 
@@ -416,16 +404,10 @@ yet.
   super-block would also be cheaper per PE. This is the main decision before the block-scaled
   path is final.
 
-- **Block-scaled numerics:** the assumptions in the table under Arithmetic need team sign-off:
-  bf16 scales, Q23.24 in 48 bits, binary32 output, and partial blocks. Two related questions are
-  also open: how activation scales are grouped (here one per row and block), and whether
-  per-tensor scales are folded into `sB`.
-- **Requantization to INT8**, which the compute-team decisions ask for, needs a specification of
-  the scale, rounding and saturation.
-- **Arbiter integration:** the actual arbiter and the unit must share a reset boundary that
-  discards pre-reset read responses and cancels uncommitted writes. The arbiter RTL in rtl PR
-  #35 lacks the Matrix transpose and element-width inputs and the sticky `fault_o`, and still
-  drives the `sb_wr_done_o` the specification removed. Until it matches, the integration bench
-  uses a specification model (`sram_arbiter_spec_model`).
-- **Command source:** settled. The Matrix command queue drives `bpu_matrix_unit` with the
-  version-1 record; see the [integration contract](matrix_unit_integration.md).
+- **Per-tensor scales:** whether they are folded into `sB` is open.
+- **Arbiter integration:** the arbiter in rtl #35 runs the golden commands bit-exact with this
+  unit (a bench outside the regression), but lacks the Matrix transpose and element-width inputs
+  and the sticky `fault_o`, and does not state when a write becomes visible. Until #35 matches
+  its specification and merges, the regression uses a specification model
+  (`sram_arbiter_spec_model`). The open questions are in the
+  [block specification](bpu_matrix_unit_spec.md), section 12.

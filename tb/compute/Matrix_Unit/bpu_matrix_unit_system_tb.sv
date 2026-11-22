@@ -74,8 +74,8 @@ module bpu_matrix_unit_system_tb;
   localparam int MATRIX = 1;
   localparam int VECTOR = 2;
 
-  // Memory and Vector records (docs/memory/memory_unit_spec.md and the Vector stand-in
-  // below): the kind, two wait targets, then the body; bits above the body are zero.
+  // Memory records follow the Memory unit specification in rtl #32; Vector records are this
+  // bench's own. Both: the kind, two wait targets, then the body; bits above it are zero.
   localparam logic [1:0] KIND_TRANSFER = 2'b00;
   localparam logic [1:0] KIND_VECTOR_RUN = 2'b10;
   localparam int TARGET_0_LSB = 2;

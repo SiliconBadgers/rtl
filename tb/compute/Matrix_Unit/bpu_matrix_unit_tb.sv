@@ -134,6 +134,7 @@ module bpu_matrix_unit_tb;
   int requests_checked;
   int idle_gap_cycles;  // cycles with the last milestones still due (idle_o low, no work)
   int writes_at_accept[COMMANDS];
+  int accept_cycle[COMMANDS];  // for the per-command cycle counts in the log
   string status;
 
   bpu_matrix_unit #(
@@ -369,6 +370,7 @@ module bpu_matrix_unit_tb;
         for (int i = 0; i < count; i++) begin
           offer(golden_record(first + i), 1'b1);
           writes_at_accept[base+i] = writes;
+          accept_cycle[base+i]     = cycle;
         end
       end
       begin : follow_milestones
@@ -413,27 +415,37 @@ module bpu_matrix_unit_tb;
             check_c(n);  // +inject_error corrupts the first command's first element
           end
           commands_checked++;
-          $display("CMD %0d k=%0d int4=%0d scaled=%0d clear=%0d write=%0d done at cycle %0d", n,
-                   GV_CMD[n][0], GV_CMD[n][1], GV_CMD[n][2], GV_CMD[n][3], GV_CMD[n][4], cycle);
+          // Cycles from the accepting edge to the edges that count milestones 1 and 3.
+          $write("CMD %0d k=%0d int4=%0d scaled=%0d clear=%0d write=%0d done at cycle %0d", n,
+                 GV_CMD[n][0], GV_CMD[n][1], GV_CMD[n][2], GV_CMD[n][3], GV_CMD[n][4], cycle);
+          $display(" inputs_released=+%0d complete=+%0d", inputs_cycle - accept_cycle[j],
+                   cycle - accept_cycle[j]);
         end
       end
     join
   endtask
 
   // The controller's coordinated reset: unit, arbiter model and progress counter
-  // together, asserted between clock edges and released on a falling edge.
+  // together, asserted between clock edges and released on a falling edge. The outputs
+  // are checked in every cycle of reset and in the first cycle after it.
   task automatic coordinated_reset();
     #2;
     rst_n = 1'b0;
     repeat (3) begin
       tick();
+      check_reset_outputs("during");
     end
     rst_n = 1'b1;
     tick();
-    if (idle !== 1'b1 || fault !== 1'b0 || cmd_ready !== 1'b1 || req_valid !== 1'b0) begin
+    check_reset_outputs("after");
+  endtask
+
+  task automatic check_reset_outputs(input string when);
+    if (idle !== 1'b1 || fault !== 1'b0 || cmd_ready !== 1'b1 || req_valid !== 1'b0
+        || milestone_inc !== 2'b00) begin
       errors++;
-      $display("bpu_matrix_unit_tb: after reset idle %b fault %b ready %b request %b", idle, fault,
-               cmd_ready, req_valid);
+      $display("bpu_matrix_unit_tb: %s reset idle %b fault %b ready %b request %b milestones %b",
+               when, idle, fault, cmd_ready, req_valid, milestone_inc);
     end
   endtask
 

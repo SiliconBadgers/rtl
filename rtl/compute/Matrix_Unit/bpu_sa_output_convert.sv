@@ -1,6 +1,5 @@
-// Output conversion for the Matrix unit: one finished C row from the array, in its
-// native form, becomes the row in the command's output encoding
-// (docs/compute/matrix_unit_spec.md, "Output representations"):
+// Converts one finished C row from its native form into the command's output encoding
+// (docs/compute/matrix_unit_io_scheme.md, "Output encodings"):
 //
 //   0 legacy   INT32 for integer commands, FP32 for block-scaled ones   4 bytes
 //   1 INT32    saturate32(RNE(v * 2^frac))                              4 bytes
@@ -9,22 +8,18 @@
 //              directly from the native value (no FP32 step)
 //   4 INT8     clamp(RNE(a * mul / 2^shift), -127, 127)                 1 byte
 //
-// with a the native code (the AccW-bit integer sum, or the Q23.24 code of a block-
-// scaled sum) and v its value (a, or a / 2^24). Block-scaled flags: NaN gives the
-// canonical NaN (FP32 0x7FC00000, FP16 0x7E00) or integer 0; overflow gives signed
-// infinity or the integer endpoint (INT32 -2^31 or 2^31 - 1, INT8 -127 or 127), with
-// the accumulator's sign; a zero sum gives +0. Each lane's element sits in the low
-// bytes of its 32-bit output lane, the rest zero; the wrapper packs them.
+// a is the native code (the AccW-bit integer sum, or the Q23.24 code of a block-scaled
+// sum) and v its value (a, or a / 2^24). Block-scaled flags: NaN gives the canonical NaN
+// (FP32 0x7FC00000, FP16 0x7E00) or integer 0; overflow gives signed infinity or the
+// integer endpoint (INT32 -2^31 or 2^31 - 1, INT8 -127 or 127); a zero sum gives +0. Each
+// element sits in the low bytes of its 32-bit lane, the rest zero; the wrapper packs them.
 //
-// The arithmetic is bpu_sa_pkg::cv_stage1 and cv_stage2. Stage 1 (registered here)
-// takes the magnitude, its leading one and the product a * mul (2^frac for INT32),
-// 48 x 32 bits; stage 2 (combinational from the register) rounds and saturates.
-// INT32 and INT8 share stage 2: INT32 is the product with 2^frac shifted right by the
-// native fractional bits (24 or 0).
-//
-// Timing: out_valid_o and out_o follow in_valid_i by one clock edge, like the
-// conversion register they replace. The format fields must hold while a row is in
-// the register (the wrapper holds them for the whole command).
+// The arithmetic is bpu_sa_pkg::cv_stage1 and cv_stage2. Stage 1, registered here, takes
+// the magnitude, its leading one and the 48 x 32 product a * mul (2^frac for INT32); stage
+// 2 rounds and saturates combinationally from the register. INT32 shares the INT8 path:
+// the product with 2^frac, shifted right by the native fractional bits (24 or 0).
+// out_valid_o and out_o follow in_valid_i by one edge. The format fields must hold while a
+// row is in the register; the wrapper holds them for the whole command.
 module bpu_sa_output_convert
   import bpu_sa_pkg::*;
 #(

@@ -1,22 +1,13 @@
-// Decoder for the version-1 Matrix command record (docs/compute/matrix_unit_spec.md,
-// "Command record"): a 512-bit record from the Matrix command queue becomes the
-// fields of bpu_sa_pkg::matrix_command_t, which the parent connects to
-// bpu_sa_sram_wrapper's cmd_*_i ports, and a malformed-record flag for its
-// cmd_decode_error_i.
+// Decodes the 512-bit version-1 Matrix record (docs/compute/bpu_matrix_unit_spec.md,
+// section 7.2) into bpu_sa_pkg::matrix_command_t, with a malformed-record flag for the
+// wrapper's cmd_decode_error_i. Purely combinational: ready and valid pass straight
+// through, and the fields follow rec_i in the same cycle.
 //
-// Purely combinational. Ready/valid pass straight through: rec_ready_o is
-// cmd_ready_i, cmd_valid_o is rec_valid_i, and the fields follow rec_i in the same
-// cycle, so the wrapper sees the record exactly as the queue offers it.
-//
-// Malformed (cmd_decode_error_o = 1): kind or version not 1; any reserved bit set
-// (word 0 bits 7:2 and 31:16, word 9 bit 31, word 11 bits 31:7, words 12 to 15);
-// an output format above 4; fractional bits above 31; either transpose bit set
-// (transpose is not in version 1). The wrapper rejects such a record like any other
-// illegal command: done_o and err_o, no memory traffic, kept sums preserved. Checks
-// against the array's build (M, N, K, alignment, supported formats) are the
-// wrapper's. The decoder neither tracks dependencies nor transposes. It passes the
-// wait targets on, and bpu_matrix_unit ignores them: the controller checks its own
-// sideband copies before the record reaches the unit.
+// Malformed: kind or version not 1; a reserved bit set (word 0 bits 7:2 and 31:16, word 9
+// bit 31, word 11 bits 31:7, words 12 to 15); an output format above 4; fractional bits
+// above 31; either transpose bit set. Checks against the build (M, N, K, alignment,
+// supported modes) are the wrapper's. The wait targets are passed on, and bpu_matrix_unit
+// ignores them.
 module bpu_sa_command_decoder
   import bpu_sa_pkg::*;
 (

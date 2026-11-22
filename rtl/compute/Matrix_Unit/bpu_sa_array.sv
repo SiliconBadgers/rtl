@@ -1,24 +1,13 @@
-// Output-stationary systolic array: C = A * B with C held in the PEs.
-// INT8 x INT8, or INT8 activations x INT4 weights at two k-steps per cycle;
-// unscaled (exact integer C) or block-scaled (each PE scales every block's integer
-// sum by the block's bf16 scales into a fixed-point accumulator).
+// Output-stationary systolic array: C = A * B with C held in the PEs. INT8 x INT8, or INT8
+// activations x INT4 weights at two k-steps per cycle; unscaled (exact integer C) or
+// block-scaled (each PE scales every block's integer sum by the block's bf16 scales into a
+// fixed-point accumulator).
 //
-// PE(i,j) owns C[i][j]. Each k-step brings one column of A (Rows values, entering
-// from the left, one per row) and one row of B (Cols values, entering from the top,
-// one per column); every PE adds A[i][k] * B[k][j] to its accumulator. A moves
-// right and B moves down one PE per cycle, so the reduction length K can be any
-// length: the sum never leaves the PE until the tile is finished. Accumulators are
-// carry-save (sum + carry vectors); the one carry-propagate add per column happens
-// at the top edge, as each finished row drains out.
-//
-// Sources (one module per file; rtl/compute/Matrix_Unit/bpu_sa_array.f lists them):
-//   bpu_sa_array.sv   this module: input skew, PE grid, tile control, drain
-//   bpu_sa_pe.sv      one processing element
-//   bpu_sa_delay.sv   a shift-register delay line
-//   bpu_sa_pkg.sv     the block-scaled numerics constants
-//
-// ---------------------------------------------------------------------------------
-// Geometry
+// PE(i,j) owns C[i][j]. A k-step brings one column of A in from the left and one row of B
+// in from the top; A moves right and B down one PE per cycle, so K is unbounded and a sum
+// never leaves its PE until the tile finishes. Accumulators are carry-save, with one
+// carry-propagate add per column at the top edge as each finished row drains: no AccW
+// adder in any PE, at the cost of twice the accumulator and shadow registers.
 //
 //              B[k][0]   B[k][1]   B[k][2]      B[k][j] enters column j, delayed j cycles
 //                 |         |         |
@@ -26,105 +15,43 @@
 //                 |         |         |         (with the tile flags)
 //   A[1][k] -> PE(1,0) -> PE(1,1) -> PE(1,2)
 //
-//   The skews make A[i][k] and B[k][j] meet in PE(i,j) on the same cycle. The
-//   k-step a caller sends on cycle t reaches PE(i,j) on cycle t + 1 + i + j.
+// A k-step sent on cycle t reaches PE(i,j) on cycle t + 1 + i + j.
 //
-// ---------------------------------------------------------------------------------
-// Clock and reset
+// Modes change only while the array is idle (nothing accumulating, capturing or draining)
+//   mode_i     0: INT8, one k-step per transfer. 1 (Int4 builds): INT4 pair, k-steps k
+//              and k+1 per transfer; a "k-step" below is then one pair.
+//   scaled_i   0: unscaled. 1 (Scale builds): block-scaled. in_first_i / in_last_i mark
+//              each block; with in_last_i come the block's scales and the tile flags
+//              in_sfirst_i (start the scaled sums from zero) and in_slast_i (drain).
 //
-//   clk_i    Rising-edge clock. Every port is in this single clock domain; there
-//            are no clock-domain crossings.
-//   rst_ni   Active-low reset. Assertion may be asynchronous. Deassertion must be
-//            synchronous to clk_i and meet recovery and removal timing for every
-//            register in the array; the instantiating design owns that guarantee
-//            (normally the system reset synchronizer that drives this reset). The
-//            same reset goes to every bpu_sa_pe and bpu_sa_delay inside. The
-//            producer must hold in_valid_i low while rst_ni is low.
+// Input: ready/valid, one k-step per transfer
+//   in_a_i     Rows lanes of AW bits (16 with Int4, else 8). INT8: A[i][k] in the low
+//              byte. INT4 pair: A[i][k] low, A[i][k+1] high.
+//   in_b_i     Cols lanes of 8 bits. INT8: B[k][j]. INT4 pair: B[k][j] in the low
+//              nibble, B[k+1][j] in the high.
+//   in_first_i, in_last_i  first and last k-step of a tile (block-scaled: of a block).
+//   in_sa_i, in_sb_i, in_sfirst_i, in_slast_i  used only with in_last_i, block-scaled.
+//   in_ready_o = !(final k-step && previous tile still capturing or draining). It depends
+//   on payload bits, never on in_valid_i. One tile drains while the next accumulates, so
+//   back-to-back tiles stream without stalls when K >= 2 * Rows + Cols (+ SCALE_PIPE
+//   block-scaled) and the output keeps up.
 //
-//   Reset cancels all accepted work: a tile in progress or draining is discarded,
-//   out_valid_o is low until a tile completed after reset drains, and the first
-//   k-step after reset must have in_first_i = 1. Reset clears the control state
-//   (tile-flag pipeline, tile and drain counters); accumulators, shadow registers
-//   and the A and B pipelines are data storage and are not reset.
+// Output: ready/valid, one row per transfer, rows 0 to Rows-1 in order
+//   out_row_o holds C[r][j] (AccW bits, signed) at [AccW*j +: AccW]; block-scaled,
+//   out_fx_o holds {nan, overflow, value} (FX_PACK_W bits) at [FX_PACK_W*j +: FX_PACK_W].
+//   out_row_idx_o is r; out_last_o marks row Rows-1. out_valid_o rises Rows + Cols - 1
+//   edges (+ SCALE_PIPE block-scaled) after the edge that accepts the tile's final k-step.
+//   The outputs depend only on registers. err_mode_o is high while a mode the build lacks
+//   is selected; the array then computes INT8 or unscaled.
 //
-// ---------------------------------------------------------------------------------
-// Interface (all widths in bits, all latencies in clk_i cycles)
+// Arithmetic: products are exact and sums wrap modulo 2^AccW, so a tile is exact while
+// K < 2^(AccW-15) in INT8 mode. A block sum needs 16 + log2(BlockK) bits; the scaling is in
+// bpu_sa_pe.
 //
-//   Modes    scaled_i = 0: unscaled. A tile's sums are exact integers.
-//            scaled_i = 1 (Scale = 1 builds only): block-scaled. The k-steps come
-//            in blocks of at most BlockK; in_first_i / in_last_i mark a block's
-//            first and last k-step, and with in_last_i come the block's scales
-//            in_sa_i / in_sb_i and the tile flags in_sfirst_i (the tile's first
-//            block: start the scaled sums from zero) and in_slast_i (its final
-//            block: drain the scaled results). Each PE scales the block sum into
-//            its fixed-point accumulator (bpu_sa_pe); a tile is complete only at a
-//            block with in_slast_i. Like mode_i, scaled_i may change only while
-//            the array is idle.
-//            mode_i = 0 (INT8): one k-step per transfer.
-//            mode_i = 1 (INT4 pair, Int4 = 1 builds only): two k-steps, k and k+1,
-//            per transfer, with INT8 A and INT4 B. A tile's "k-step" below is
-//            then one such pair. mode_i applies to every k-step inside the array,
-//            so it may change only while the array is idle: no tile accumulating,
-//            capturing or draining.
-//   Input    in_valid_i / in_ready_o: ready/valid, one k-step per transfer.
-//            in_a_i: Rows lanes of AW bits (AW = 16 with Int4, else 8); lane i is
-//              in_a_i[AW*i +: AW]. INT8: A[i][k] (signed int8) in the lane's low
-//              byte. INT4 pair: A[i][k] in the low byte, A[i][k+1] in the high.
-//            in_b_i: Cols lanes of 8 bits; lane j is in_b_i[8*j +: 8]. INT8:
-//              B[k][j] (signed int8). INT4 pair: B[k][j] (signed int4) in the low
-//              nibble, B[k+1][j] in the high nibble.
-//            in_first_i: first k-step of a tile, or (block-scaled) of a block: the
-//              integer accumulators restart.
-//            in_last_i: last k-step of a tile, or of a block. A tile with K = 1
-//              sets both.
-//            in_sa_i: Rows lanes of 16 bits, sA[i][g] (bf16) for row i; in_sb_i:
-//              Cols lanes of 16 bits, sB[g][j] (bf16) for column j; in_sfirst_i,
-//              in_slast_i: see Modes. All four count only with in_last_i in
-//              block-scaled mode.
-//            The tile's final k-step is its last k-step (unscaled) or the last
-//            k-step of its in_slast_i block (block-scaled). in_ready_o is 1 except
-//            for a final k-step while the previous tile is still capturing or
-//            draining: in_ready_o = !(final k-step && tile busy). It depends
-//            combinationally on payload bits, never on in_valid_i. One tile can
-//            drain while the next accumulates, so back-to-back tiles stream
-//            without stalls when K >= 2 * Rows + Cols (+ SCALE_PIPE block-scaled)
-//            and the output keeps up; a shorter tile's final k-step waits for the
-//            previous drain. Block ends inside a tile never wait.
-//   Output   out_valid_o / out_ready_i: ready/valid, one row of the finished C
-//            tile per transfer, rows 0 to Rows-1 in order. out_row_o holds
-//            C[r][j] (signed, AccW bits) in bits [AccW*j +: AccW]; out_row_idx_o
-//            is r; out_last_o marks row Rows-1. Block-scaled, out_fx_o holds the
-//            packed result {nan, overflow, value} (FX_PACK_W bits) of C[r][j] in
-//            bits [FX_PACK_W*j +: FX_PACK_W]. out_valid_o rises Rows + Cols - 1
-//            clock edges (plus SCALE_PIPE block-scaled) after the edge that accepts
-//            the tile's final k-step: the edge at which the last PE,
-//            PE(Rows-1, Cols-1), captures it. out_row_o, out_fx_o and out_valid_o
-//            depend only on registers.
-//   Errors   err_mode_o is high while mode_i = 1 in a build without Int4 (the
-//            array then computes INT8) or scaled_i = 1 in a build without Scale
-//            (it then computes unscaled). There are no other error conditions.
-//
-// Arithmetic
-//
-//   Products are exact; sums wrap modulo 2^AccW. A tile's result is exact while
-//   K * 16384 < 2^(AccW-1) in INT8 mode, i.e. K < 2^(AccW-15) (131,072 for the
-//   default AccW = 32), and while K * 1024 < 2^(AccW-1) in INT4 mode (K counted in
-//   single k-steps). Block-scaled: each block sum is exact (BlockK k-steps need
-//   16 + log2(BlockK) bits, at most AccW); the scaling follows bpu_sa_pe.
-//
-// Knobs for the cost/benefit study:
-//   * AccW: accumulator width; sets the longest exact K.
-//   * Int4: the INT4-pair mode doubles MACs per cycle for INT4 weights at the cost
-//     of a 16-bit A path (8 more flops per PE) and the partial-product muxes.
-//   * Scale: block scaling in every PE (scale lanes, a 4-stage scaling pipeline,
-//     a 48-bit accumulator); the largest per-PE cost, removable for unscaled-only
-//     builds. BlockK sets the block-sum width.
-//   * Carry-save accumulators and shadows (here) double those registers but keep
-//     carry propagation out of every PE; the alternative resolves sum + carry in
-//     each PE every cycle (one AccW adder per PE, half the registers).
-//   * The drain shifts one row per cycle through the shadow registers; a wider or
-//     column-parallel drain trades wiring for shorter tile-to-tile gaps.
-// ---------------------------------------------------------------------------------
+// Reset discards all accepted work: in_valid_i must be low during reset, and the first
+// k-step after it must have in_first_i = 1. It clears the tile-flag pipeline and the tile
+// and drain counters; accumulators, shadow registers and the A and B pipelines are data
+// storage and are not reset.
 module bpu_sa_array
   import bpu_sa_pkg::*;
 #(
@@ -195,7 +122,7 @@ module bpu_sa_array
   logic [Cols-1:0][7:0] top_b;
   logic [Cols-1:0][15:0] top_sb;
 
-  // PE grid. Each array holds every PE's outputs; inputs come from the neighbours.
+  // PE grid. Each array holds every PE's outputs; inputs come from the neighbors.
   logic [Rows-1:0][Cols-1:0][A_WIDTH-1:0] a_rt;  // going right: A values
   logic [Rows-1:0][Cols-1:0] first_rt;  // going right: first flags
   logic [Rows-1:0][Cols-1:0] last_rt;  // going right: last flags
