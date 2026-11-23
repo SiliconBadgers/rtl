@@ -1,69 +1,43 @@
-// One processing element (PE) of the output-stationary bpu_sa_array.
+// One processing element of bpu_sa_array. PE(i,j) owns C[i][j]: each cycle it multiplies
+// the A value from the left by the B value from above and adds the product to a carry-save
+// accumulator (sum + carry, mod 2^AccW), so no carry propagates inside the PE. A and the
+// tile flags move right and B moves down, one PE per cycle.
 //
-// PE(i,j) owns one element of the C tile, C[i][j]. Each cycle it multiplies the A
-// value arriving from the left by the B value arriving from above and adds the
-// product to its accumulator. The accumulator stays in carry-save form:
-// separate sum and carry vectors whose value is sum + carry (mod 2^AccW), so no
-// carry propagates inside the PE. A and the tile flags move right, and B moves
-// down, one PE per cycle.
+// Tile flags ride with A: first_i restarts the accumulator; last_i captures the finished
+// carry-save sum into the shadow register, so the next tile accumulates while this one
+// drains. shift_i, driven to every PE at once, moves the shadows up one row, and the array
+// adds sum + carry at the top edge. Capture and shift never coincide
+// (CaptureShiftExclusive_A).
 //
-// Tile flags travel with A:
-//   first_i  This k-step starts a new tile: the accumulator restarts from zero.
-//   last_i   This k-step ends the tile: the finished sum (still carry-save) is
-//            captured into the shadow register, so the next tile can start
-//            accumulating at once while this one drains.
-// Drain: shift_i, driven to every PE at once by the array, moves the shadow
-// registers up one row. shd_sum_o / shd_carry_o feed the PE above; the array adds
-// sum + carry at the top edge. The array never captures and shifts in the same
-// cycle (CaptureShiftExclusive_A).
+// Modes are static; bpu_sa_array says when they may change.
+//   mode_i = 0  INT8: a_i[7:0] x b_i[7:0].
+//   mode_i = 1  INT4 pair (Int4 builds): a_i[7:0] x b_i[3:0] + a_i[15:8] x b_i[7:4].
+// Both modes share the eight partial-product rows and the adder tree: the 8x8 multiplier
+// splits into two 8x4 halves, so the INT4 mode costs only the row multiplexers and the
+// wider A path.
 //
-// Block-scaled mode (scaled_i = 1, Scale builds): the k-steps come in blocks, and
-// first_i / last_i mark a block's first and last k-step. At each block end the
-// block's exact integer sum isum is scaled into a second accumulator, acc_fx:
+// Block-scaled (scaled_i = 1, Scale builds): first_i / last_i mark a block. At each block
+// end the block's exact integer sum isum is scaled into a second accumulator:
 //   acc_fx = acc_fx + round(isum * sa * sb * 2^FX_FRAC)
-// where sa_i (riding with A) and sb_i (riding with B) are the block's bf16 scales,
-// sampled with last_i. Blocks with different scales are never added as raw
-// integers. With last_i, sfirst_i restarts acc_fx from zero (the tile's first
-// block) and slast_i copies the result into the shadow register for the drain (the
-// tile's final block); both ride with A. The scaling is a pipeline of SCALE_PIPE
-// cycles (decode and add, multiply, shift and round, accumulate), so it overlaps
-// the next block; block ends may be any distance apart.
-//   Numerics (bpu_sa_pkg; docs/compute/matrix_unit_io_scheme.md, Arithmetic):
-//   - A scale with exponent 0 (zero or subnormal) counts as zero; exponent 255 (inf
-//     or NaN) makes the element NaN.
-//   - isum * ma * mb is exact; the shift to FX_FRAC fractional bits rounds to
-//     nearest, ties to even.
-//   - A contribution, or a sum, outside the FX_W-bit signed range saturates acc_fx
-//     to that limit and sets the element's overflow flag. The NaN and overflow flags
-//     are sticky until sfirst_i.
-//   The drained shadow holds {nan, overflow, acc_fx}, zero-extended to 2 * AccW bits:
-//   sum = the low AccW bits, carry = the high AccW bits.
+// with the block's bf16 scales sa_i (riding with A) and sb_i (riding with B), sampled with
+// last_i. sfirst_i restarts acc_fx; slast_i copies {nan, overflow, acc_fx}, zero-extended
+// to 2 * AccW bits (sum the low half, carry the high), into the shadow for the drain. The
+// scaling is a SCALE_PIPE-stage pipeline (decode and add, multiply, shift and round,
+// accumulate), so it overlaps the next block.
+//   - A scale with exponent 0 (zero or subnormal) counts as zero; exponent 255 (inf or
+//     NaN) makes the element NaN.
+//   - isum * ma * mb is exact; the shift to FX_FRAC fractional bits rounds to nearest even.
+//   - Outside the FX_W-bit signed range, acc_fx saturates and the overflow flag sets. Both
+//     flags are sticky until sfirst_i.
 //
-// Clock and reset
-//   clk_i   Rising-edge clock. The only clock domain.
-//   rst_ni  Active-low reset. Assertion may be asynchronous; deassertion must be
-//           synchronous to clk_i and meet recovery and removal timing. The
-//           instantiating design owns that guarantee; bpu_sa_array passes its
-//           own reset through (see its header). Reset clears the flag outputs and
-//           the scaling pipeline's valid bits. The accumulators, the shadow register
-//           and the data pipeline registers are data storage and are not reset.
+// Products are exact and integer sums wrap modulo 2^AccW. Idle cycles carry A = B = 0.
 //
-// Modes (mode_i, scaled_i: static; see bpu_sa_array for when they may change)
-//   mode_i = 0  INT8:     a_i[7:0] x b_i[7:0], one signed int8 x int8 product per
-//               cycle.
-//   mode_i = 1  INT4 pair (only with Int4 = 1): a_i[7:0] x b_i[3:0] + a_i[15:8] x
-//               b_i[7:4], two signed int8 x int4 products per cycle (k-steps k and
-//               k+1).
-// Both modes use the same eight partial-product rows and the same adder tree: the
-// 8x8 multiplier splits into two 8x4 halves (the slides' "2x2 INT4" PE), so the
-// INT4 mode costs only the row multiplexers and the wider A path.
-//
-// Arithmetic: products are exact; integer sums wrap modulo 2^AccW. Idle cycles carry
-// A = B = 0, which adds nothing.
+// Reset clears the flag outputs and the scaling pipeline's valid bits; accumulators,
+// shadows and data pipeline registers are data storage and are not reset.
 module bpu_sa_pe
   import bpu_sa_pkg::*;
 #(
-  parameter int unsigned AccW  = 32,    // Accumulator width in bits, >= 16
+  parameter int unsigned AccW  = 32,    // accumulator width in bits, >= 16
   parameter bit          Int4  = 1'b1,  // 1: build the INT4-pair mode (16-bit A path)
   parameter bit          Scale = 1'b1,  // 1: build block scaling (AccW >= 25)
   parameter int unsigned BsumW = 20     // Bits of a block sum: 16 + log2(block k-steps)

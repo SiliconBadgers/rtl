@@ -1,21 +1,10 @@
-// First-in first-out buffer used by bpu_sa_sram_wrapper for the A and B row
-// buffers and the read-order queue.
+// First-in first-out buffer for bpu_sa_sram_wrapper's row buffers and read-order queue.
+// push_i writes data_i at the tail and pop_i removes the head; data_o is the head while
+// empty_o is 0. A push and a pop may share a cycle. The caller never pushes when full or
+// pops when empty (NoOverflow_A, NoUnderflow_A); the wrapper's credits guarantee it.
 //
-// push_i writes data_i at the tail; pop_i removes the head. data_o shows the head
-// while empty_o is 0. A push and a pop may happen in the same cycle. The caller
-// never pushes while full_o is 1 and never pops while empty_o is 1
-// (NoOverflow_A, NoUnderflow_A); bpu_sa_sram_wrapper guarantees this with credits.
-//
-// Clock and reset
-//   clk_i   Rising-edge clock. The only clock domain.
-//   rst_ni  Active-low reset. Assertion may be asynchronous; deassertion must be
-//           synchronous to clk_i and meet recovery and removal timing. The
-//           instantiating design owns that guarantee. Reset empties the FIFO
-//           (pointers and count); the entries are data storage and are not reset.
-//
-// Parameters
-//   Width  Bits per entry, >= 1.
-//   Depth  Entries, >= 1.
+// Parameters: Width, bits per entry (>= 1); Depth, entries (>= 1). Reset empties the
+// FIFO; the entries are data storage and are not reset.
 module bpu_sa_fifo #(
   parameter int unsigned Width = 1,
   parameter int unsigned Depth = 2

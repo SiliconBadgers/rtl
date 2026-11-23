@@ -1,24 +1,9 @@
-// Shift-register delay line used by bpu_sa_array for the A, tile-flag and B skews
-// and the capture timing.
+// Shift-register delay line for bpu_sa_array's skews and capture timing: d_i in cycle t
+// appears on q_o in cycle t + Depth. Depth = 0 is a wire.
 //
-// A value presented on d_i in cycle t appears on q_o in cycle t + Depth.
-// Depth = 0 is a plain wire with no registers.
-//
-// Clock and reset
-//   clk_i   Rising-edge clock. The only clock domain.
-//   rst_ni  Active-low reset. Assertion may be asynchronous; deassertion must be
-//           synchronous to clk_i and meet the registers' recovery and removal
-//           timing. The instantiating design owns that guarantee (in this block,
-//           bpu_sa_array passes its own reset through; see its header).
-//           With Reset = 1 every stage clears to 0 while rst_ni is low.
-//           With Reset = 0 the stages are data storage, are not reset, and
-//           rst_ni is unused.
-//
-// Parameters
-//   Width  Bits per stage, >= 1.
-//   Depth  Number of register stages, in clock cycles, >= 0.
-//   Reset  1 for control bits that must not hold garbage after reset (valid and
-//          tile-switch flags); 0 for data.
+// Parameters: Width, bits per stage (>= 1); Depth, register stages (>= 0); Reset, 1 for
+// control bits that must not hold garbage after reset (every stage clears while rst_ni is
+// low) and 0 for data (no reset; rst_ni is unused).
 module bpu_sa_delay #(
   parameter int unsigned Width = 1,
   parameter int unsigned Depth = 1,

@@ -76,8 +76,8 @@
 //   expects zero C elements there.
 //
 // Reference model: unscaled C is the exact integer sum, wrapped to AccW bits and
-// sign-extended. Block-scaled C follows the numerics contract in
-// bpu_sa_sram_wrapper and bpu_sa_pe, computed independently here: each block's
+// sign-extended. Block-scaled C follows the I/O scheme's "Arithmetic"
+// (docs/compute/matrix_unit_io_scheme.md), computed independently here: each block's
 // contribution isum * sA * sB * 2^24 in double precision (exact: at most 35
 // significant bits), rounded to nearest even, added into a saturating 48-bit
 // fixed-point sum with sticky NaN and overflow flags; the result is NaN, +-infinity
@@ -90,25 +90,28 @@
 // negative limit and 2^16 scales (every element saturates: +infinity), and one with
 // the B scales negated (every element saturates: -infinity).
 //
-// Checks: every C element in memory against the model, for every command that
-// writes; no write at all from a command that keeps its sums; the number of reads
-// and writes and their bytes for each command (exact sizes, all four streams); done_o
-// once per command, with err_o only for an illegal one, one cycle after it is
-// accepted, with no memory traffic; no SRAM response (read data or write
-// completion) still in flight when done_o rises; busy_o from the cycle after
-// acceptance until done_o; cmd_ready_o = !busy_o; err_o never without done_o; after
-// reset, busy_o, done_o and matrix_req_valid_o low at once. Milestones, counted as
-// the command queue would: each legal command publishes exactly one before done_o
-// (inputs released) and two with it; an illegal one none; milestone_inc_o is never
-// 11 or unknown. C is checked at its packed size (4, 2 or 1 bytes per element), and
-// the window allows exactly those bytes. Legacy and FP32 expectations come from the
-// independent reference above; INT32, FP16 and INT8 from bpu_sa_pkg's conversion
-// functions, which bpu_sa_output_convert_tb checks against the golden model, so here
-// they check plumbing and packing. The model checks the
-// port protocol (stable stalled requests, alignment, sizes, reads only inside the
-// command's operands and scale tables, writes only inside C). The run ends with
-// $fatal(1, ...) on any error, on a count mismatch or on timeout, and prints one
-// RESULT line for the runner.
+// Checks
+//   - Every C element in memory against the model, for every writing command, at its
+//     packed size (4, 2 or 1 bytes), with the write window allowing exactly those bytes.
+//     Legacy and FP32 expectations come from the independent reference above; INT32,
+//     FP16 and INT8 from bpu_sa_pkg's conversion functions, which
+//     bpu_sa_output_convert_tb checks against the golden model, so here they check
+//     plumbing and packing.
+//   - No write from a command that keeps its sums; exact read and write counts and
+//     bytes per command, for all four streams.
+//   - done_o once per command, with err_o only for an illegal one, one cycle after
+//     acceptance and with no memory traffic; err_o never without done_o; no read
+//     response or uncommitted write in flight when done_o rises.
+//   - busy_o from the cycle after acceptance until done_o; cmd_ready_o = !busy_o; after
+//     reset, busy_o, done_o and matrix_req_valid_o low at once.
+//   - Milestones, counted as the command queue would: one before done_o and two with it
+//     per legal command, none for an illegal one; milestone_inc_o never 11 or unknown.
+//   - idle_o every cycle: high exactly when busy_o is low and every completed legal
+//     command's three milestones have been counted.
+//   - The model checks the port protocol: stable stalled requests, alignment, sizes,
+//     reads only inside the command's operands and scale tables, writes only inside C.
+// The run ends with $fatal(1, ...) on any error, count mismatch or timeout, and prints
+// one RESULT line for the runner.
 //
 // Scheduling: stimulus is driven and outputs are checked on the falling clock edge;
 // the design and the model act on the rising edge.
@@ -213,6 +216,9 @@ module bpu_sa_sram_wrapper_tb;
   logic cmd_decode_error;
   logic [1:0] milestone_inc;
   int progress;  // milestones published since reset, as the command queue counts them
+  logic idle;
+  int legal_seen;  // legal completions (done_o without err_o) since reset, each owing three
+  int idle_gaps;  // cycles with busy_o low but idle_o rightly low (milestones still due)
   int tb_fmt;  // output encoding of the next command (set_format)
   int tb_frac;
   int unsigned tb_mul;
@@ -337,6 +343,7 @@ module bpu_sa_sram_wrapper_tb;
     .done_o                 (done),
     .err_o                  (err),
     .milestone_inc_o        (milestone_inc),
+    .idle_o                 (idle),
     .matrix_req_valid_o     (req_valid),
     .matrix_req_ready_i     (req_ready),
     .matrix_req_is_write_o  (req_is_write),
@@ -381,15 +388,37 @@ module bpu_sa_sram_wrapper_tb;
   );
 
   // The Matrix progress counter, as the command queues keep it: reset with the unit.
+  // legal_seen counts legal completions; each owes exactly three milestones.
   always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-      progress <= 0;
+      progress   <= 0;
+      legal_seen <= 0;
     end else begin
       if (milestone_inc === 2'b11 || $isunknown(milestone_inc)) begin
         errors++;
         $display("bpu_sa_sram_wrapper_tb: milestone_inc_o = %b", milestone_inc);
       end
       progress <= progress + int'(milestone_inc);
+      if (done === 1'b1 && err !== 1'b1) begin
+        legal_seen <= legal_seen + 1;
+      end
+    end
+  end
+
+  // idle_o, every cycle: high exactly when no command is running and every
+  // completed command's three milestones have been counted. busy_o alone falls
+  // while the last two are still on milestone_inc_o; idle_gaps counts those cycles.
+  // Not at time 0: clk's first assignment is a falling edge before any register is reset.
+  always @(negedge clk) begin
+    if ($time > 0 && rst_n !== 1'bx) begin
+      if (idle !== (busy === 1'b0 && progress == 3 * legal_seen)) begin
+        errors++;
+        $display("bpu_sa_sram_wrapper_tb: idle_o = %b with busy_o = %b, %0d milestones, %0d %s",
+                 idle, busy, progress, legal_seen, "legal commands done");
+      end
+      if (rst_n === 1'b1 && busy === 1'b0 && idle === 1'b0) begin
+        idle_gaps++;
+      end
     end
   end
 
@@ -1609,7 +1638,8 @@ module bpu_sa_sram_wrapper_tb;
         || dependent_checks != 2 * Rows * Cols
         || pending_write_resets != 1 || cancelled_writes == 0
         || completed_writes + cancelled_writes != writes
-        || (ReadyPct < 100 && req_stalls == 0) || (RequireOutStall && out_stalls == 0)) begin
+        || (ReadyPct < 100 && req_stalls == 0) || (RequireOutStall && out_stalls == 0)
+        || idle_gaps < legal_done) begin
       status = "FAIL";
     end else begin
       status = "PASS";
@@ -1629,6 +1659,7 @@ module bpu_sa_sram_wrapper_tb;
     $write(" masked=%0d partial_blocks=%0d", masked_done, partial_done);
     $write(" int32_out=%0d fp32_out=%0d fp16_out=%0d int8_out=%0d progress=%0d", fmt_written[1],
            fmt_written[2], fmt_written[3], fmt_written[4], progress);
+    $write(" idle_gaps=%0d", idle_gaps);
     $write(" c_nans=%0d c_infs=%0d c_neg_infs=%0d", c_nans, c_infs, c_neg_infs);
     $write(" uncommitted_write_checks=%0d dependent_commands=%0d dependent_checks=%0d",
            delayed_write_checks, dependent_commands, dependent_checks);

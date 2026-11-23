@@ -7,3 +7,4 @@ rtl/compute/Matrix_Unit/bpu_sa_read_stream.sv
 rtl/compute/Matrix_Unit/bpu_sa_output_convert.sv
 rtl/compute/Matrix_Unit/bpu_sa_command_decoder.sv
 rtl/compute/Matrix_Unit/bpu_sa_sram_wrapper.sv
+rtl/compute/Matrix_Unit/bpu_matrix_unit.sv

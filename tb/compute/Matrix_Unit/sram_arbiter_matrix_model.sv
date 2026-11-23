@@ -13,7 +13,7 @@
 //            fails.
 //   Write    address, size and data are captured on the accepting edge n and
 //            committed to memory on edge n + 1 exactly, the arbiter's fixed
-//            completion (docs/memory/sram_arbiter_spec.md, "Completion and
+//            completion (the arbiter specification in rtl #32, "Completion and
 //            visibility"). There is no write acknowledgment; rsp_valid_o carries
 //            reads only.
 //   Reset    cancels writes not yet committed and drops every response still in

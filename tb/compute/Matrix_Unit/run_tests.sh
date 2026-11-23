@@ -38,6 +38,9 @@ RTL_LIST="rtl/compute/Matrix_Unit/bpu_sa_array.f"
 # name | testbench top | parameter overrides | seed mode (single: first seed only) |
 # extra testbench files, in TB_DIR
 M="sram_arbiter_matrix_model.sv"
+# The command queues (rtl/control), for the system bench; extra files that start
+# with rtl/ are relative to the repository root, the rest to TB_DIR.
+CONTROL="rtl/control/command_queue.sv rtl/control/shared_scoreboard.sv rtl/control/command_queues.sv"
 CONFIGS=(
   "pe_acc32|bpu_sa_pe_tb|AccW=32|single|"
   "pe_acc16|bpu_sa_pe_tb|AccW=16 Scale=0|single|"
@@ -66,6 +69,10 @@ CONFIGS=(
   "wrap_2x128_noscale_acc20|bpu_sa_sram_wrapper_tb|Rows=2 Cols=128 AccW=20 Scale=0 BufRows=3 Latency=3 ReadyPct=90 Commands=4 MaxK=300|all|$M"
   "wrap_1x1_minimal|bpu_sa_sram_wrapper_tb|Rows=1 Cols=1 AccW=16 Int4=0 Scale=0 Latency=2 ReadyPct=60|all|$M"
   "wrap_8x8_golden|bpu_sa_sram_wrapper_golden_tb|Latency=5 ReadyPct=75|all|bpu_sa_golden_vectors_pkg.sv $M"
+  "top_8x8_payload512|bpu_matrix_unit_tb|Latency=4 ReadyPct=70|all|bpu_sa_golden_vectors_pkg.sv bpu_matrix_record_tb_pkg.sv $M"
+  "top_8x8_payload640_lat1|bpu_matrix_unit_tb|PayloadWidth=640 Latency=1 ReadyPct=100|all|bpu_sa_golden_vectors_pkg.sv bpu_matrix_record_tb_pkg.sv $M"
+  "system_8x8_stall20|bpu_matrix_unit_system_tb|StallPct=20 MemDelayMax=6|all|bpu_sa_golden_vectors_pkg.sv bpu_matrix_record_tb_pkg.sv sram_arbiter_spec_model.sv $CONTROL"
+  "system_8x8_nostall|bpu_matrix_unit_system_tb|StallPct=0 MemDelayMax=0|all|bpu_sa_golden_vectors_pkg.sv bpu_matrix_record_tb_pkg.sv sram_arbiter_spec_model.sv $CONTROL"
   "decoder|bpu_sa_command_decoder_tb||all|"
   "convert_4lanes|bpu_sa_output_convert_tb|Lanes=4|all|bpu_sa_convert_vectors_pkg.sv"
 )
@@ -145,7 +152,9 @@ build() {
   local name="$1" top="$2" params="$3" extra="$4"
   local dir="$work/build/$name" args=() tb_files=() p f
   mkdir -p "$dir"
-  for f in $extra; do tb_files+=("$ROOT/$TB_DIR/$f"); done
+  for f in $extra; do
+    if [[ "$f" == rtl/* ]]; then tb_files+=("$ROOT/$f"); else tb_files+=("$ROOT/$TB_DIR/$f"); fi
+  done
   for p in $params; do args+=("-pvalue+$top.$p"); done
   (
     cd "$dir"
